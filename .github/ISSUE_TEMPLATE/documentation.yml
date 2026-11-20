@@ -1,0 +1,24 @@
+name: "Documentation"
+description: "문서 작성 및 수정"
+labels: ["documentation"]
+body:
+  - type: textarea
+    attributes:
+      label: 문서 작업 설명
+      description: 추가하거나 수정해야 할 문서에 대해 설명해 주세요.
+      placeholder: "예: README.md 가이드 업데이트 등"
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: 작업할 내용
+      description: 작성 또는 수정할 세부 항목을 체크박스 형태로 작성해 주세요.
+      placeholder: |
+        - [ ] 목차 구성
+        - [ ] 예제 코드 추가
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: 🔗 관련 파일 및 참고 자료
+      description: 수정 대상 문서 경로나 참고할 만한 자료가 있다면 작성해 주세요.

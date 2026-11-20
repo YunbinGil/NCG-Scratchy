@@ -1,0 +1,25 @@
+name: "Bug Report"
+description: "버그 및 오류 제보"
+labels: ["bug"]
+body:
+  - type: textarea
+    attributes:
+      label: 버그 설명
+      description: 어떤 버그가 발생했는지 명확하게 설명해 주세요.
+      placeholder: 예상했던 동작과 실제 발생한 동작의 차이점을 적어주시면 좋습니다.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: 재현 방법
+      description: 버그를 재현할 수 있는 단계를 순서대로 작성해 주세요.
+      placeholder: |
+        1. '...' 메뉴로 이동합니다.
+        2. '....' 버튼을 클릭합니다.
+        3. ~한 에러가 발생합니다.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: 📸 스크린샷 및 로그
+      description: 문제 해결에 도움이 될 스크린샷이나 에러 로그가 있다면 첨부해 주세요.
