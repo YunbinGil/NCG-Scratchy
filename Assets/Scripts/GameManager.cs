@@ -6,11 +6,10 @@ public class GameManager : MonoBehaviour
     public int Level {get; private set;}
     public int Exp {get; private set;}
     public int Money {get; private set;}
-    private UiManager uiManager;
     
     private void Awake()
     {
-        uiManager.GetComponent<UiManager>();
+        uiManager = GetComponent<UiManager>();
     }
     private void Start()
     {
