@@ -1,18 +1,48 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
-public class Lottery : MonoBehaviour, IInspectableSource, IPointerDownHandler, IPointerUpHandler
+[RequireComponent(typeof(Button))]
+public class Lottery : MonoBehaviour, IInspectableSource
 {
     [Header("데이터 (ScriptableObject)")]
     [SerializeField] private LotteryData lotteryData;
 
-    [Header("클릭 판정")]
-    [SerializeField] private float clickMoveThreshold = 10f;
-
-    private Vector2 _downPos;
-    private bool _isTracking;
+    [Header("UI 버튼")]
+    [SerializeField] private Button lotteryButton;
 
     public LotteryData Data => lotteryData;
+
+    private void Awake()
+    {
+        if (lotteryButton == null)
+            lotteryButton = GetComponent<Button>();
+
+        if (lotteryButton != null)
+        {
+            lotteryButton.onClick.RemoveListener(HandleClick);
+            lotteryButton.onClick.AddListener(HandleClick);
+        }
+    }
+
+    private void OnDestroy()
+    {
+        if (lotteryButton != null)
+            lotteryButton.onClick.RemoveListener(HandleClick);
+    }
+
+    private void HandleClick()
+    {
+        if (InspectViewManager.Instance != null && InspectViewManager.Instance.IsInspecting)
+            return;
+
+        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
+        {
+            
+        }
+
+        InspectViewManager.Instance?.OpenInspect(this);
+    }
 
     public Sprite GetInspectSprite()
     {
@@ -29,28 +59,5 @@ public class Lottery : MonoBehaviour, IInspectableSource, IPointerDownHandler, I
     {
         if (detailPanel == null || lotteryData == null) return;
         detailPanel.ShowLottery(lotteryData);
-    }
-
-    public void OnPointerDown(PointerEventData eventData)
-    {
-        if (InspectViewManager.Instance != null && InspectViewManager.Instance.IsInspecting)
-            return;
-
-        _downPos = eventData.position;
-        _isTracking = true;
-    }
-
-    public void OnPointerUp(PointerEventData eventData)
-    {
-        if (!_isTracking) return;
-        _isTracking = false;
-
-        if (InspectViewManager.Instance != null && InspectViewManager.Instance.IsInspecting)
-            return;
-
-        if (Vector2.Distance(_downPos, eventData.position) <= clickMoveThreshold)
-        {
-            InspectViewManager.Instance?.OpenInspect(this);
-        }
     }
 }

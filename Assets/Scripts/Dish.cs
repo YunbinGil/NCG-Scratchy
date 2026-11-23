@@ -1,18 +1,48 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
-public class Dish : MonoBehaviour, IInspectableSource, IPointerDownHandler, IPointerUpHandler
+[RequireComponent(typeof(Button))]
+public class Dish : MonoBehaviour, IInspectableSource
 {
     [Header("데이터 (ScriptableObject)")]
     [SerializeField] private DishData dishData;
 
-    [Header("클릭 판정")]
-    [SerializeField] private float clickMoveThreshold = 10f;
-
-    private Vector2 _downPos;
-    private bool _isTracking;
+    [Header("UI 버튼")]
+    [SerializeField] private Button DishButton;
 
     public DishData Data => dishData;
+
+    private void Awake()
+    {
+        if (DishButton == null)
+            DishButton = GetComponent<Button>();
+
+        if (DishButton != null)
+        {
+            DishButton.onClick.RemoveListener(HandleClick);
+            DishButton.onClick.AddListener(HandleClick);
+        }
+    }
+
+    private void OnDestroy()
+    {
+        if (DishButton != null)
+            DishButton.onClick.RemoveListener(HandleClick);
+    }
+
+    private void HandleClick()
+    {
+        if (InspectViewManager.Instance != null && InspectViewManager.Instance.IsInspecting)
+            return;
+
+        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
+        {
+            
+        }
+
+        InspectViewManager.Instance?.OpenInspect(this);
+    }
 
     public Sprite GetInspectSprite()
     {
@@ -22,35 +52,12 @@ public class Dish : MonoBehaviour, IInspectableSource, IPointerDownHandler, IPoi
 
     public float GetInspectScale()
     {
-        return dishData != null ? dishData.inspectScale : 1f;
+        return 1f;
     }
 
     public void OpenInDetailPanel(InspectDetailPanel detailPanel)
     {
-        if (detailPanel == null) return;
+        if (detailPanel == null || dishData == null) return;
         detailPanel.ShowDish(dishData);
-    }
-
-    public void OnPointerDown(PointerEventData eventData)
-    {
-        if (InspectViewManager.Instance != null && InspectViewManager.Instance.IsInspecting)
-            return;
-
-        _downPos = eventData.position;
-        _isTracking = true;
-    }
-
-    public void OnPointerUp(PointerEventData eventData)
-    {
-        if (!_isTracking) return;
-        _isTracking = false;
-
-        if (InspectViewManager.Instance != null && InspectViewManager.Instance.IsInspecting)
-            return;
-
-        if (Vector2.Distance(_downPos, eventData.position) <= clickMoveThreshold)
-        {
-            InspectViewManager.Instance?.OpenInspect(this);
-        }
     }
 }
