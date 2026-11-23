@@ -29,8 +29,8 @@ public class LotteryDetailView : MonoBehaviour
         int requiredMatchCount = Mathf.Max(1, data.requiredMatchCount);
 
         if (titleText != null) titleText.text = data.lotteryName;
-        if (matchRuleText != null) matchRuleText.text = $"{requiredMatchCount}개 일치 시 당첨";
-        if (hardnessText != null) hardnessText.text = $"단단함: {data.hardness}";
+        if (matchRuleText != null) matchRuleText.text = $"{requiredMatchCount}match, win";
+        if (hardnessText != null) hardnessText.text = $"Hard: {data.hardness}";
 
         BindSymbolRows(data, requiredMatchCount);
     }

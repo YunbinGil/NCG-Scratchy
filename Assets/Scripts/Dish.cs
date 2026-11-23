@@ -10,7 +10,7 @@ public class Dish : MonoBehaviour, IInspectableSource, IPointerDownHandler, IPoi
     [SerializeField] private float clickMoveThreshold = 10f;
 
     private Vector2 _downPos;
-    private bool _isTracking;
+    private bool IsTracking;
 
     public DishData Data => dishData;
 
@@ -37,13 +37,13 @@ public class Dish : MonoBehaviour, IInspectableSource, IPointerDownHandler, IPoi
             return;
 
         _downPos = eventData.position;
-        _isTracking = true;
+        IsTracking = true;
     }
 
     public void OnPointerUp(PointerEventData eventData)
     {
-        if (!_isTracking) return;
-        _isTracking = false;
+        if (!IsTracking) return;
+        IsTracking = false;
 
         if (InspectViewManager.Instance != null && InspectViewManager.Instance.IsInspecting)
             return;
