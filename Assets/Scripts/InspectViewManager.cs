@@ -21,10 +21,10 @@ public class InspectViewManager : MonoBehaviour
     [Header("Inspect 상태에서만 켜지는 루트")]
     [SerializeField] private GameObject inspectOverlayRoot;
 
-    [Header("배경 및 중앙 확대 이미지")]
+    [Header("배경 및 중앙 확대 스프라이트")]
     [SerializeField] private Button dimmedBackgroundButton;
-    [SerializeField] private Image centerPreviewImage;
-    [SerializeField] private Vector2 basePreviewSize = new Vector2(360f, 360f);
+    [SerializeField] private SpriteRenderer centerPreviewRenderer;
+    [SerializeField] private float basePreviewScale = 1f;
 
     [Header("우측 상세 패널")]
     [SerializeField] private InspectDetailPanel detailPanel;
@@ -54,14 +54,14 @@ public class InspectViewManager : MonoBehaviour
     {
         if (target == null) return;
 
-        if (centerPreviewImage != null)
+        if (centerPreviewRenderer != null)
         {
             Sprite sprite = target.GetInspectSprite();
-            centerPreviewImage.sprite = sprite;
-            centerPreviewImage.enabled = sprite != null;
+            centerPreviewRenderer.sprite = sprite;
+            centerPreviewRenderer.enabled = sprite != null;
 
             float scale = Mathf.Max(0.1f, target.GetInspectScale());
-            centerPreviewImage.rectTransform.sizeDelta = basePreviewSize * scale;
+            centerPreviewRenderer.transform.localScale = Vector3.one * (basePreviewScale * scale);
         }
 
         if (detailPanel != null)
@@ -80,10 +80,10 @@ public class InspectViewManager : MonoBehaviour
             detailPanel.Hide();
         }
 
-        if (centerPreviewImage != null)
+        if (centerPreviewRenderer != null)
         {
-            centerPreviewImage.sprite = null;
-            centerPreviewImage.enabled = false;
+            centerPreviewRenderer.sprite = null;
+            centerPreviewRenderer.enabled = false;
         }
 
         SetState(ViewState.Table);
