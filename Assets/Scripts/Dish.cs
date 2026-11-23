@@ -12,6 +12,7 @@ public class Dish : MonoBehaviour, IInspectableSource
     [SerializeField] private Button DishButton;
 
     public DishData Data => dishData;
+    private UiManager uiManager;
 
     private void Awake()
     {
@@ -23,6 +24,10 @@ public class Dish : MonoBehaviour, IInspectableSource
             DishButton.onClick.RemoveListener(HandleClick);
             DishButton.onClick.AddListener(HandleClick);
         }
+    }
+    private void Start()
+    {
+        uiManager = GameObject.FindWithTag("GameController").GetComponent<UiManager>();
     }
 
     private void OnDestroy()
@@ -42,6 +47,7 @@ public class Dish : MonoBehaviour, IInspectableSource
         }
 
         InspectViewManager.Instance?.OpenInspect(this);
+        uiManager.SetScrubberCursor();
     }
 
     public Sprite GetInspectSprite()
