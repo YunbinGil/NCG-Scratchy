@@ -5,7 +5,8 @@ using UnityEngine.UI;
 public class Draggable : MonoBehaviour,
     IPointerDownHandler, 
     IDragHandler,
-    IPointerUpHandler
+    IPointerUpHandler,
+    IPointerEnterHandler
 {
     // [Header("드래그 가능 영역")]
     // [SerializeField]
@@ -15,14 +16,36 @@ public class Draggable : MonoBehaviour,
 
     private RectTransform objectRect;
     private bool isDragging;
-    private Vector2 dragOffset;
+
+    [SerializeField] private GameObject dragSprite;
+
+    private Quaternion defaultRotation;
+    private bool isTilted;
+    [SerializeField] private float highlightAngle = 10f;
     private Vector2 pressPosition;
     private float dragThreshold = 10f;
+
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        if (isDragging)
+            return;
+
+        isTilted = !isTilted;
+        objectRect.localRotation = isTilted ? defaultRotation * Quaternion.Euler(0f, 0f, -highlightAngle) : defaultRotation;
+    }
+
+    private void SetDragging(bool dragging)
+    {
+        isDragging = dragging;
+
+        if (dragSprite != null)
+            dragSprite.SetActive(dragging);
+    }
 
     public void OnPointerDown(PointerEventData eventData)
     {
         pressPosition = eventData.position;
-        isDragging = false;
+        SetDragging(false);
         transform.SetAsLastSibling();
     }
 
@@ -30,12 +53,12 @@ public class Draggable : MonoBehaviour,
     {
         float distance = Vector2.Distance(pressPosition, eventData.position);
 
-        if (distance >= dragThreshold)
+        if (!isDragging && distance >= dragThreshold)
         {
-            isDragging = true;
+            SetDragging(true);
         }
 
-        if (isDragging)
+        if (isDragging && tableRect != null)
         {
             // 오브젝트 이동 범위 설정
             float minX = tableRect.anchoredPosition.x - tableRect.rect.width / 2f + objectRect.rect.width / 2f;
@@ -52,6 +75,8 @@ public class Draggable : MonoBehaviour,
 
             // 최종 위치 적용
             objectRect.anchoredPosition = nextPosition;
+
+            dragSprite.SetActive(true);
         }
     }
 
@@ -59,6 +84,14 @@ public class Draggable : MonoBehaviour,
     {
         objectButton = GetComponent<Button>();
         objectRect = GetComponent<RectTransform>();
+        defaultRotation = objectRect.localRotation;
+        if (dragSprite != null)
+            dragSprite.SetActive(false);
+    }
+
+    private void OnDisable()
+    {
+        SetDragging(false);
     }
 
     public void SetTableRect(RectTransform table)
@@ -72,6 +105,6 @@ public class Draggable : MonoBehaviour,
         {
             Debug.Log("버튼 클릭");
         }
-        isDragging = false;
+        SetDragging(false);
     }
 }
