@@ -3,8 +3,8 @@ using System.Collections.Generic;
 
 public class ItemSpawner : MonoBehaviour
 {
-    public List<GameObject> items;
-    public RectTransform spawnTable;
+    [SerializeField] private List<GameObject> items;
+    [SerializeField] private RectTransform spawnTable;
 
     private List<RectTransform> spawnItems = new List<RectTransform>();
     private List<Vector2> targetpoints = new List<Vector2>();
