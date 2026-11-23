@@ -3,15 +3,15 @@ using UnityEngine;
 public class Scratchable : MonoBehaviour
 {
     [Header("References")]
-    public Camera targetCamera;
-    public SpriteRenderer dirtyRenderer;   // 지워질 얼룩 스프라이트
-    public Texture2D brushTexture;         // 지우개 모양 텍스처 (없으면 원형 브러시 사용)
+    [SerializeField] private Camera targetCamera;
+    [SerializeField] private SpriteRenderer dirtyRenderer;   // 지워질 얼룩 스프라이트
+    [SerializeField] private Texture2D brushTexture;         // 지우개 모양 텍스처 (없으면 원형 브러시 사용)
 
     [Header("Brush & Clean Settings")]
-    public float brushWorldRadius = 0.45f; // 월드 기준 지우개 반지름
+    [SerializeField] private float brushWorldRadius = 0.45f; // 월드 기준 지우개 반지름
     [Range(0.5f, 1f)]
-    public float cleanThreshold = 0.85f;   // 85% 지우면 자동 완료
-    public float checkInterval = 0.1f;
+    [SerializeField] private float cleanThreshold = 0.85f;   // 85% 지우면 자동 완료
+    [SerializeField] private float checkInterval = 0.1f;
 
     private Texture2D runtimeTex;
     private Color32[] pixels;
@@ -28,6 +28,7 @@ public class Scratchable : MonoBehaviour
     // 브러시 알파 마스크 캐시 (0 ~ 1)
     private float[] brushMask;
     private int brushMaskSize = 64;
+    [SerializeField] private InspectViewManager inspectViewManager;
 
     void Start()
     {
@@ -235,6 +236,7 @@ public class Scratchable : MonoBehaviour
             isCompleted = true;
             dirtyRenderer.enabled = false;
             Debug.Log($"세척 완료! ({ratio * 100f:F1}%)");
+            //TODO: inspectorViewManager 연결: 확률에 따라 깨지거나 보상 변경, 판매버튼 보이기
         }
     }
 

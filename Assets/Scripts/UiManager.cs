@@ -3,11 +3,11 @@ using UnityEngine;
 public class UiManager : MonoBehaviour
 {
     [Header("Cursor Settings")]
-    public Camera targetCamera;
-    public SpriteRenderer cursorRenderer; 
-    public Sprite defaultCursorSprite;   
-    public Sprite scrubberSprite;       
-    public Sprite scrubCoinSprite;       
+    [SerializeField] private Camera targetCamera;
+    [SerializeField] private SpriteRenderer cursorRenderer; 
+    [SerializeField] private Sprite defaultCursorSprite;   
+    [SerializeField] private Sprite scrubberSprite;       
+    [SerializeField] private Sprite scrubCoinSprite;       
     
 
     void Awake()
