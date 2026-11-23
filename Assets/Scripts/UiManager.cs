@@ -15,7 +15,7 @@ public class UiManager : MonoBehaviour
     [SerializeField] private Image levelImage;
     // [SerializeField] private Ticket[] tickets;
     // [SerializeField] private Equipment[] equips;
-    [SerializeField] private GameManager gameManager;
+    private GameManager gameManager;
 
     private void Awake()
     {
@@ -67,7 +67,8 @@ public class UiManager : MonoBehaviour
     public void SetMoneyText(int amount){
         moneyText.text = amount.ToString();
     }
-    public void SetLevelText(int goalExp){
-        levelText.text = $"{gameManager.Exp} / {goalExp}";
+    public void SetLevelText(int exp, int goalExp){
+        levelText.text = $"{exp} / {goalExp}";
+        levelImage.fillAmount = (float)exp/goalExp;
     }
 }
