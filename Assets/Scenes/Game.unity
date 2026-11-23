@@ -609,6 +609,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Scroll View
       objectReference: {fileID: 0}
+    - target: {fileID: 6279470081348714200, guid: b83240e296fa66d4685bb7f82178cb1a, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 7092710897921150922, guid: b83240e296fa66d4685bb7f82178cb1a, type: 3}
       propertyPath: m_Size
       value: 1
