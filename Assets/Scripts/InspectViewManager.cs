@@ -197,6 +197,12 @@ public class InspectViewManager : MonoBehaviour
             centerPreviewRenderer.sprite = null;
             centerPreviewRenderer.enabled = false;
         }
+        if (currentActiveOverlay != null)
+        {
+            currentActiveOverlay.SetActive(false);
+            currentActiveOverlay = null;
+        }
+        currentInspectDish = null;
 
         SetState(ViewState.Table);
         uiManager.SetDefaultCursor();
