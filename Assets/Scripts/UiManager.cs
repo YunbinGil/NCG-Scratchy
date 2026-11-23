@@ -65,7 +65,8 @@ public class UiManager : MonoBehaviour
         SetCursorSprite(scrubCoinSprite);
     }
     public void SetMoneyText(int amount){
-        moneyText.text = amount.ToString();
+        if (moneyText != null)
+            moneyText.text = amount.ToString();
     }
     public void SetLevelText(int goalExp){
         levelText.text = $"{gameManager.Exp} / {goalExp}";

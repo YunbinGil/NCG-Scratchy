@@ -12,8 +12,11 @@ public class ItemSpawner : MonoBehaviour
 
     private float objectSpeed = 600f;
 
-    private void CreateItem(GameObject item)
+    public bool TrySpawnItem(GameObject item)
     {
+        if (spawnTable == null || item == null || !item.TryGetComponent<RectTransform>(out _))
+            return false;
+
         GameObject spawnedObject  = Instantiate(item, transform.position, Quaternion.identity, spawnTable);
         RectTransform spawnItem = spawnedObject .GetComponent<RectTransform>();
         spawnItem.SetAsLastSibling();
@@ -38,16 +41,17 @@ public class ItemSpawner : MonoBehaviour
         // 생성한 아이템과 목표 좌표 저장
         spawnItems.Add(spawnItem);
         targetpoints.Add(targetpoint);
+        return true;
     }
 
     private void Update()
     {
         if (Input.GetKeyDown(KeyCode.Alpha1))
         {
-            if (items.Count > 0)
+            if (items != null && items.Count > 0)
             {
                 int randomIndex = Random.Range(0, items.Count);
-                CreateItem(items[randomIndex]);
+                TrySpawnItem(items[randomIndex]);
             }
         }
 
