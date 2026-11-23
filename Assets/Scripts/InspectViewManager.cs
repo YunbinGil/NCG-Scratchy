@@ -21,8 +21,14 @@ public class InspectViewManager : MonoBehaviour
     [Header("Inspect 상태에서만 켜지는 루트")]
     [SerializeField] private GameObject inspectOverlayRoot;
 
-    [Header("배경 및 중앙 확대 스프라이트")]
-    [SerializeField] private Button dimmedBackgroundButton;
+    // [주석 처리됨] 기존 Background 버튼 및 영역 제한 필드
+    // [SerializeField] private Button dimmedBackgroundButton;
+    // [SerializeField] private RectTransform tableArea;
+
+    [Header("배경 및 중앙 확대 이미지")]
+    [SerializeField] private Button closeDimmedBackgroundButton;
+    [SerializeField] private RectTransform centerPreviewRect;
+    [SerializeField] private Image centerPreviewImage;
     [SerializeField] private SpriteRenderer centerPreviewRenderer;
     [SerializeField] private float basePreviewScale = 1f;
 
@@ -41,26 +47,102 @@ public class InspectViewManager : MonoBehaviour
         }
         Instance = this;
 
-        if (dimmedBackgroundButton != null)
+        // [주석 처리됨] 기존 Background 버튼 리스너 연결
+        // if (dimmedBackgroundButton != null)
+        // {
+        //     dimmedBackgroundButton.onClick.RemoveListener(HandleBackgroundClick);
+        //     dimmedBackgroundButton.onClick.AddListener(HandleBackgroundClick);
+        // }
+
+        if (closeDimmedBackgroundButton != null)
         {
-            dimmedBackgroundButton.onClick.RemoveListener(CloseInspect);
-            dimmedBackgroundButton.onClick.AddListener(CloseInspect);
+            closeDimmedBackgroundButton.onClick.RemoveListener(HandleDimmedBackgroundClick);
+            closeDimmedBackgroundButton.onClick.AddListener(HandleDimmedBackgroundClick);
         }
 
         SetState(ViewState.Table);
+    }
+
+    // [주석 처리됨] 기존 Background 버튼 클릭 핸들러
+    // private void HandleBackgroundClick()
+    // {
+    //     Vector2 screenPos = Input.mousePosition;
+    //     Camera eventCam = GetEventCamera();
+    //
+    //     if (tableArea != null && RectTransformUtility.RectangleContainsScreenPoint(tableArea, screenPos, eventCam))
+    //     {
+    //         return;
+    //     }
+    //
+    //     CloseInspect();
+    // }
+
+    private void HandleDimmedBackgroundClick()
+    {
+        RectTransform previewArea = GetCenterPreviewRectTransform();
+        if (previewArea != null && previewArea.gameObject.activeInHierarchy)
+        {
+            Vector2 screenPos = Input.mousePosition;
+            Camera eventCam = GetEventCamera(previewArea);
+
+            // CenterPreviewImage 영역 안을 클릭한 경우 닫지 않음
+            if (RectTransformUtility.RectangleContainsScreenPoint(previewArea, screenPos, eventCam))
+            {
+                return;
+            }
+        }
+
+        CloseInspect();
+    }
+
+    private RectTransform GetCenterPreviewRectTransform()
+    {
+        if (centerPreviewRect != null)
+            return centerPreviewRect;
+
+        if (centerPreviewImage != null)
+            return centerPreviewImage.rectTransform;
+
+        return null;
+    }
+
+    private Camera GetEventCamera(RectTransform targetRect = null)
+    {
+        Canvas canvas = null;
+
+        if (targetRect != null)
+            canvas = targetRect.GetComponentInParent<Canvas>();
+
+        if (canvas == null && closeDimmedBackgroundButton != null)
+            canvas = closeDimmedBackgroundButton.GetComponentInParent<Canvas>();
+
+        if (canvas == null)
+            canvas = GetComponentInParent<Canvas>();
+
+        if (canvas == null || canvas.renderMode == RenderMode.ScreenSpaceOverlay)
+            return null;
+
+        return canvas.worldCamera != null ? canvas.worldCamera : Camera.main;
     }
 
     public void OpenInspect(IInspectableSource target)
     {
         if (target == null) return;
 
+        Sprite sprite = target.GetInspectSprite();
+        float scale = Mathf.Max(0.1f, target.GetInspectScale());
+
+        if (centerPreviewImage != null)
+        {
+            centerPreviewImage.sprite = sprite;
+            centerPreviewImage.enabled = sprite != null;
+            centerPreviewImage.rectTransform.localScale = Vector3.one * (basePreviewScale * scale);
+        }
+
         if (centerPreviewRenderer != null)
         {
-            Sprite sprite = target.GetInspectSprite();
             centerPreviewRenderer.sprite = sprite;
             centerPreviewRenderer.enabled = sprite != null;
-
-            float scale = Mathf.Max(0.1f, target.GetInspectScale());
             centerPreviewRenderer.transform.localScale = Vector3.one * (basePreviewScale * scale);
         }
 
@@ -78,6 +160,12 @@ public class InspectViewManager : MonoBehaviour
         if (detailPanel != null)
         {
             detailPanel.Hide();
+        }
+
+        if (centerPreviewImage != null)
+        {
+            centerPreviewImage.sprite = null;
+            centerPreviewImage.enabled = false;
         }
 
         if (centerPreviewRenderer != null)

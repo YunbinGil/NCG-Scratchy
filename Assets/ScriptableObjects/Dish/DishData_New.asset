@@ -15,10 +15,10 @@ MonoBehaviour:
   id: 1
   dishName: DAY JOB
   description: "It may be a pittance, but it\u2019s the reward for my hard work."
-  tableSprite: {fileID: -5765715482260863811, guid: 74742ca7dffb13d43aaedb67eb200a21, type: 3}
-  inspectSprite: {fileID: -5765715482260863811, guid: 74742ca7dffb13d43aaedb67eb200a21, type: 3}
+  tableSprite: {fileID: 21300000, guid: 74742ca7dffb13d43aaedb67eb200a21, type: 3}
+  inspectSprite: {fileID: 21300000, guid: 74742ca7dffb13d43aaedb67eb200a21, type: 3}
   cleanSprite: {fileID: 21300000, guid: d705d001a0b604855854706783068070, type: 3}
-  stainSprite: {fileID: -5765715482260863811, guid: 74742ca7dffb13d43aaedb67eb200a21, type: 3}
+  stainSprite: {fileID: 21300000, guid: 74742ca7dffb13d43aaedb67eb200a21, type: 3}
   brokenSprite: {fileID: 21300000, guid: 2296b2f63942ac24e81bb397520ec7a8, type: 3}
   buyPrice: 1
   sellPriceAfterClean: 3
