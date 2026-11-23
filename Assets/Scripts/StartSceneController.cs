@@ -3,7 +3,7 @@ using UnityEngine.SceneManagement;
 
 public class StartSceneController : MonoBehaviour
 {
-    [SerializeField] private string tutorialSceneName = "Tutorial";
+    [SerializeField] private string tutorialSceneName = "Game";
 
     public void LoadTutorialScene()
     {
