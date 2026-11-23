@@ -1245,6 +1245,7 @@ GameObject:
   - component: {fileID: 591906605}
   - component: {fileID: 591906604}
   - component: {fileID: 591906603}
+  - component: {fileID: 591906606}
   m_Layer: 0
   m_Name: GameController
   m_TagString: GameController
@@ -1299,6 +1300,28 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &591906606
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 591906602}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b937b31dc272158408e499b2d5bc0540, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InspectViewManager
+  inspectOverlayRoot: {fileID: 1145175257}
+  closeDimmedBackgroundButton: {fileID: 2027860282}
+  centerPreviewRect: {fileID: 1056257475}
+  centerPreviewImage: {fileID: 1056257477}
+  centerPreviewRenderer: {fileID: 1056257476}
+  basePreviewScale: 100
+  detailPanel: {fileID: 1722499350}
+  resultButton: {fileID: 1916094882}
+  stainOverlayPrefab: {fileID: 8403676423638986814, guid: d02ee4745a849cf40b7a69b3fda1d976, type: 3}
+  stainOverlayParent: {fileID: 1056257475}
 --- !u!224 &597293224 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 4450775410597310440, guid: c0504dc04cee9d54a875ef37d3c302dd, type: 3}
@@ -2604,6 +2627,10 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3075215476071532702, guid: 43a21a3247361cd4db11a521aa3dff7d, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 3365056729551299726, guid: 43a21a3247361cd4db11a521aa3dff7d, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
@@ -3687,7 +3714,6 @@ GameObject:
   - component: {fileID: 1489247441}
   - component: {fileID: 1489247440}
   - component: {fileID: 1489247439}
-  - component: {fileID: 1489247443}
   m_Layer: 5
   m_Name: Canvas
   m_TagString: Untagged
@@ -3783,27 +3809,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
---- !u!114 &1489247443
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1489247438}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b937b31dc272158408e499b2d5bc0540, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::InspectViewManager
-  inspectOverlayRoot: {fileID: 1145175257}
-  closeDimmedBackgroundButton: {fileID: 2027860282}
-  centerPreviewRect: {fileID: 1056257475}
-  centerPreviewImage: {fileID: 1056257477}
-  centerPreviewRenderer: {fileID: 1056257476}
-  basePreviewScale: 100
-  detailPanel: {fileID: 1722499350}
-  stainOverlayPrefab: {fileID: 8403676423638986814, guid: d02ee4745a849cf40b7a69b3fda1d976, type: 3}
-  stainOverlayParent: {fileID: 1056257475}
 --- !u!1 &1526926609
 GameObject:
   m_ObjectHideFlags: 0
@@ -5045,6 +5050,17 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1915704618}
   m_CullTransparentMesh: 1
+--- !u!114 &1916094882 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1812385763715223394, guid: 43a21a3247361cd4db11a521aa3dff7d, type: 3}
+  m_PrefabInstance: {fileID: 1074750621}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Button
 --- !u!1 &2001795933
 GameObject:
   m_ObjectHideFlags: 0

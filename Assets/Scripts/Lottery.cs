@@ -13,6 +13,12 @@ public class Lottery : MonoBehaviour, IInspectableSource
 
     public LotteryData Data => lotteryData;
 
+    public int Reward => throw new System.NotImplementedException();
+    //TODO: rotteryData, rotteryIconData 확률에 따라 결과계산 후 Reward반영
+
+    public bool IsCleaned { get; } = false;
+    //TODO: 다 긁어서 결과 나오면 true로 변경
+
     private void Awake()
     {
         if (lotteryButton == null)
@@ -59,5 +65,10 @@ public class Lottery : MonoBehaviour, IInspectableSource
     {
         if (detailPanel == null || lotteryData == null) return;
         detailPanel.ShowLottery(lotteryData);
+    }
+
+    public void DestoryItem()
+    {
+        Destroy(gameObject);
     }
 }

@@ -21,9 +21,9 @@ MonoBehaviour:
   stainSprite: {fileID: 21300000, guid: 74742ca7dffb13d43aaedb67eb200a21, type: 3}
   brokenSprite: {fileID: 21300000, guid: 2296b2f63942ac24e81bb397520ec7a8, type: 3}
   buyPrice: 1
-  sellPriceAfterClean: 3
-  breakPenalty: 3
-  breakChance: 0.1
+  sellPriceAfterClean: 2
+  breakPenalty: 2
+  breakChance: 0.747
   baseCleanRequirement: 100
   cleanCompleteRatio: 0.8
   inspectScale: 1.5

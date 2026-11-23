@@ -1,3 +1,4 @@
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -12,6 +13,9 @@ public interface IInspectableSource
     Sprite GetInspectSprite();
     float GetInspectScale();
     void OpenInDetailPanel(InspectDetailPanel detailPanel);
+    void DestoryItem();
+    public int Reward { get; }
+    public bool IsCleaned { get; }
 }
 
 public class InspectViewManager : MonoBehaviour
@@ -34,6 +38,7 @@ public class InspectViewManager : MonoBehaviour
 
     [Header("우측 상세 패널")]
     [SerializeField] private InspectDetailPanel detailPanel;
+    [SerializeField] private Button resultButton;
     [Header("얼룩 오브젝트 생성 설정")]
     [SerializeField] private GameObject stainOverlayPrefab; // SpriteRenderer + Scratchable이 붙은 프리팹
     [SerializeField] private Transform stainOverlayParent; // 생성할 부모(없으면 null)
@@ -41,6 +46,7 @@ public class InspectViewManager : MonoBehaviour
     public ViewState CurrentState { get; private set; } = ViewState.Table;
     public bool IsInspecting => CurrentState == ViewState.Inspect;
     private UiManager uiManager;
+    private GameManager gameManager;
     private Dish currentInspectDish;
     private GameObject currentActiveOverlay;
 
@@ -65,7 +71,6 @@ public class InspectViewManager : MonoBehaviour
             closeDimmedBackgroundButton.onClick.RemoveListener(HandleDimmedBackgroundClick);
             closeDimmedBackgroundButton.onClick.AddListener(HandleDimmedBackgroundClick);
         }
-
         SetState(ViewState.Table);
     }
 
@@ -85,6 +90,7 @@ public class InspectViewManager : MonoBehaviour
     private void Start()
     {
         uiManager = GameObject.FindWithTag("GameController").GetComponent<UiManager>();
+        gameManager = GameObject.FindWithTag("GameController").GetComponent<GameManager>();
     }
     private void HandleDimmedBackgroundClick()
     {
@@ -176,6 +182,14 @@ public class InspectViewManager : MonoBehaviour
                 currentActiveOverlay.SetActive(true);
             }
         }
+        if (target.IsCleaned)
+        {
+            ShowResultButton(target);
+        }
+        else
+        {
+            resultButton.gameObject.SetActive(false);
+        }
         SetState(ViewState.Inspect);
     }
 
@@ -228,6 +242,7 @@ public class InspectViewManager : MonoBehaviour
         {
             overlay = Instantiate(stainOverlayPrefab, stainOverlayParent);
             overlay.name = $"{dish.gameObject.name}_StainOverlay";
+            overlay.GetComponent<Scratchable>().Dish = dish;
 
             SpriteRenderer sr = overlay.GetComponentInChildren<SpriteRenderer>();
             if (sr != null)
@@ -239,5 +254,36 @@ public class InspectViewManager : MonoBehaviour
         }
 
         return overlay;
+    }
+
+    public void OnDishCleaned(Dish dish)
+    {
+        if (dish == null) return;
+
+        Sprite resultSprite = dish.Reward > 0 ? dish.GetInspectSprite() : dish.GetBrokenSprite();
+        if (centerPreviewImage != null)
+        {
+            centerPreviewImage.sprite = resultSprite;
+            centerPreviewImage.enabled = resultSprite != null;
+        }
+        if (centerPreviewRenderer != null)
+        {
+            centerPreviewRenderer.sprite = resultSprite;
+            centerPreviewRenderer.enabled = resultSprite != null;
+        }
+        ShowResultButton(dish);
+    }
+    private void ShowResultButton(IInspectableSource target)
+    {
+        resultButton.onClick.RemoveAllListeners();
+        resultButton.onClick.AddListener(() =>
+        {
+            gameManager.AddMoney(target.Reward);
+            gameManager.AddExp(target.Reward);
+            CloseInspect();
+            target.DestoryItem();
+        });
+        resultButton.GetComponentInChildren<TMP_Text>().text = $"${target.Reward}";
+        resultButton.gameObject.SetActive(true);
     }
 }
