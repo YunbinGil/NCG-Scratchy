@@ -34,10 +34,15 @@ public class InspectViewManager : MonoBehaviour
 
     [Header("우측 상세 패널")]
     [SerializeField] private InspectDetailPanel detailPanel;
+    [Header("얼룩 오브젝트 생성 설정")]
+    [SerializeField] private GameObject stainOverlayPrefab; // SpriteRenderer + Scratchable이 붙은 프리팹
+    [SerializeField] private Transform stainOverlayParent; // 생성할 부모(없으면 null)
 
     public ViewState CurrentState { get; private set; } = ViewState.Table;
     public bool IsInspecting => CurrentState == ViewState.Inspect;
     private UiManager uiManager;
+    private Dish currentInspectDish;
+    private GameObject currentActiveOverlay;
 
     private void Awake()
     {
@@ -156,6 +161,21 @@ public class InspectViewManager : MonoBehaviour
             target.OpenInDetailPanel(detailPanel);
         }
 
+        if (currentActiveOverlay != null)
+        {
+            currentActiveOverlay.SetActive(false);
+            currentActiveOverlay = null;
+        }
+
+        currentInspectDish = target as Dish;
+        if (currentInspectDish != null)
+        {
+            currentActiveOverlay = GetOrCreateOverlayForDish(currentInspectDish);
+            if (currentActiveOverlay != null)
+            {
+                currentActiveOverlay.SetActive(true);
+            }
+        }
         SetState(ViewState.Inspect);
     }
 
@@ -191,5 +211,27 @@ public class InspectViewManager : MonoBehaviour
         {
             inspectOverlayRoot.SetActive(isInspect);
         }
+    }
+
+    private GameObject GetOrCreateOverlayForDish(Dish dish)
+    {
+        if (dish == null) return null;
+
+        GameObject overlay = dish.GetStainOverlay();
+        if (overlay == null && stainOverlayPrefab != null)
+        {
+            overlay = Instantiate(stainOverlayPrefab, stainOverlayParent);
+            overlay.name = $"{dish.gameObject.name}_StainOverlay";
+
+            SpriteRenderer sr = overlay.GetComponentInChildren<SpriteRenderer>();
+            if (sr != null)
+            {
+                sr.sprite = dish.GetRustedSprite();
+            }
+
+            dish.SetStainOverlay(overlay);
+        }
+
+        return overlay;
     }
 }

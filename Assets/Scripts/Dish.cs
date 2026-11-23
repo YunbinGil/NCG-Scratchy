@@ -10,6 +10,7 @@ public class Dish : MonoBehaviour, IInspectableSource
 
     [Header("UI 버튼")]
     [SerializeField] private Button DishButton;
+    private GameObject stainOverlay;
 
     public DishData Data => dishData;
     private UiManager uiManager;
@@ -34,6 +35,12 @@ public class Dish : MonoBehaviour, IInspectableSource
     {
         if (DishButton != null)
             DishButton.onClick.RemoveListener(HandleClick);
+        
+        if (stainOverlay != null)
+        {
+            Destroy(stainOverlay);
+            stainOverlay = null;
+        }
     }
 
     private void HandleClick()
@@ -55,6 +62,11 @@ public class Dish : MonoBehaviour, IInspectableSource
         if (dishData == null) return null;
         return dishData.inspectSprite != null ? dishData.inspectSprite : dishData.tableSprite;
     }
+    public Sprite GetRustedSprite()
+    {
+        if (dishData == null) return null;
+        return dishData.stainSprite != null ? dishData.stainSprite : dishData.tableSprite;
+    }
 
     public float GetInspectScale()
     {
@@ -65,5 +77,14 @@ public class Dish : MonoBehaviour, IInspectableSource
     {
         if (detailPanel == null || dishData == null) return;
         detailPanel.ShowDish(dishData);
+    }
+    public GameObject GetStainOverlay()
+    {
+        return stainOverlay;
+    }
+
+    public void SetStainOverlay(GameObject overlay)
+    {
+        stainOverlay = overlay;
     }
 }
