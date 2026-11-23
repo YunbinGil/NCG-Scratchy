@@ -149,6 +149,7 @@ GameObject:
   - component: {fileID: 3196480826813447816}
   - component: {fileID: 8314163158724215520}
   - component: {fileID: 9009334106207964980}
+  - component: {fileID: 3483031078698107248}
   m_Layer: 5
   m_Name: Button (1)
   m_TagString: Untagged
@@ -258,3 +259,17 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &3483031078698107248
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3889690227582078860}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8dba1180e0359c64e91fa99ac42a3621, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Draggable
+  tableRect: {fileID: 0}
+  objectButton: {fileID: 9009334106207964980}

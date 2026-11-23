@@ -7,9 +7,9 @@ public class Draggable : MonoBehaviour,
     IDragHandler,
     IPointerUpHandler
 {
-    [Header("드래그 가능 영역")]
-    [SerializeField]
-    public RectTransform tableRect;
+    // [Header("드래그 가능 영역")]
+    // [SerializeField]
+    private RectTransform tableRect;
 
     public Button objectButton;
 
@@ -59,6 +59,11 @@ public class Draggable : MonoBehaviour,
     {
         objectButton = GetComponent<Button>();
         objectRect = GetComponent<RectTransform>();
+    }
+
+    public void SetTableRect(RectTransform table)
+    {
+        tableRect = table;
     }
 
     public void OnPointerUp(PointerEventData eventData)

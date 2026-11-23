@@ -7,6 +7,7 @@ public class MachineItem : MonoBehaviour
     [Header("장비 정보")]
     public string equipmentName;
     public int equipmentPrice;
+    public GameObject equipmentPrefab;
 
     [Header("UI")]
     public TMP_Text nameText;
@@ -41,6 +42,8 @@ public class MachineItem : MonoBehaviour
             purchaseText.text = "Sold Out";
             purchaseButton.interactable = false;
             equipmentImage.color = Color.gray;
+
+            equipmentShop.SpawnEquipment(equipmentPrefab);
 
             Debug.Log(equipmentName + " 구매 완료!");
         }

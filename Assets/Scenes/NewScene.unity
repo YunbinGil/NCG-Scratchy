@@ -1874,6 +1874,7 @@ MonoBehaviour:
   - {fileID: 686142727840833646, guid: 5c301a526126b4345bf5bcda26a0f499, type: 3}
   equipmentContent: {fileID: 441972839}
   currentGold: 1000
+  canvasRect: {fileID: 1489247442}
 --- !u!1 &1489247438
 GameObject:
   m_ObjectHideFlags: 0
@@ -2218,7 +2219,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7676039029940577965, guid: 1ab651507c4d8ba43b35b8ed2ace9187, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 0.000030517578
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7883491018465193472, guid: 1ab651507c4d8ba43b35b8ed2ace9187, type: 3}
       propertyPath: m_Pivot.x

@@ -5,6 +5,7 @@ public class ItemSpawner : MonoBehaviour
 {
     [SerializeField] private List<GameObject> items;
     [SerializeField] private RectTransform spawnTable;
+    [SerializeField] public RectTransform dragArea;
 
     private List<RectTransform> spawnItems = new List<RectTransform>();
     private List<Vector2> targetpoints = new List<Vector2>();
@@ -16,6 +17,13 @@ public class ItemSpawner : MonoBehaviour
         GameObject spawnedObject  = Instantiate(item, transform.position, Quaternion.identity, spawnTable);
         RectTransform spawnItem = spawnedObject .GetComponent<RectTransform>();
         spawnItem.SetAsLastSibling();
+
+        Draggable draggable = spawnedObject.GetComponent<Draggable>();
+
+        if (draggable != null)
+        {
+            draggable.SetTableRect(dragArea);
+        }
 
         float minX = -spawnTable.rect.width / 3f;
         float maxX = spawnTable.rect.width / 3f;
