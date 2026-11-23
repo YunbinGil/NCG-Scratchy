@@ -37,6 +37,7 @@ public class InspectViewManager : MonoBehaviour
 
     public ViewState CurrentState { get; private set; } = ViewState.Table;
     public bool IsInspecting => CurrentState == ViewState.Inspect;
+    private UiManager uiManager;
 
     private void Awake()
     {
@@ -76,7 +77,10 @@ public class InspectViewManager : MonoBehaviour
     //
     //     CloseInspect();
     // }
-
+    private void Start()
+    {
+        uiManager = GameObject.FindWithTag("GameController").GetComponent<UiManager>();
+    }
     private void HandleDimmedBackgroundClick()
     {
         RectTransform previewArea = GetCenterPreviewRectTransform();
@@ -175,6 +179,7 @@ public class InspectViewManager : MonoBehaviour
         }
 
         SetState(ViewState.Table);
+        uiManager.SetDefaultCursor();
     }
 
     public void SetState(ViewState nextState)
