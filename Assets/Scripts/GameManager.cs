@@ -44,6 +44,7 @@ public class GameManager : MonoBehaviour
         if (Level < levelExpInfo.Length && Exp >= levelExpInfo[Level])
         {
             Level++;
+            PhoneEventController.Instance?.CheckLevelEvents(Level);
             Exp = 0;
         }
         uiManager.SetLevelText(Exp, levelExpInfo[Level]);
