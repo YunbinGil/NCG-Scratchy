@@ -5,6 +5,7 @@ using UnityEngine.UI;
 public class Draggable : MonoBehaviour,
     IPointerDownHandler,
     IDragHandler,
+    IEndDragHandler,
     IPointerUpHandler,
     IPointerEnterHandler
 {
@@ -14,6 +15,8 @@ public class Draggable : MonoBehaviour,
 
     private RectTransform objectRect;
     private Canvas parentCanvas;
+    private CanvasGroup canvasGroup;
+    private bool blocksRaycastsBeforeDrag;
     private Camera eventCamera;
     private bool isDragging;
     [SerializeField] private float highlightAngle = 10f;
@@ -30,6 +33,8 @@ public class Draggable : MonoBehaviour,
         objectButton = GetComponent<Button>();
         objectRect = GetComponent<RectTransform>();
         parentCanvas = GetComponentInParent<Canvas>();
+        if (!TryGetComponent(out canvasGroup))
+            canvasGroup = gameObject.AddComponent<CanvasGroup>();
         defaultRotation = objectRect.localRotation;
         SetDragging(false);
     }
@@ -52,6 +57,16 @@ public class Draggable : MonoBehaviour,
 
     private void SetDragging(bool dragging)
     {
+        if (dragging && !isDragging)
+        {
+            blocksRaycastsBeforeDrag = canvasGroup.blocksRaycasts;
+            canvasGroup.blocksRaycasts = false;
+        }
+        else if (!dragging && isDragging)
+        {
+            canvasGroup.blocksRaycasts = blocksRaycastsBeforeDrag;
+        }
+
         isDragging = dragging;
         if (dragSprite != null)
             dragSprite.SetActive(dragging);
@@ -120,6 +135,10 @@ public class Draggable : MonoBehaviour,
         {
             itemSource?.HandleClick();
         }
+    }
+
+    public void OnEndDrag(PointerEventData eventData)
+    {
         SetDragging(false);
     }
 }

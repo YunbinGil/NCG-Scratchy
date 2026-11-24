@@ -10,6 +10,8 @@ public class ItemSpawner : MonoBehaviour
     [SerializeField] private RectTransform spawnTable;
     [SerializeField] public RectTransform dragArea;
 
+    public RectTransform SpawnTable => spawnTable;
+
     [Header("도감 해금 아이템")]
     [SerializeField] private GameObject unlockPrefab;
     [SerializeField] private Texture2D lightTexture;
