@@ -272,7 +272,8 @@ public class InspectViewManager : MonoBehaviour
             centerPreviewRenderer.sprite = resultSprite;
             centerPreviewRenderer.enabled = resultSprite != null;
         }
-        ShowResultButton(dish);
+        PhoneEventController.Instance?.TriggerBrokenOrLossCall();
+        ShowResultButton(dish);        
     }
     private void ShowResultButton(IInspectableSource target)
     {
