@@ -5,17 +5,28 @@ public class ItemSpawner : MonoBehaviour
 {
     [SerializeField] private List<GameObject> items;
     [SerializeField] private RectTransform spawnTable;
+    [SerializeField] public RectTransform dragArea;
 
     private List<RectTransform> spawnItems = new List<RectTransform>();
     private List<Vector2> targetpoints = new List<Vector2>();
 
     private float objectSpeed = 600f;
 
-    private void CreateItem(GameObject item)
+    public bool TrySpawnItem(GameObject item)
     {
+        if (spawnTable == null || item == null || !item.TryGetComponent<RectTransform>(out _))
+            return false;
+
         GameObject spawnedObject  = Instantiate(item, transform.position, Quaternion.identity, spawnTable);
         RectTransform spawnItem = spawnedObject .GetComponent<RectTransform>();
         spawnItem.SetAsLastSibling();
+
+        Draggable draggable = spawnedObject.GetComponent<Draggable>();
+
+        if (draggable != null)
+        {
+            draggable.SetTableRect(dragArea);
+        }
 
         float minX = -spawnTable.rect.width / 3f;
         float maxX = spawnTable.rect.width / 3f;
@@ -30,16 +41,17 @@ public class ItemSpawner : MonoBehaviour
         // 생성한 아이템과 목표 좌표 저장
         spawnItems.Add(spawnItem);
         targetpoints.Add(targetpoint);
+        return true;
     }
 
     private void Update()
     {
         if (Input.GetKeyDown(KeyCode.Alpha1))
         {
-            if (items.Count > 0)
+            if (items != null && items.Count > 0)
             {
                 int randomIndex = Random.Range(0, items.Count);
-                CreateItem(items[randomIndex]);
+                TrySpawnItem(items[randomIndex]);
             }
         }
 

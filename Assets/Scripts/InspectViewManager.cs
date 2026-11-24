@@ -14,6 +14,7 @@ public interface IInspectableSource
     float GetInspectScale();
     void OpenInDetailPanel(InspectDetailPanel detailPanel);
     void DestoryItem();
+    void HandleClick();
     public int Reward { get; }
     public bool IsCleaned { get; }
 }

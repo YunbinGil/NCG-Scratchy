@@ -19,25 +19,7 @@ public class Lottery : MonoBehaviour, IInspectableSource
     public bool IsCleaned { get; } = false;
     //TODO: 다 긁어서 결과 나오면 true로 변경
 
-    private void Awake()
-    {
-        if (lotteryButton == null)
-            lotteryButton = GetComponent<Button>();
-
-        if (lotteryButton != null)
-        {
-            lotteryButton.onClick.RemoveListener(HandleClick);
-            lotteryButton.onClick.AddListener(HandleClick);
-        }
-    }
-
-    private void OnDestroy()
-    {
-        if (lotteryButton != null)
-            lotteryButton.onClick.RemoveListener(HandleClick);
-    }
-
-    private void HandleClick()
+    public void HandleClick()
     {
         if (InspectViewManager.Instance != null && InspectViewManager.Instance.IsInspecting)
             return;

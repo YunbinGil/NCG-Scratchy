@@ -19,17 +19,6 @@ public class Dish : MonoBehaviour, IInspectableSource
 
 
 
-    private void Awake()
-    {
-        if (DishButton == null)
-            DishButton = GetComponent<Button>();
-
-        if (DishButton != null)
-        {
-            DishButton.onClick.RemoveListener(HandleClick);
-            DishButton.onClick.AddListener(HandleClick);
-        }
-    }
     private void Start()
     {
         uiManager = GameObject.FindWithTag("GameController").GetComponent<UiManager>();
@@ -37,9 +26,6 @@ public class Dish : MonoBehaviour, IInspectableSource
 
     private void OnDestroy()
     {
-        if (DishButton != null)
-            DishButton.onClick.RemoveListener(HandleClick);
-
         if (stainOverlay != null)
         {
             Destroy(stainOverlay);
@@ -47,7 +33,7 @@ public class Dish : MonoBehaviour, IInspectableSource
         }
     }
 
-    private void HandleClick()
+    public void HandleClick()
     {
         if (InspectViewManager.Instance != null && InspectViewManager.Instance.IsInspecting)
             return;

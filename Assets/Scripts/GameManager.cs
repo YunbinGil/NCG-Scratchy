@@ -6,6 +6,8 @@ public class GameManager : MonoBehaviour
     {
         3, 10, 50, 100, 1000, 2000, 10000, 50000
     };
+    [SerializeField, Min(0)] private int startingMoney;
+
     private UiManager uiManager;
     public int Level { get; private set; }
     public int Exp { get; private set; }
@@ -17,8 +19,9 @@ public class GameManager : MonoBehaviour
     }
     private void Start()
     {
-        SetMoney(0);
+        SetMoney(startingMoney);
         Exp = 0;
+        Level = 0;
         AddExp(0);
     }
 
