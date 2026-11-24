@@ -118,7 +118,7 @@ public class Draggable : MonoBehaviour,
     {
         if (!isDragging)
         {
-            itemSource.HandleClick();
+            itemSource?.HandleClick();
         }
         SetDragging(false);
     }

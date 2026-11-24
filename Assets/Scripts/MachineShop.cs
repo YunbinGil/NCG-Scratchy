@@ -9,6 +9,7 @@ public class MachineShop : MonoBehaviour
 
     [Header("스크롤뷰 Content")]
     public Transform equipmentContent;
+    public RectTransform canvasRect;
 
     [Header("임시 골드")]
     public int currentGold = 1000;
@@ -44,8 +45,6 @@ public class MachineShop : MonoBehaviour
         Debug.Log("남은 골드: " + currentGold);
         return true;
     }
-
-    public RectTransform canvasRect;
 
     public void SpawnEquipment(GameObject equipmentPrefab)
     {
