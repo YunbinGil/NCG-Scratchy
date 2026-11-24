@@ -5,14 +5,14 @@ using UnityEngine;
 using UnityEngine.UI;
 
 [Serializable]
-public class DishSymbolRow
+public class TrophySymbolRow
 {
     public GameObject rowRoot;
     public Image iconImage;
     public TMP_Text probText;
 }
 
-public class DishDetailView : MonoBehaviour
+public class TrophyDetailView : MonoBehaviour
 {
     [Header("제목 및 설명")]
     [SerializeField] private TMP_Text titleText;
@@ -20,9 +20,9 @@ public class DishDetailView : MonoBehaviour
 
     [Header("심볼 확률 영역")]
     [SerializeField] private TMP_Text symbolHeaderText;
-    [SerializeField] private List<DishSymbolRow> symbolRows = new List<DishSymbolRow>();
+    [SerializeField] private List<TrophySymbolRow> symbolRows = new List<TrophySymbolRow>();
 
-    public void Bind(DishData data)
+    public void Bind(TrophyData data)
     {
         if (data == null) return;
 
@@ -72,7 +72,7 @@ public class DishDetailView : MonoBehaviour
     {
         if (index < 0 || index >= symbolRows.Count) return;
 
-        DishSymbolRow row = symbolRows[index];
+        TrophySymbolRow row = symbolRows[index];
         if (row == null) return;
 
         if (row.rowRoot != null)
@@ -88,7 +88,7 @@ public class DishDetailView : MonoBehaviour
             row.probText.text = lineText;
     }
 
-    private void ClearRow(DishSymbolRow row)
+    private void ClearRow(TrophySymbolRow row)
     {
         if (row == null) return;
 

@@ -2,7 +2,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class TicketItem : MonoBehaviour
+public class CatalogSlot : MonoBehaviour
 {
     [SerializeField] private string ticketName;
     [SerializeField, Min(0)] private int price;
@@ -12,9 +12,9 @@ public class TicketItem : MonoBehaviour
     [SerializeField] private TMP_Text priceText;
     [SerializeField] private Button purchaseButton;
 
-    private TicketShop shop;
+    private CatalogShop shop;
 
-    public void Initialize(TicketShop ticketShop)
+    public void Initialize(CatalogShop ticketShop)
     {
         shop = ticketShop;
 

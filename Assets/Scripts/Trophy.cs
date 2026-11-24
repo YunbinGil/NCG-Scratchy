@@ -3,16 +3,16 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 [RequireComponent(typeof(Button))]
-public class Dish : MonoBehaviour, IInspectableSource
+public class Trophy : MonoBehaviour, IInspectableSource
 {
     [Header("데이터 (ScriptableObject)")]
-    [SerializeField] private DishData dishData;
+    [SerializeField] private TrophyData dishData;
 
     [Header("UI 버튼")]
     [SerializeField] private Button DishButton;
     private GameObject stainOverlay;
 
-    public DishData Data => dishData;
+    public TrophyData Data => dishData;
     private UiManager uiManager;
     public bool IsCleaned { get; private set; }
     public int Reward { get; private set; }

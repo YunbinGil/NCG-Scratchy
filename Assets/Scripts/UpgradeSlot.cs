@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
-public class ListUpgrade : MonoBehaviour
+public class UpgradeSlot : MonoBehaviour
 {
     [Header("Upgrade Info")]
     [SerializeField] private UpgradeType upgradeType;

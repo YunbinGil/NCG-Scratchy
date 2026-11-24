@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 [RequireComponent(typeof(Button))]
-public class TicketCatalogUnlock : MonoBehaviour
+public class UnlockLotteryCatalog : MonoBehaviour
 {
     private Button button;
     private Texture2D lightTexture;
