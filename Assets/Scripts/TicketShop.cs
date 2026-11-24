@@ -32,6 +32,6 @@ public class TicketShop : MonoBehaviour
         if (!itemSpawner.TrySpawnItem(ticketPrefab) || !gameManager.TrySpendMoney(price))
             return false;
 
-        return true;
+        return false;
     }
 }

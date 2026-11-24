@@ -22,9 +22,11 @@ public class Draggable : MonoBehaviour,
     private bool isTilted;
     private Vector2 pressPosition;
     private float dragThreshold = 10f;
+    private IInspectableSource itemSource;
 
     private void Awake()
     {
+        itemSource = GetComponent<IInspectableSource>();
         objectButton = GetComponent<Button>();
         objectRect = GetComponent<RectTransform>();
         parentCanvas = GetComponentInParent<Canvas>();
@@ -116,7 +118,7 @@ public class Draggable : MonoBehaviour,
     {
         if (!isDragging)
         {
-            Debug.Log("버튼 클릭");
+            itemSource.HandleClick();
         }
         SetDragging(false);
     }
