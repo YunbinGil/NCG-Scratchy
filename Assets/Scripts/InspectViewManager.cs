@@ -1,3 +1,4 @@
+using NUnit.Framework;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -272,7 +273,9 @@ public class InspectViewManager : MonoBehaviour
             centerPreviewRenderer.sprite = resultSprite;
             centerPreviewRenderer.enabled = resultSprite != null;
         }
-        ShowResultButton(dish);
+        if(dish.Reward<0) 
+            PhoneEventController.Instance?.TriggerBrokenOrLossCall();
+        ShowResultButton(dish);        
     }
     private void ShowResultButton(IInspectableSource target)
     {

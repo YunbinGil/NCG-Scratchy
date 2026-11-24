@@ -64,12 +64,15 @@ public class UiManager : MonoBehaviour
     {
         SetCursorSprite(scrubCoinSprite);
     }
-    public void SetMoneyText(int amount){
+    public void SetMoneyText(int amount)
+    {
         if (moneyText != null)
             moneyText.text = amount.ToString();
     }
-    public void SetLevelText(int exp, int goalExp){
+    public void SetLevelText(int exp, int goalExp)
+    {
         levelText.text = $"{exp} / {goalExp}";
-        levelImage.fillAmount = (float)exp/goalExp;
+        levelImage.fillAmount = (float)exp / goalExp;
+        Debug.Log($"exp {exp}, goalExp {goalExp} ");
     }
 }
