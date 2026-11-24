@@ -11,13 +11,6 @@ public class PhoneCallTrigger : MonoBehaviour
     [SerializeField] private float ringShakeAngle = 8f;
     [SerializeField] private float ringShakeSpeed = 28f;
 
-    [Header("테스트용 기본 대사")]
-    [TextArea]
-    [SerializeField] private string[] defaultCallLines =
-    {
-        "컨텐츠가 추가되었습니다.",
-        "테이블에서 확인해 보세요!"
-    };
 
     private Button Button;
     private string[] QueuedLines;
@@ -46,7 +39,7 @@ public class PhoneCallTrigger : MonoBehaviour
     // 새 컨텐츠가 추가될 때마다 호출
     public void RingPhone(string[] lines = null)
     {
-        QueuedLines = (lines != null && lines.Length > 0) ? lines : defaultCallLines;
+        QueuedLines = (lines != null && lines.Length > 0) ? lines : null;
         IsRinging = true;
         SetRingingVisual(true);
 
@@ -74,7 +67,7 @@ public class PhoneCallTrigger : MonoBehaviour
     {
         if (!IsRinging) return;
 
-        string[] linesToPlay = (QueuedLines != null && QueuedLines.Length > 0) ? QueuedLines : defaultCallLines;
+        string[] linesToPlay = (QueuedLines != null && QueuedLines.Length > 0) ? QueuedLines : null;
 
         StopRinging();
 

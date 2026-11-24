@@ -13,14 +13,14 @@ public class DialogueManager : MonoBehaviour, IPointerClickHandler
     [SerializeField] private TextMeshProUGUI dialogueText;
     [SerializeField] private float typingSpeed = 0.03f;
 
-    private string[] _lines;
-    private int _index;
-    private Coroutine _typingCoroutine;
-    private bool _isActive;
-    private float _ignoreInputUntil;
-    private Action _onDialogComplete;
+    private string[] lines;
+    private int index;
+    private Coroutine typingCoroutine;
+    private bool isActive;
+    private float ignoreInputUntil;
+    private Action onDialogComplete;
 
-    public bool IsActive => _isActive;
+    public bool IsActive => isActive;
 
     private void Awake()
     {
@@ -37,8 +37,8 @@ public class DialogueManager : MonoBehaviour, IPointerClickHandler
 
     private void Update()
     {
-        if (!_isActive) return;
-        if (Time.unscaledTime < _ignoreInputUntil) return;
+        if (!isActive) return;
+        if (Time.unscaledTime < ignoreInputUntil) return;
 
         if (Input.GetKeyDown(KeyCode.Space))
         {
@@ -49,19 +49,19 @@ public class DialogueManager : MonoBehaviour, IPointerClickHandler
     // UI 패널 영역 클릭 시 한 줄씩 진행 (EventSystem/Raycast Target 필요)
     public void OnPointerClick(PointerEventData eventData)
     {
-        if (!_isActive) return;
-        if (Time.unscaledTime < _ignoreInputUntil) return;
+        if (!isActive) return;
+        if (Time.unscaledTime < ignoreInputUntil) return;
 
         AdvanceOrCompleteLine();
     }
 
     private void AdvanceOrCompleteLine()
     {
-        if (_typingCoroutine != null)
+        if (typingCoroutine != null)
         {
-            StopCoroutine(_typingCoroutine);
-            _typingCoroutine = null;
-            dialogueText.text = _lines[_index];
+            StopCoroutine(typingCoroutine);
+            typingCoroutine = null;
+            dialogueText.text = lines[index];
         }
         else
         {
@@ -73,11 +73,11 @@ public class DialogueManager : MonoBehaviour, IPointerClickHandler
     {
         if (texts == null || texts.Length == 0) return;
 
-        _lines = texts;
-        _index = 0;
-        _onDialogComplete = onComplete;
-        _isActive = true;
-        _ignoreInputUntil = Time.unscaledTime + 1f; // 전화기 클릭 직후 첫 줄 스킵 방지
+        lines = texts;
+        index = 0;
+        onDialogComplete = onComplete;
+        isActive = true;
+        ignoreInputUntil = Time.unscaledTime + 1f; // 전화기 클릭 직후 첫 줄 스킵 방지
 
         if (dialoguePanel != null)
             dialoguePanel.SetActive(true);
@@ -87,11 +87,11 @@ public class DialogueManager : MonoBehaviour, IPointerClickHandler
 
     private void ShowCurrentLine()
     {
-        if (_typingCoroutine != null)
+        if (typingCoroutine != null)
         {
-            StopCoroutine(_typingCoroutine);
+            StopCoroutine(typingCoroutine);
         }
-        _typingCoroutine = StartCoroutine(TypeLine(_lines[_index]));
+        typingCoroutine = StartCoroutine(TypeLine(lines[index]));
     }
 
     private IEnumerator TypeLine(string line)
@@ -102,13 +102,13 @@ public class DialogueManager : MonoBehaviour, IPointerClickHandler
             dialogueText.text += c;
             yield return new WaitForSeconds(typingSpeed);
         }
-        _typingCoroutine = null;
+        typingCoroutine = null;
     }
 
     private void NextLine()
     {
-        _index++;
-        if (_index < _lines.Length)
+        index++;
+        if (index < lines.Length)
         {
             ShowCurrentLine();
         }
@@ -120,9 +120,9 @@ public class DialogueManager : MonoBehaviour, IPointerClickHandler
 
     private void EndDialog()
     {
-        _isActive = false;
-        _lines = null;
-        _index = 0;
+        isActive = false;
+        lines = null;
+        index = 0;
 
         if (dialogueText != null)
             dialogueText.text = string.Empty;
@@ -130,8 +130,8 @@ public class DialogueManager : MonoBehaviour, IPointerClickHandler
         if (dialoguePanel != null)
             dialoguePanel.SetActive(false);
 
-        Action callback = _onDialogComplete;
-        _onDialogComplete = null;
+        Action callback = onDialogComplete;
+        onDialogComplete = null;
         callback?.Invoke();
     }
 }

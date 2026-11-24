@@ -55,7 +55,7 @@ public class PhoneEventController : MonoBehaviour
             {
                 // "본업이 지겹다고 느껴지시나요?"
                 // "그렇다면 딱 맞는 게 있는데.."
-                // "바로 스크래치 티켓이랍니다!"
+                // "바로 스크래치 복권이랍니다!"
 
                 "Do you feel like your main job is boring?",
                 "Then there's one that fits perfectly...",
@@ -104,6 +104,7 @@ public class PhoneEventController : MonoBehaviour
             triggerOnlyOnce = true,
             lines = new[]
             {
+                // "이 많은 티켓을 직접 긁느라 지치셨나요?"
                 "Wow, you've accumulated a lot of tickets! Don't you feel a bit tired from scratching them all by hand?"
             }
         },
