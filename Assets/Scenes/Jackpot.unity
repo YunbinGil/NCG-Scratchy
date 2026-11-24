@@ -1890,7 +1890,7 @@ PrefabInstance:
     - target: {fileID: 2471224355645944803, guid: b9e0f672665130549be9f9a5cac0ffb3, type: 3}
       propertyPath: 'callEntries.Array.data[0].lines.Array.data[0]'
       value: "\uB9E4\uBC88 \uB538 \uC218\uB294 \uC5C6\uB294 \uBC95\uC774\uC8E0. \uAC00\uB054\uC740
-        \uC190\uD574\uB97C \uBCFC \uC218\uB3C4 \uC788\uC744 \uAC70\uC608\uC694."
+        \uC190\uD574\uB97C \uBCFC \uC218\uB3C4 \uC788\uC744 \uAC70\uC608\uC694. "
       objectReference: {fileID: 0}
     - target: {fileID: 2471224355645944803, guid: b9e0f672665130549be9f9a5cac0ffb3, type: 3}
       propertyPath: 'callEntries.Array.data[0].lines.Array.data[1]'
@@ -2429,7 +2429,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7994922925460622214, guid: 30e7eb5b629f65642a207e4b9a476236, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 0.0009765625
+      value: 0.000061035156
       objectReference: {fileID: 0}
     - target: {fileID: 8026055554778373793, guid: 30e7eb5b629f65642a207e4b9a476236, type: 3}
       propertyPath: m_AnchorMax.y
