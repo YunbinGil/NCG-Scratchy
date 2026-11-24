@@ -119,6 +119,19 @@ public class TableLotteryTicket : MonoBehaviour, IBeginDragHandler, IDragHandler
     public Sprite GetInspectSprite() => inspectSprite;
     public float GetInspectScale() => inspectScale;
 
+    public void DestoryItem()
+    {
+        Destroy(gameObject);
+    }
+
+    public void HandleClick()
+    {
+        // 클릭 시 필요한 동작 (필요 없으면 비워두어도 컴파일은 됩니다)
+    }
+
+    public int Reward => 0; // 실제 보상 값 필드가 있으면 그 값을 반환
+
+    public bool IsCleaned => false; // 복권에 청소 상태가 없다면 적절한 bool 값 반환
     public void OpenInDetailPanel(InspectDetailPanel detailPanel)
     {
         // detailPanel 쪽에 rollResult(각 칸 아이콘/확률/매칭 보상/총 당첨금)를 전달해 표시하도록 연결
