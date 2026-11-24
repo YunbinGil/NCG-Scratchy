@@ -24,6 +24,7 @@ public class DishData : ScriptableObject
 
     [Header("세정 및 확대뷰 보조 수치")]
     [Min(0.1f)] public float baseCleanRequirement = 100f;
+    //TODO: Scratchable.cs에서 이 필드 사용하는걸로 변경
     [Range(0.1f, 1f)] public float cleanCompleteRatio = 0.8f; // 닦기 완료 판정 비율
     [Min(0.5f)] public float inspectScale = 1.5f;
 }

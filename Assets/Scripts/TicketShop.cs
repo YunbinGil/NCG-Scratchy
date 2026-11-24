@@ -29,10 +29,9 @@ public class TicketShop : MonoBehaviour
 
     public bool TryPurchase(GameObject ticketPrefab, int price)
     {
-        if (itemSpawner.TrySpawnItem(ticketPrefab))
-            return true;
+        if (!itemSpawner.TrySpawnItem(ticketPrefab) || !gameManager.TrySpendMoney(price))
+            return false;
 
-        gameManager.RefundMoney(price);
-        return false;
+        return true;
     }
 }

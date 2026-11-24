@@ -10,9 +10,14 @@ public class Dish : MonoBehaviour, IInspectableSource
 
     [Header("UI 버튼")]
     [SerializeField] private Button DishButton;
+    private GameObject stainOverlay;
 
     public DishData Data => dishData;
     private UiManager uiManager;
+    public bool IsCleaned { get; private set; }
+    public int Reward { get; private set; }
+
+
 
     private void Awake()
     {
@@ -34,6 +39,12 @@ public class Dish : MonoBehaviour, IInspectableSource
     {
         if (DishButton != null)
             DishButton.onClick.RemoveListener(HandleClick);
+
+        if (stainOverlay != null)
+        {
+            Destroy(stainOverlay);
+            stainOverlay = null;
+        }
     }
 
     private void HandleClick()
@@ -43,10 +54,12 @@ public class Dish : MonoBehaviour, IInspectableSource
 
         if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
         {
-            
+
         }
 
         InspectViewManager.Instance?.OpenInspect(this);
+        if(IsCleaned)
+            InspectViewManager.Instance?.OnDishCleaned(this);
         uiManager.SetScrubberCursor();
     }
 
@@ -55,7 +68,16 @@ public class Dish : MonoBehaviour, IInspectableSource
         if (dishData == null) return null;
         return dishData.inspectSprite != null ? dishData.inspectSprite : dishData.tableSprite;
     }
-
+    public Sprite GetRustedSprite()
+    {
+        if (dishData == null) return null;
+        return dishData.stainSprite != null ? dishData.stainSprite : dishData.tableSprite;
+    }
+    public Sprite GetBrokenSprite()
+    {
+        if (dishData == null) return null;
+        return dishData.brokenSprite != null ? dishData.brokenSprite : dishData.tableSprite;
+    }
     public float GetInspectScale()
     {
         return 1f;
@@ -65,5 +87,29 @@ public class Dish : MonoBehaviour, IInspectableSource
     {
         if (detailPanel == null || dishData == null) return;
         detailPanel.ShowDish(dishData);
+    }
+    public GameObject GetStainOverlay()
+    {
+        return stainOverlay;
+    }
+
+    public void SetStainOverlay(GameObject overlay)
+    {
+        stainOverlay = overlay;
+        stainOverlay.GetComponent<Scratchable>().Dish = this;
+    }
+
+    public void CompleteScratch()
+    {
+        if (dishData == null) return;
+        IsCleaned = true;
+        Reward = Random.value < dishData.breakChance
+            ? -Mathf.Abs(dishData.breakPenalty)
+            : dishData.sellPriceAfterClean;
+    }
+
+    public void DestoryItem()
+    {
+        Destroy(gameObject);
     }
 }

@@ -3,7 +3,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 public class Draggable : MonoBehaviour,
-    IPointerDownHandler, 
+    IPointerDownHandler,
     IDragHandler,
     IPointerUpHandler,
     IPointerEnterHandler
@@ -13,6 +13,8 @@ public class Draggable : MonoBehaviour,
     public Button objectButton;
 
     private RectTransform objectRect;
+    private Canvas parentCanvas;
+    private Camera eventCamera;
     private bool isDragging;
     [SerializeField] private float highlightAngle = 10f;
     [SerializeField] private GameObject dragSprite;
@@ -20,6 +22,20 @@ public class Draggable : MonoBehaviour,
     private bool isTilted;
     private Vector2 pressPosition;
     private float dragThreshold = 10f;
+
+    private void Awake()
+    {
+        objectButton = GetComponent<Button>();
+        objectRect = GetComponent<RectTransform>();
+        parentCanvas = GetComponentInParent<Canvas>();
+        defaultRotation = objectRect.localRotation;
+        SetDragging(false);
+    }
+
+    public void SetTableRect(RectTransform table)
+    {
+        tableRect = table;
+    }
 
     public void OnPointerEnter(PointerEventData eventData)
     {
@@ -47,6 +63,12 @@ public class Draggable : MonoBehaviour,
     public void OnPointerDown(PointerEventData eventData)
     {
         pressPosition = eventData.position;
+        eventCamera = eventData.pressEventCamera != null
+            ? eventData.pressEventCamera
+            : (parentCanvas != null && parentCanvas.renderMode != RenderMode.ScreenSpaceOverlay
+                ? parentCanvas.worldCamera
+                : null);
+
         SetDragging(false);
         transform.SetAsLastSibling();
     }
@@ -58,45 +80,36 @@ public class Draggable : MonoBehaviour,
             return;
 
         float distance = Vector2.Distance(pressPosition, eventData.position);
-
         if (!isDragging && distance >= dragThreshold)
         {
             SetDragging(true);
         }
 
-        if (isDragging)
-        {
-            Vector2 boundsCenter = tableRect != null ? tableRect.anchoredPosition : dragBounds.rect.center - ((Vector2)objectRect.localPosition - objectRect.anchoredPosition);
+        if (!isDragging)
+            return;
 
-            // 오브젝트 이동 범위 설정
-            float minX = boundsCenter.x - dragBounds.rect.width / 2f + objectRect.rect.width / 2f;
-            float maxX = boundsCenter.x + dragBounds.rect.width / 2f - objectRect.rect.width / 2f;
-            float minY = boundsCenter.y - dragBounds.rect.height / 2f + objectRect.rect.height / 2f;
-            float maxY = boundsCenter.y + dragBounds.rect.height / 2f - objectRect.rect.height / 2f;
+        Camera cam = eventData.pressEventCamera != null ? eventData.pressEventCamera : eventCamera;
 
-            // 이동할 위치 계산
-            Vector2 nextPosition = objectRect.anchoredPosition + eventData.delta / objectRect.lossyScale.x;
+        // 포인터 위치를 dragBounds 로컬 좌표로 변환
+        if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(dragBounds, eventData.position, cam, out Vector2 pointerLocal))
+            return;
 
-            // 테이블 범위로 제한
-            nextPosition.x = Mathf.Clamp(nextPosition.x, minX, maxX);
-            nextPosition.y = Mathf.Clamp(nextPosition.y, minY, maxY);
+        // dragBounds 내부에서 오브젝트 중심이 갈 수 있는 로컬 범위 계산
+        float halfW = Mathf.Max(0f, (dragBounds.rect.width - objectRect.rect.width) * 0.5f);
+        float halfH = Mathf.Max(0f, (dragBounds.rect.height - objectRect.rect.height) * 0.5f);
 
-            // 최종 위치 적용
-            objectRect.anchoredPosition = nextPosition;
-        }
-    }
+        float minX = dragBounds.rect.center.x - halfW;
+        float maxX = dragBounds.rect.center.x + halfW;
+        float minY = dragBounds.rect.center.y - halfH;
+        float maxY = dragBounds.rect.center.y + halfH;
 
-    private void Awake()
-    {
-        objectButton = GetComponent<Button>();
-        objectRect = GetComponent<RectTransform>();
-        defaultRotation = objectRect.localRotation;
-        SetDragging(false);
-    }
+        Vector2 clampedLocal = new Vector2(
+            Mathf.Clamp(pointerLocal.x, minX, maxX),
+            Mathf.Clamp(pointerLocal.y, minY, maxY)
+        );
 
-    public void SetTableRect(RectTransform table)
-    {
-        tableRect = table;
+        // dragBounds 로컬 좌표를 월드 좌표로 변환해 적용
+        objectRect.position = dragBounds.TransformPoint(clampedLocal);
     }
 
     public void OnPointerUp(PointerEventData eventData)
