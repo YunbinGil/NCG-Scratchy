@@ -23,7 +23,7 @@ MonoBehaviour:
   buyPrice: 1
   sellPriceAfterClean: 2
   breakPenalty: 2
-  breakChance: 0
+  breakChance: 0.503
   baseCleanRequirement: 100
   cleanCompleteRatio: 0.8
   inspectScale: 1.5
