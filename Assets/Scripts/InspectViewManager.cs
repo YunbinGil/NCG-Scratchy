@@ -27,9 +27,6 @@ public class InspectViewManager : MonoBehaviour
     [Header("Inspect 상태에서만 켜지는 루트")]
     [SerializeField] private GameObject inspectOverlayRoot;
 
-    // [주석 처리됨] 기존 Background 버튼 및 영역 제한 필드
-    // [SerializeField] private Button dimmedBackgroundButton;
-    // [SerializeField] private RectTransform tableArea;
 
     [Header("배경 및 중앙 확대 이미지")]
     [SerializeField] private Button closeDimmedBackgroundButton;
@@ -61,13 +58,6 @@ public class InspectViewManager : MonoBehaviour
         }
         Instance = this;
 
-        // [주석 처리됨] 기존 Background 버튼 리스너 연결
-        // if (dimmedBackgroundButton != null)
-        // {
-        //     dimmedBackgroundButton.onClick.RemoveListener(HandleBackgroundClick);
-        //     dimmedBackgroundButton.onClick.AddListener(HandleBackgroundClick);
-        // }
-
         if (closeDimmedBackgroundButton != null)
         {
             closeDimmedBackgroundButton.onClick.RemoveListener(HandleDimmedBackgroundClick);
@@ -76,19 +66,6 @@ public class InspectViewManager : MonoBehaviour
         SetState(ViewState.Table);
     }
 
-    // [주석 처리됨] 기존 Background 버튼 클릭 핸들러
-    // private void HandleBackgroundClick()
-    // {
-    //     Vector2 screenPos = Input.mousePosition;
-    //     Camera eventCam = GetEventCamera();
-    //
-    //     if (tableArea != null && RectTransformUtility.RectangleContainsScreenPoint(tableArea, screenPos, eventCam))
-    //     {
-    //         return;
-    //     }
-    //
-    //     CloseInspect();
-    // }
     private void Start()
     {
         uiManager = GameObject.FindWithTag("GameController").GetComponent<UiManager>();
