@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
-public class GameEscapePanelController : MonoBehaviour
+public class PausePanelController : MonoBehaviour
 {
     [Header("세팅 패널 & 버튼")]
     [SerializeField] private GameObject settingPanel;

@@ -49,7 +49,7 @@ public class InspectViewManager : MonoBehaviour
     public bool IsInspecting => CurrentState == ViewState.Inspect;
     private UiManager uiManager;
     private GameManager gameManager;
-    private Dish currentInspectDish;
+    private Trophy currentInspectDish;
     private GameObject currentActiveOverlay;
 
     private void Awake()
@@ -175,7 +175,7 @@ public class InspectViewManager : MonoBehaviour
             currentActiveOverlay = null;
         }
 
-        currentInspectDish = target as Dish;
+        currentInspectDish = target as Trophy;
         if (currentInspectDish != null)
         {
             currentActiveOverlay = GetOrCreateOverlayForDish(currentInspectDish);
@@ -235,7 +235,7 @@ public class InspectViewManager : MonoBehaviour
         }
     }
 
-    private GameObject GetOrCreateOverlayForDish(Dish dish)
+    private GameObject GetOrCreateOverlayForDish(Trophy dish)
     {
         if (dish == null) return null;
 
@@ -258,7 +258,7 @@ public class InspectViewManager : MonoBehaviour
         return overlay;
     }
 
-    public void OnDishCleaned(Dish dish)
+    public void OnDishCleaned(Trophy dish)
     {
         if (dish == null) return;
 

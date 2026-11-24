@@ -31,7 +31,7 @@ public class Scratchable : MonoBehaviour
     private int brushMaskSize = 64;
     
     private InspectViewManager inspectViewManager;
-    public Dish Dish {get;set;}
+    public Trophy Dish {get;set;}
 
     void Start()
     {

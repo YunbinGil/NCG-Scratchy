@@ -102,7 +102,7 @@ public class ItemSpawner : MonoBehaviour
     public bool TrySpawnUnlockItem(System.Action onComplete)
     {
         if (unlockPrefab == null ||
-            !unlockPrefab.TryGetComponent<TicketCatalogUnlock>(out _))
+            !unlockPrefab.TryGetComponent<UnlockLotteryCatalog>(out _))
         {
             Debug.LogWarning("해금 프리팹을 확인하세요.", this);
             return false;
@@ -115,8 +115,8 @@ public class ItemSpawner : MonoBehaviour
             return false;
         }
 
-        TicketCatalogUnlock unlock =
-            spawnedObject.GetComponent<TicketCatalogUnlock>();
+        UnlockLotteryCatalog unlock =
+            spawnedObject.GetComponent<UnlockLotteryCatalog>();
 
         // 해금 이펙트 및 완료 콜백 전달
         unlock.Initialize(lightTexture, onComplete);

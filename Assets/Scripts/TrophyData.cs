@@ -1,7 +1,7 @@
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "DishData_New", menuName = "Scritchy Scratchy/Dish Data")]
-public class DishData : ScriptableObject
+[CreateAssetMenu(fileName = "TrophyData_New", menuName = "Scritchy Scratchy/Trophy Data")]
+public class TrophyData : ScriptableObject
 {
     [Header("기본 정보")]
     public int id = 1;

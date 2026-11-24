@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class TicketShop : MonoBehaviour
+public class CatalogShop : MonoBehaviour
 {
     [Header("도감 목록")]
     [SerializeField]
@@ -27,7 +27,7 @@ public class TicketShop : MonoBehaviour
             gameManager == null ||
             itemSpawner == null)
         {
-            Debug.LogWarning("TicketShop 참조를 확인하세요.", this);
+            Debug.LogWarning("LotteryShop 참조를 확인하세요.", this);
             return;
         }
 
@@ -71,7 +71,7 @@ public class TicketShop : MonoBehaviour
     private void SpawnUnlockItem()
     {
         if (unlockPrefab == null ||
-            !unlockPrefab.TryGetComponent<TicketCatalogUnlock>(out _))
+            !unlockPrefab.TryGetComponent<UnlockLotteryCatalog>(out _))
         {
             Debug.LogWarning("해금 프리팹을 확인하세요.", this);
             return;
@@ -88,8 +88,8 @@ public class TicketShop : MonoBehaviour
             return;
         }
 
-        TicketCatalogUnlock unlock =
-            spawnedObject.GetComponent<TicketCatalogUnlock>();
+        UnlockLotteryCatalog unlock =
+            spawnedObject.GetComponent<UnlockLotteryCatalog>();
 
         unlock.Initialize(lightTexture, CompleteUnlock);
     }
@@ -119,8 +119,8 @@ public class TicketShop : MonoBehaviour
             ticketContent
         );
 
-        foreach (TicketItem item in
-            catalog.GetComponentsInChildren<TicketItem>(true))
+        foreach (CatalogSlot item in
+            catalog.GetComponentsInChildren<CatalogSlot>(true))
         {
             item.Initialize(this);
 

@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
-public class MachineItem : MonoBehaviour
+public class MachineSlot : MonoBehaviour
 {
     [Header("장비 정보")]
     public string equipmentName;
