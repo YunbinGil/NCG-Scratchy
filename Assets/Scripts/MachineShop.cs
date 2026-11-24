@@ -27,7 +27,7 @@ public class MachineShop : MonoBehaviour
         {
             GameObject item = Instantiate(equipment, equipmentContent);
 
-            MachineItem equipmentItem = item.GetComponent<MachineItem>();
+            MachineSlot equipmentItem = item.GetComponent<MachineSlot>();
             equipmentItem.equipmentShop = this;
         }
     }

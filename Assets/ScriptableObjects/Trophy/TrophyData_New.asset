@@ -10,20 +10,20 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3811b4e171099d74aa61da95f3b677ba, type: 3}
-  m_Name: DishData_New
+  m_Name: TrophyData_New
   m_EditorClassIdentifier: Assembly-CSharp::DishData
   id: 1
   dishName: DAY JOB
   description: "It may be a pittance, but it\u2019s the reward for my hard work."
   tableSprite: {fileID: 21300000, guid: 74742ca7dffb13d43aaedb67eb200a21, type: 3}
-  inspectSprite: {fileID: 21300000, guid: 74742ca7dffb13d43aaedb67eb200a21, type: 3}
-  cleanSprite: {fileID: 21300000, guid: d705d001a0b604855854706783068070, type: 3}
+  inspectSprite: {fileID: 21300000, guid: f4af5b98fe12815448369e3b5b98db24, type: 3}
+  cleanSprite: {fileID: 21300000, guid: f4af5b98fe12815448369e3b5b98db24, type: 3}
   stainSprite: {fileID: 21300000, guid: 74742ca7dffb13d43aaedb67eb200a21, type: 3}
   brokenSprite: {fileID: 21300000, guid: 2296b2f63942ac24e81bb397520ec7a8, type: 3}
   buyPrice: 1
-  sellPriceAfterClean: 3
-  breakPenalty: 3
-  breakChance: 0.1
+  sellPriceAfterClean: 2
+  breakPenalty: 2
+  breakChance: 0.503
   baseCleanRequirement: 100
   cleanCompleteRatio: 0.8
   inspectScale: 1.5

@@ -7,7 +7,7 @@ public class InspectDetailPanel : MonoBehaviour
     [SerializeField] private GameObject lotteryDetailPanel;
 
     [Header("상세 뷰 스크립트")]
-    [SerializeField] private DishDetailView dishDetailView;
+    [SerializeField] private TrophyDetailView dishDetailView;
     [SerializeField] private LotteryDetailView lotteryDetailView;
 
     public void Show()
@@ -30,7 +30,7 @@ public class InspectDetailPanel : MonoBehaviour
         if (lotteryDetailPanel != null) lotteryDetailPanel.SetActive(false);
     }
 
-    public void ShowDish(DishData dishData)
+    public void ShowDish(TrophyData dishData)
     {
         ClearAll();
         if (dishDetailPanel != null) dishDetailPanel.SetActive(true);

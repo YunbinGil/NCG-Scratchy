@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public class Scratchable : MonoBehaviour
@@ -28,10 +29,13 @@ public class Scratchable : MonoBehaviour
     // 브러시 알파 마스크 캐시 (0 ~ 1)
     private float[] brushMask;
     private int brushMaskSize = 64;
-    [SerializeField] private InspectViewManager inspectViewManager;
+    
+    private InspectViewManager inspectViewManager;
+    public Trophy Dish {get;set;}
 
     void Start()
     {
+        inspectViewManager = GameObject.FindWithTag("GameController").GetComponent<InspectViewManager>();
         if (targetCamera == null) targetCamera = Camera.main;
         if (dirtyRenderer == null || dirtyRenderer.sprite == null) return;
 
@@ -236,9 +240,11 @@ public class Scratchable : MonoBehaviour
             isCompleted = true;
             dirtyRenderer.enabled = false;
             Debug.Log($"세척 완료! ({ratio * 100f:F1}%)");
-            //TODO: inspectorViewManager 연결: 확률에 따라 깨지거나 보상 변경, 판매버튼 보이기
+            Dish.CompleteScratch();
+            inspectViewManager.OnDishCleaned(Dish);
         }
     }
+
 
     void OnDestroy()
     {

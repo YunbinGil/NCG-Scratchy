@@ -1,7 +1,7 @@
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "DishData_New", menuName = "Scritchy Scratchy/Dish Data")]
-public class DishData : ScriptableObject
+[CreateAssetMenu(fileName = "TrophyData_New", menuName = "Scritchy Scratchy/Trophy Data")]
+public class TrophyData : ScriptableObject
 {
     [Header("기본 정보")]
     public int id = 1;
@@ -24,6 +24,7 @@ public class DishData : ScriptableObject
 
     [Header("세정 및 확대뷰 보조 수치")]
     [Min(0.1f)] public float baseCleanRequirement = 100f;
+    //TODO: Scratchable.cs에서 이 필드 사용하는걸로 변경
     [Range(0.1f, 1f)] public float cleanCompleteRatio = 0.8f; // 닦기 완료 판정 비율
     [Min(0.5f)] public float inspectScale = 1.5f;
 }

@@ -1,3 +1,5 @@
+using NUnit.Framework;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -12,6 +14,10 @@ public interface IInspectableSource
     Sprite GetInspectSprite();
     float GetInspectScale();
     void OpenInDetailPanel(InspectDetailPanel detailPanel);
+    void DestoryItem();
+    void HandleClick();
+    public int Reward { get; }
+    public bool IsCleaned { get; }
 }
 
 public class InspectViewManager : MonoBehaviour
@@ -21,9 +27,6 @@ public class InspectViewManager : MonoBehaviour
     [Header("Inspect 상태에서만 켜지는 루트")]
     [SerializeField] private GameObject inspectOverlayRoot;
 
-    // [주석 처리됨] 기존 Background 버튼 및 영역 제한 필드
-    // [SerializeField] private Button dimmedBackgroundButton;
-    // [SerializeField] private RectTransform tableArea;
 
     [Header("배경 및 중앙 확대 이미지")]
     [SerializeField] private Button closeDimmedBackgroundButton;
@@ -34,9 +37,17 @@ public class InspectViewManager : MonoBehaviour
 
     [Header("우측 상세 패널")]
     [SerializeField] private InspectDetailPanel detailPanel;
+    [SerializeField] private Button resultButton;
+    [Header("얼룩 오브젝트 생성 설정")]
+    [SerializeField] private GameObject stainOverlayPrefab; // SpriteRenderer + Scratchable이 붙은 프리팹
+    [SerializeField] private Transform stainOverlayParent; // 생성할 부모(없으면 null)
 
     public ViewState CurrentState { get; private set; } = ViewState.Table;
     public bool IsInspecting => CurrentState == ViewState.Inspect;
+    private UiManager uiManager;
+    private GameManager gameManager;
+    private Trophy currentInspectDish;
+    private GameObject currentActiveOverlay;
 
     private void Awake()
     {
@@ -47,36 +58,19 @@ public class InspectViewManager : MonoBehaviour
         }
         Instance = this;
 
-        // [주석 처리됨] 기존 Background 버튼 리스너 연결
-        // if (dimmedBackgroundButton != null)
-        // {
-        //     dimmedBackgroundButton.onClick.RemoveListener(HandleBackgroundClick);
-        //     dimmedBackgroundButton.onClick.AddListener(HandleBackgroundClick);
-        // }
-
         if (closeDimmedBackgroundButton != null)
         {
             closeDimmedBackgroundButton.onClick.RemoveListener(HandleDimmedBackgroundClick);
             closeDimmedBackgroundButton.onClick.AddListener(HandleDimmedBackgroundClick);
         }
-
         SetState(ViewState.Table);
     }
 
-    // [주석 처리됨] 기존 Background 버튼 클릭 핸들러
-    // private void HandleBackgroundClick()
-    // {
-    //     Vector2 screenPos = Input.mousePosition;
-    //     Camera eventCam = GetEventCamera();
-    //
-    //     if (tableArea != null && RectTransformUtility.RectangleContainsScreenPoint(tableArea, screenPos, eventCam))
-    //     {
-    //         return;
-    //     }
-    //
-    //     CloseInspect();
-    // }
-
+    private void Start()
+    {
+        uiManager = GameObject.FindWithTag("GameController").GetComponent<UiManager>();
+        gameManager = GameObject.FindWithTag("GameController").GetComponent<GameManager>();
+    }
     private void HandleDimmedBackgroundClick()
     {
         RectTransform previewArea = GetCenterPreviewRectTransform();
@@ -152,6 +146,29 @@ public class InspectViewManager : MonoBehaviour
             target.OpenInDetailPanel(detailPanel);
         }
 
+        if (currentActiveOverlay != null)
+        {
+            currentActiveOverlay.SetActive(false);
+            currentActiveOverlay = null;
+        }
+
+        currentInspectDish = target as Trophy;
+        if (currentInspectDish != null)
+        {
+            currentActiveOverlay = GetOrCreateOverlayForDish(currentInspectDish);
+            if (currentActiveOverlay != null)
+            {
+                currentActiveOverlay.SetActive(true);
+            }
+        }
+        if (target.IsCleaned)
+        {
+            ShowResultButton(target);
+        }
+        else
+        {
+            resultButton.gameObject.SetActive(false);
+        }
         SetState(ViewState.Inspect);
     }
 
@@ -173,8 +190,15 @@ public class InspectViewManager : MonoBehaviour
             centerPreviewRenderer.sprite = null;
             centerPreviewRenderer.enabled = false;
         }
+        if (currentActiveOverlay != null)
+        {
+            currentActiveOverlay.SetActive(false);
+            currentActiveOverlay = null;
+        }
+        currentInspectDish = null;
 
         SetState(ViewState.Table);
+        uiManager.SetDefaultCursor();
     }
 
     public void SetState(ViewState nextState)
@@ -186,5 +210,61 @@ public class InspectViewManager : MonoBehaviour
         {
             inspectOverlayRoot.SetActive(isInspect);
         }
+    }
+
+    private GameObject GetOrCreateOverlayForDish(Trophy dish)
+    {
+        if (dish == null) return null;
+
+        GameObject overlay = dish.GetStainOverlay();
+        if (overlay == null && stainOverlayPrefab != null)
+        {
+            overlay = Instantiate(stainOverlayPrefab, stainOverlayParent);
+            overlay.name = $"{dish.gameObject.name}_StainOverlay";
+            overlay.GetComponent<Scratchable>().Dish = dish;
+
+            SpriteRenderer sr = overlay.GetComponentInChildren<SpriteRenderer>();
+            if (sr != null)
+            {
+                sr.sprite = dish.GetRustedSprite();
+            }
+
+            dish.SetStainOverlay(overlay);
+        }
+
+        return overlay;
+    }
+
+    public void OnDishCleaned(Trophy dish)
+    {
+        if (dish == null) return;
+
+        Sprite resultSprite = dish.Reward > 0 ? dish.GetInspectSprite() : dish.GetBrokenSprite();
+        if (centerPreviewImage != null)
+        {
+            centerPreviewImage.sprite = resultSprite;
+            centerPreviewImage.enabled = resultSprite != null;
+        }
+        if (centerPreviewRenderer != null)
+        {
+            centerPreviewRenderer.sprite = resultSprite;
+            centerPreviewRenderer.enabled = resultSprite != null;
+        }
+        if(dish.Reward<0) 
+            PhoneEventController.Instance?.TriggerBrokenOrLossCall();
+        ShowResultButton(dish);        
+    }
+    private void ShowResultButton(IInspectableSource target)
+    {
+        resultButton.onClick.RemoveAllListeners();
+        resultButton.onClick.AddListener(() =>
+        {
+            gameManager.AddMoney(target.Reward);
+            gameManager.AddExp(target.Reward);
+            CloseInspect();
+            target.DestoryItem();
+        });
+        resultButton.GetComponentInChildren<TMP_Text>().text = $"${target.Reward}";
+        resultButton.gameObject.SetActive(true);
     }
 }

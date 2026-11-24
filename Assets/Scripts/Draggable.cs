@@ -3,94 +3,34 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 public class Draggable : MonoBehaviour,
-    IPointerDownHandler, 
+    IPointerDownHandler,
     IDragHandler,
     IPointerUpHandler,
     IPointerEnterHandler
 {
-    // [Header("드래그 가능 영역")]
-    // [SerializeField]
     private RectTransform tableRect;
 
     public Button objectButton;
 
     private RectTransform objectRect;
+    private Canvas parentCanvas;
+    private Camera eventCamera;
     private bool isDragging;
-
+    [SerializeField] private float highlightAngle = 10f;
     [SerializeField] private GameObject dragSprite;
-
     private Quaternion defaultRotation;
     private bool isTilted;
-    [SerializeField] private float highlightAngle = 10f;
     private Vector2 pressPosition;
     private float dragThreshold = 10f;
-
-    public void OnPointerEnter(PointerEventData eventData)
-    {
-        if (isDragging)
-            return;
-
-        isTilted = !isTilted;
-        objectRect.localRotation = isTilted ? defaultRotation * Quaternion.Euler(0f, 0f, -highlightAngle) : defaultRotation;
-    }
-
-    private void SetDragging(bool dragging)
-    {
-        isDragging = dragging;
-
-        if (dragSprite != null)
-            dragSprite.SetActive(dragging);
-    }
-
-    public void OnPointerDown(PointerEventData eventData)
-    {
-        pressPosition = eventData.position;
-        SetDragging(false);
-        transform.SetAsLastSibling();
-    }
-
-    public void OnDrag(PointerEventData eventData)
-    {
-        float distance = Vector2.Distance(pressPosition, eventData.position);
-
-        if (!isDragging && distance >= dragThreshold)
-        {
-            SetDragging(true);
-        }
-
-        if (isDragging && tableRect != null)
-        {
-            // 오브젝트 이동 범위 설정
-            float minX = tableRect.anchoredPosition.x - tableRect.rect.width / 2f + objectRect.rect.width / 2f;
-            float maxX = tableRect.anchoredPosition.x + tableRect.rect.width / 2f - objectRect.rect.width / 2f;
-            float minY = tableRect.anchoredPosition.y - tableRect.rect.height / 2f + objectRect.rect.height / 2f;
-            float maxY = tableRect.anchoredPosition.y + tableRect.rect.height / 2f - objectRect.rect.height / 2f;
-
-            // 이동할 위치 계산
-            Vector2 nextPosition = objectRect.anchoredPosition + eventData.delta / objectRect.lossyScale.x;
-
-            // 테이블 범위로 제한
-            nextPosition.x = Mathf.Clamp(nextPosition.x, minX, maxX);
-            nextPosition.y = Mathf.Clamp(nextPosition.y, minY, maxY);
-
-            // 최종 위치 적용
-            objectRect.anchoredPosition = nextPosition;
-
-            dragSprite.SetActive(true);
-        }
-    }
+    private IInspectableSource itemSource;
 
     private void Awake()
     {
+        itemSource = GetComponent<IInspectableSource>();
         objectButton = GetComponent<Button>();
         objectRect = GetComponent<RectTransform>();
+        parentCanvas = GetComponentInParent<Canvas>();
         defaultRotation = objectRect.localRotation;
-        if (dragSprite != null)
-            dragSprite.SetActive(false);
-    }
-
-    private void OnDisable()
-    {
         SetDragging(false);
     }
 
@@ -99,11 +39,86 @@ public class Draggable : MonoBehaviour,
         tableRect = table;
     }
 
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        if (isDragging)
+            return;
+
+        isTilted = !isTilted;
+        objectRect.localRotation = isTilted
+            ? defaultRotation * Quaternion.Euler(0f, 0f, -highlightAngle)
+            : defaultRotation;
+    }
+
+    private void SetDragging(bool dragging)
+    {
+        isDragging = dragging;
+        if (dragSprite != null)
+            dragSprite.SetActive(dragging);
+    }
+
+    private void OnDisable()
+    {
+        SetDragging(false);
+    }
+
+    public void OnPointerDown(PointerEventData eventData)
+    {
+        pressPosition = eventData.position;
+        eventCamera = eventData.pressEventCamera != null
+            ? eventData.pressEventCamera
+            : (parentCanvas != null && parentCanvas.renderMode != RenderMode.ScreenSpaceOverlay
+                ? parentCanvas.worldCamera
+                : null);
+
+        SetDragging(false);
+        transform.SetAsLastSibling();
+    }
+
+    public void OnDrag(PointerEventData eventData)
+    {
+        RectTransform dragBounds = tableRect != null ? tableRect : objectRect.parent as RectTransform;
+        if (dragBounds == null)
+            return;
+
+        float distance = Vector2.Distance(pressPosition, eventData.position);
+        if (!isDragging && distance >= dragThreshold)
+        {
+            SetDragging(true);
+        }
+
+        if (!isDragging)
+            return;
+
+        Camera cam = eventData.pressEventCamera != null ? eventData.pressEventCamera : eventCamera;
+
+        // 포인터 위치를 dragBounds 로컬 좌표로 변환
+        if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(dragBounds, eventData.position, cam, out Vector2 pointerLocal))
+            return;
+
+        // dragBounds 내부에서 오브젝트 중심이 갈 수 있는 로컬 범위 계산
+        float halfW = Mathf.Max(0f, (dragBounds.rect.width - objectRect.rect.width) * 0.5f);
+        float halfH = Mathf.Max(0f, (dragBounds.rect.height - objectRect.rect.height) * 0.5f);
+
+        float minX = dragBounds.rect.center.x - halfW;
+        float maxX = dragBounds.rect.center.x + halfW;
+        float minY = dragBounds.rect.center.y - halfH;
+        float maxY = dragBounds.rect.center.y + halfH;
+
+        Vector2 clampedLocal = new Vector2(
+            Mathf.Clamp(pointerLocal.x, minX, maxX),
+            Mathf.Clamp(pointerLocal.y, minY, maxY)
+        );
+
+        // dragBounds 로컬 좌표를 월드 좌표로 변환해 적용
+        objectRect.position = dragBounds.TransformPoint(clampedLocal);
+    }
+
     public void OnPointerUp(PointerEventData eventData)
     {
         if (!isDragging)
         {
-            Debug.Log("버튼 클릭");
+            itemSource?.HandleClick();
         }
         SetDragging(false);
     }
