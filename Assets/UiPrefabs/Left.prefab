@@ -681,7 +681,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7092710897921150922, guid: b83240e296fa66d4685bb7f82178cb1a, type: 3}
       propertyPath: m_Size
-      value: 1
+      value: 0.99998355
       objectReference: {fileID: 0}
     - target: {fileID: 7676039029940577965, guid: b83240e296fa66d4685bb7f82178cb1a, type: 3}
       propertyPath: m_SizeDelta.y
@@ -693,7 +693,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7676039029940577965, guid: b83240e296fa66d4685bb7f82178cb1a, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 0.00048828125
+      value: 0.000030517578
       objectReference: {fileID: 0}
     - target: {fileID: 7883491018465193472, guid: b83240e296fa66d4685bb7f82178cb1a, type: 3}
       propertyPath: m_Pivot.x
@@ -800,9 +800,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 19437b7dd11cac34497f3c4a69a198d4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TicketShop
-  catalogPrefabs:
-  - {fileID: 4230826935241957706, guid: 38cfe2f523ca205459d50f321c4d3f7a, type: 3}
-  - {fileID: 6440229899436363538, guid: e06e257b1bc1a204b8dd37916dec1a0a, type: 3}
+  catalogList:
+  - catalogPrefab: {fileID: 4230826935241957706, guid: 38cfe2f523ca205459d50f321c4d3f7a, type: 3}
+    unlockLevel: 0
+  - catalogPrefab: {fileID: 6440229899436363538, guid: e06e257b1bc1a204b8dd37916dec1a0a, type: 3}
+    unlockLevel: 1
+  unlockPrefab: {fileID: 4230826935241957706, guid: 0e0c454bc533c0f4688d0238bcb5dde5, type: 3}
+  lightTexture: {fileID: 2800000, guid: ce53761f6ab1519419fe88bf947ca400, type: 3}
+  unlockPoint: {x: 0, y: 0}
   ticketContent: {fileID: 7994922925460622214}
   gameManager: {fileID: 0}
   itemSpawner: {fileID: 0}
