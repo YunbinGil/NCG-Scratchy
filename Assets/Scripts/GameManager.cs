@@ -1,4 +1,5 @@
 using UnityEngine;
+using System;
 
 public class GameManager : MonoBehaviour
 {
@@ -12,6 +13,9 @@ public class GameManager : MonoBehaviour
     public int Level { get; private set; }
     public int Exp { get; private set; }
     public int Money { get; private set; }
+
+    // 레벨 상승 이벤트
+    public event Action<int> OnLevelChanged;
 
     private void Awake()
     {
@@ -43,13 +47,23 @@ public class GameManager : MonoBehaviour
     public void AddExp(int add)
     {
         if (add < 0) return;
+
         Exp += add;
+
         if (Level < levelExpInfo.Length && Exp >= levelExpInfo[Level])
         {
             Level++;
             Exp = 0;
+
+            // 레벨 상승 시 이벤트 발생
+            OnLevelChanged?.Invoke(Level);
         }
-        uiManager.SetLevelText(Exp, levelExpInfo[Level]);
+
+        int requiredExp = Level < levelExpInfo.Length
+            ? levelExpInfo[Level]
+            : levelExpInfo[levelExpInfo.Length - 1];
+
+        uiManager.SetLevelText(Exp, requiredExp);
     }
     private void Update()
     {
