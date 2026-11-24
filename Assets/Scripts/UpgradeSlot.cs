@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
-public class ListUpgrade : MonoBehaviour
+public class UpgradeSlot : MonoBehaviour
 {
     [Header("Upgrade Info")]
     [SerializeField] private UpgradeType upgradeType;
@@ -17,6 +17,13 @@ public class ListUpgrade : MonoBehaviour
     [SerializeField] private TMP_Text costText;
     [SerializeField] private Button upgradeButton;
 
+    private void Awake()
+    {
+        if(upgradeButton == null)
+        {
+            upgradeButton = GetComponent<Button>();
+        }
+    }
     private void Start()
     {
         upgradeButton.onClick.AddListener(UpgradeLevelUp);

@@ -48,8 +48,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 663f6e7c861fe7c4aa2af74ac923e6c0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ItemSpawner
-  items:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
+  items: []
   spawnTable: {fileID: 0}
+  dragArea: {fileID: 0}
+  unlockPrefab: {fileID: 4230826935241957706, guid: 0e0c454bc533c0f4688d0238bcb5dde5, type: 3}
+  lightTexture: {fileID: 2800000, guid: ce53761f6ab1519419fe88bf947ca400, type: 3}
