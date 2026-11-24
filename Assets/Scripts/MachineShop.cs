@@ -71,7 +71,19 @@ public class MachineShop : MonoBehaviour
         // 오른쪽 하단에서 안쪽으로 50만큼 이동
         rect.anchoredPosition = new Vector2(-50f, 50f);
 
-        // Canvas에서 가장 앞에 표시
+        if (equipment.TryGetComponent<TrashCan>(out _))
+        {
+            ItemSpawner itemSpawner = FindFirstObjectByType<ItemSpawner>();
+            RectTransform itemTable = itemSpawner != null ? itemSpawner.SpawnTable : null;
+            if (itemTable != null && itemTable.IsChildOf(canvasRect))
+            {
+                // Keep the drop target above the table graphic and below its items.
+                rect.SetParent(itemTable, true);
+                rect.SetAsFirstSibling();
+                return;
+            }
+        }
+
         rect.SetAsLastSibling();
     }
 }
