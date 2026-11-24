@@ -11,6 +11,7 @@ public class GameEscapePanelController : MonoBehaviour
     [SerializeField] private Button mainMenuButton;
     [SerializeField] private Button quitGameButton;
 
+
     [Header("열렸을 때 정지 여부")]
     [SerializeField] private bool pauseTimeWhenOpen = true;
 
@@ -41,7 +42,11 @@ public class GameEscapePanelController : MonoBehaviour
 
     public void TogglePanel()
     {
-        if (settingPanel == null) return;
+        if (settingPanel == null)
+        {
+            return;
+        }
+
         SetPanelActive(!settingPanel.activeSelf);
     }
 
@@ -53,7 +58,6 @@ public class GameEscapePanelController : MonoBehaviour
     public void GoToMainMenu()
     {
         Time.timeScale = 1f;
-
         SetPanelActive(false);
     }
 
