@@ -958,17 +958,6 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 6706617594907514561, guid: 43a21a3247361cd4db11a521aa3dff7d, type: 3}
   m_PrefabInstance: {fileID: 1074750621}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1056257477 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 8167976126664066358, guid: 43a21a3247361cd4db11a521aa3dff7d, type: 3}
-  m_PrefabInstance: {fileID: 1074750621}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
 --- !u!1001 &1074750621
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2001,7 +1990,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7994922925460622214, guid: 30e7eb5b629f65642a207e4b9a476236, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 0.00033569336
+      value: 0.0005187988
       objectReference: {fileID: 0}
     - target: {fileID: 8026055554778373793, guid: 30e7eb5b629f65642a207e4b9a476236, type: 3}
       propertyPath: m_AnchorMax.y
@@ -2179,9 +2168,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
---- !u!212 &1695189407 stripped
-SpriteRenderer:
-  m_CorrespondingSourceObject: {fileID: 6968763755089486167, guid: 43a21a3247361cd4db11a521aa3dff7d, type: 3}
+--- !u!1 &1693359215 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 2623609256072050184, guid: 43a21a3247361cd4db11a521aa3dff7d, type: 3}
   m_PrefabInstance: {fileID: 1074750621}
   m_PrefabAsset: {fileID: 0}
 --- !u!114 &1722499350 stripped
@@ -2513,6 +2502,14 @@ PrefabInstance:
       propertyPath: m_SizeDelta.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3958529244370453252, guid: 85a4710918584214b9fb590002c13ee0, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3958529244370453252, guid: 85a4710918584214b9fb590002c13ee0, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8521418617708834342, guid: 85a4710918584214b9fb590002c13ee0, type: 3}
       propertyPath: m_Name
       value: Lottery01
@@ -2605,6 +2602,14 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5778046202216864834, guid: a1f0c86c6f4b78e45af1bff3cdb6a72c, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6529859763165941271, guid: a1f0c86c6f4b78e45af1bff3cdb6a72c, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6529859763165941271, guid: a1f0c86c6f4b78e45af1bff3cdb6a72c, type: 3}
       propertyPath: m_SizeDelta.y
       value: 0
       objectReference: {fileID: 0}
@@ -3346,9 +3351,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::InspectViewManager
   inspectOverlayRoot: {fileID: 1145175257}
   closeDimmedBackgroundButton: {fileID: 2027860282}
-  centerPreviewRect: {fileID: 1056257475}
-  centerPreviewImage: {fileID: 1056257477}
-  centerPreviewRenderer: {fileID: 1695189407}
+  centerPreview: {fileID: 1693359215}
   basePreviewScale: 100
   detailPanel: {fileID: 1722499350}
   resultButton: {fileID: 1916094882}

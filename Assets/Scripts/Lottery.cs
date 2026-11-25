@@ -10,6 +10,8 @@ public class Lottery : MonoBehaviour, IInspectableSource
 
     [Header("UI 버튼")]
     [SerializeField] private Button lotteryButton;
+    
+    private GameObject stainOverlay;
 
     public LotteryData Data => lotteryData;
 
@@ -52,5 +54,27 @@ public class Lottery : MonoBehaviour, IInspectableSource
     public void DestoryItem()
     {
         Destroy(gameObject);
+    }
+    public GameObject GetStainOverlay()
+    {
+        return stainOverlay;
+    }
+    public void SetStainOverlay(GameObject overlay)
+    {
+        stainOverlay = overlay;
+        stainOverlay.GetComponent<Scratchable>().CurrentItem = this;
+    }
+    private void OnDestroy()
+    {
+        if (stainOverlay != null)
+        {
+            Destroy(stainOverlay);
+            stainOverlay = null;
+        }
+    }
+
+    public void CompleteScratch()
+    {
+        throw new System.NotImplementedException();
     }
 }

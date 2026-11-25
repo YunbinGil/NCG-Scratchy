@@ -3,6 +3,7 @@ using TMPro;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngineInternal.XR.WSA;
 
 public enum ViewState
 {
@@ -17,6 +18,7 @@ public interface IInspectableSource
     void OpenInDetailPanel(InspectDetailPanel detailPanel);
     void DestoryItem();
     void HandleClick();
+    void CompleteScratch();
     public int Reward { get; }
     public bool IsCleaned { get; }
 }
@@ -31,9 +33,10 @@ public class InspectViewManager : MonoBehaviour
 
     [Header("배경 및 중앙 확대 이미지")]
     [SerializeField] private Button closeDimmedBackgroundButton;
-    [SerializeField] private RectTransform centerPreviewRect;
-    [SerializeField] private Image centerPreviewImage;
-    [SerializeField] private SpriteRenderer centerPreviewRenderer;
+    [SerializeField] private GameObject centerPreview;
+    private RectTransform centerPreviewRect;
+    private Image centerPreviewImage;
+    private SpriteRenderer centerPreviewRenderer;
     [SerializeField] private float basePreviewScale = 1f;
 
     [Header("우측 상세 패널")]
@@ -52,6 +55,9 @@ public class InspectViewManager : MonoBehaviour
 
     private void Awake()
     {
+        centerPreviewRect = centerPreview.GetComponent<RectTransform>();
+        centerPreviewImage = centerPreview.GetComponent<Image>();
+        centerPreviewRenderer = centerPreview.GetComponent<SpriteRenderer>();
         if (Instance != null && Instance != this)
         {
             Destroy(gameObject);
@@ -123,7 +129,12 @@ public class InspectViewManager : MonoBehaviour
     public void OpenInspect(IInspectableSource target)
     {
         if (target == null) return;
-
+        
+        if (currentActiveOverlay != null)
+        {
+            currentActiveOverlay.SetActive(false);
+            currentActiveOverlay = null;
+        }
         currentTarget = target as Trophy;
         if (currentTarget != null)
         {
@@ -140,11 +151,6 @@ public class InspectViewManager : MonoBehaviour
             target.OpenInDetailPanel(detailPanel);
         }
 
-        if (currentActiveOverlay != null)
-        {
-            currentActiveOverlay.SetActive(false);
-            currentActiveOverlay = null;
-        }
 
         if (target.IsCleaned)
         {
@@ -179,6 +185,7 @@ public class InspectViewManager : MonoBehaviour
         currentActiveOverlay = GetOrCreateOverlayForTrophy(trophy);
         if (currentActiveOverlay != null)
         {
+            Debug.Log($"{currentActiveOverlay.name}: {currentActiveOverlay.activeSelf}");
             currentActiveOverlay.SetActive(true);
         }
     }
@@ -236,7 +243,7 @@ public class InspectViewManager : MonoBehaviour
         {
             overlay = Instantiate(stainOverlayPrefab, stainOverlayParent);
             overlay.name = $"{trophy.gameObject.name}_StainOverlay";
-            overlay.GetComponent<Scratchable>().Dish = trophy;
+            overlay.GetComponent<Scratchable>().CurrentItem = trophy;
 
             SpriteRenderer sr = overlay.GetComponentInChildren<SpriteRenderer>();
             if (sr != null)
@@ -249,11 +256,26 @@ public class InspectViewManager : MonoBehaviour
         return overlay;
     }
 
-    public void OnDishCleaned(Trophy dish)
+    public void OnCleaned(IInspectableSource target)
     {
-        if (dish == null) return;
+        if (target == null) return;
 
-        Sprite resultSprite = dish.Reward > 0 ? dish.GetInspectSprite() : dish.GetBrokenSprite();
+        currentTarget = target as Trophy;
+        if (currentTarget != null)
+        {
+            OnTrophyCleaned(currentTarget as Trophy);
+        }
+        currentTarget = target as Lottery;
+        if (currentTarget != null)
+        {
+            OnLotteryCleaned(currentTarget as Lottery);
+        }
+
+        ShowResultButton(target);
+    }
+    public void OnTrophyCleaned(Trophy trophy)
+    {
+        Sprite resultSprite = trophy.Reward > 0 ? trophy.GetInspectSprite() : trophy.GetBrokenSprite();
         if (centerPreviewImage != null)
         {
             centerPreviewImage.sprite = resultSprite;
@@ -264,9 +286,12 @@ public class InspectViewManager : MonoBehaviour
             centerPreviewRenderer.sprite = resultSprite;
             centerPreviewRenderer.enabled = resultSprite != null;
         }
-        if (dish.Reward < 0)
+        if (trophy.Reward < 0)
             PhoneEventController.Instance?.TriggerBrokenOrLossCall();
-        ShowResultButton(dish);
+    }
+    public void OnLotteryCleaned(Lottery lottery)
+    {
+        
     }
     private void ShowResultButton(IInspectableSource target)
     {

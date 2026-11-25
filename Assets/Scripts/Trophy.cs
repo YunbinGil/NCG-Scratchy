@@ -45,7 +45,7 @@ public class Trophy : MonoBehaviour, IInspectableSource
 
         InspectViewManager.Instance?.OpenInspect(this);
         if(IsCleaned)
-            InspectViewManager.Instance?.OnDishCleaned(this);
+            InspectViewManager.Instance?.OnCleaned(this);
         uiManager.SetScrubberCursor();
     }
 
@@ -82,7 +82,7 @@ public class Trophy : MonoBehaviour, IInspectableSource
     public void SetStainOverlay(GameObject overlay)
     {
         stainOverlay = overlay;
-        stainOverlay.GetComponent<Scratchable>().Dish = this;
+        stainOverlay.GetComponent<Scratchable>().CurrentItem = this;
     }
 
     public void CompleteScratch()

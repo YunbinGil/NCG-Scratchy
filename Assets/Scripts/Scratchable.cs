@@ -31,16 +31,21 @@ public class Scratchable : MonoBehaviour
     private int brushMaskSize = 64;
     
     private InspectViewManager inspectViewManager;
-    public Trophy Dish {get;set;}
+    public IInspectableSource CurrentItem {get;set;}
 
     void Start()
     {
+
         inspectViewManager = GameObject.FindWithTag("GameController").GetComponent<InspectViewManager>();
         if (targetCamera == null) targetCamera = Camera.main;
         if (dirtyRenderer == null || dirtyRenderer.sprite == null) return;
 
         BuildBrushMask();
         InitRuntimeTexture();
+    }
+    void OnEnable()
+    {
+        Debug.Log($"{gameObject.name} active: {gameObject.activeSelf}");
     }
 
     void BuildBrushMask()
@@ -240,8 +245,8 @@ public class Scratchable : MonoBehaviour
             isCompleted = true;
             dirtyRenderer.enabled = false;
             Debug.Log($"세척 완료! ({ratio * 100f:F1}%)");
-            Dish.CompleteScratch();
-            inspectViewManager.OnDishCleaned(Dish);
+            CurrentItem.CompleteScratch();
+            inspectViewManager.OnCleaned(CurrentItem);
         }
     }
 
