@@ -24,14 +24,15 @@ public class Scratchable : MonoBehaviour
     private bool isErasing;
     private Vector2 prevWorldPos;
     private float nextCheckTime;
-    private bool isCompleted;
-
+    public bool IsCompleted {get; private set;}
     // 브러시 알파 마스크 캐시 (0 ~ 1)
     private float[] brushMask;
     private int brushMaskSize = 64;
     
     private InspectViewManager inspectViewManager;
-    public Trophy Dish {get;set;}
+    public IInspectableSource CurrentItem {get;set;}
+    public int SlotIndex { get; set; }
+    public event Action<Scratchable> OnScratchCompleted;
 
     void Start()
     {
@@ -41,6 +42,10 @@ public class Scratchable : MonoBehaviour
 
         BuildBrushMask();
         InitRuntimeTexture();
+    }
+    void OnEnable()
+    {
+        // Debug.Log($"{gameObject.name} active: {gameObject.activeSelf}");
     }
 
     void BuildBrushMask()
@@ -133,7 +138,7 @@ public class Scratchable : MonoBehaviour
 
     void Update()
     {
-        if (isCompleted || runtimeTex == null) return;
+        if (IsCompleted || runtimeTex == null) return;
 
         HandleEraseInput();
 
@@ -237,11 +242,18 @@ public class Scratchable : MonoBehaviour
         float ratio = (float)erasedPixels / totalInitialOpaquePixels;
         if (ratio >= cleanThreshold)
         {
-            isCompleted = true;
+            IsCompleted = true;
             dirtyRenderer.enabled = false;
-            Debug.Log($"세척 완료! ({ratio * 100f:F1}%)");
-            Dish.CompleteScratch();
-            inspectViewManager.OnDishCleaned(Dish);
+            Debug.Log($"{this.gameObject.name} 세척 완료! ({ratio * 100f:F1}%)");
+            if (CurrentItem is Lottery currentLottery)
+            {
+                currentLottery.HandleSlotCompleted(this);
+            }
+            else
+            {
+                CurrentItem?.CompleteScratch();
+                inspectViewManager?.OnCleaned(CurrentItem);
+            }
         }
     }
 

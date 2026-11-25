@@ -202,7 +202,7 @@ public class ScratchBot : MonoBehaviour
 
                 if (target is Trophy trophy)
                 {
-                    InspectViewManager.Instance.OnDishCleaned(trophy);
+                    InspectViewManager.Instance.OnTrophyCleaned(trophy);
                 }
             }
 

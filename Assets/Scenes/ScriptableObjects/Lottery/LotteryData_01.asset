@@ -10,14 +10,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a6077189a2a5652468e1dc312c5ea426, type: 3}
-  m_Name: LotteryData_New
+  m_Name: LotteryData_01
   m_EditorClassIdentifier: Assembly-CSharp::LotteryData
   id: 1
   lotteryName: TREASURE CHEST
   description: '2 match, win '
-  tableSprite: {fileID: 21300000, guid: 0fec5af316e25954397094c0f0dc41c4, type: 3}
-  inspectSprite: {fileID: 21300000, guid: 0fec5af316e25954397094c0f0dc41c4, type: 3}
-  scratchCoverSprite: {fileID: 21300000, guid: a351e42dc615d48c8a3399456a53345f, type: 3}
+  tableSprite: {fileID: 543601121251698270, guid: 864f73d075f40a240b3aa4babd66d0d7, type: 3}
+  inspectSprite: {fileID: 543601121251698270, guid: 864f73d075f40a240b3aa4babd66d0d7, type: 3}
+  scratchCoverSprite: {fileID: 7482667652216324306, guid: 313435d4bc91f3e418393d403e4ac919, type: 3}
+  lotteryPrefab: {fileID: 2621140978157270999, guid: 38d27eab8245e2745b85f2e510639a88, type: 3}
   scratchCount: 3
   requiredMatchCount: 2
   hardness: 0
