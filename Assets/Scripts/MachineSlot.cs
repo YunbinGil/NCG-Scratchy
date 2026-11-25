@@ -16,9 +16,15 @@ public class MachineSlot : MonoBehaviour
     public TMP_Text purchaseText;
     public Image equipmentImage;
 
+    [Header("잠금 해제")]
+    [SerializeField, Min(0)] private int requiredPlayerLevel;
+    [SerializeField] private GameObject lockOverlay;
+
     [HideInInspector]
     public MachineShop equipmentShop;
 
+    private GameManager playerProgress;
+    private bool isLocked;
     private bool isPurchased = false;
 
     private void Start()
@@ -27,12 +33,36 @@ public class MachineSlot : MonoBehaviour
         priceText.text = equipmentPrice.ToString();
         purchaseText.text = string.Empty;
 
+        playerProgress = equipmentShop != null ? equipmentShop.PlayerProgress : null;
+        if (playerProgress != null)
+            playerProgress.OnLevelChanged += UpdateLock;
+
+        UpdateLock(playerProgress != null ? playerProgress.Level : 0);
         purchaseButton.onClick.AddListener(Purchase);
+    }
+
+    private void UpdateLock(int playerLevel)
+    {
+        isLocked = playerLevel < requiredPlayerLevel;
+
+        if (lockOverlay != null)
+            lockOverlay.SetActive(isLocked);
+
+        purchaseButton.interactable = !isLocked && !isPurchased;
+    }
+
+    private void OnDestroy()
+    {
+        if (playerProgress != null)
+            playerProgress.OnLevelChanged -= UpdateLock;
+
+        if (purchaseButton != null)
+            purchaseButton.onClick.RemoveListener(Purchase);
     }
 
     private void Purchase()
     {
-        if (isPurchased)
+        if (isLocked || isPurchased || equipmentShop == null)
             return;
 
         if (equipmentShop.PurchaseEquipment(equipmentPrice))
