@@ -22,17 +22,25 @@ public class TrophyDetailView : MonoBehaviour
     [SerializeField] private TMP_Text symbolHeaderText;
     [SerializeField] private List<TrophySymbolRow> symbolRows = new List<TrophySymbolRow>();
 
-    public void Bind(TrophyData data)
+    public void Bind(TrophyData data, int sellPrice, float breakChance)
     {
         if (data == null) return;
 
-        if (titleText != null) titleText.text = data.dishName;
-        if (descriptionText != null) descriptionText.text = data.description;
-        if (symbolHeaderText != null) symbolHeaderText.text = "심볼 확률";
 
-        float breakPercent = Mathf.Clamp(data.breakChance * 100f, 0f, 100f);
+        if (string.Equals(data.dishName, "DAY JOB", StringComparison.OrdinalIgnoreCase))
+        {
+            Localization.Bind(titleText, "item.trophy.day_job.name", data.dishName);
+            Localization.Bind(descriptionText, "item.trophy.day_job.description", data.description);
+        }
+        else
+        {
+            Localization.Clear(titleText, data.dishName);
+            Localization.Clear(descriptionText, data.description);
+        }
+        Localization.Bind(symbolHeaderText, "detail.symbol_probabilities", "Symbol Probabilities");
+
+        float breakPercent = Mathf.Clamp(breakChance * 100f, 0f, 100f);
         float successPercent = 100f - breakPercent;
-        int reward = data.sellPriceAfterClean;
         int penalty = -Mathf.Abs(data.breakPenalty);
 
         Sprite cleanSprite = data.cleanSprite != null ? data.cleanSprite : data.inspectSprite;
@@ -41,7 +49,7 @@ public class TrophyDetailView : MonoBehaviour
         BindRow(
             index: 0,
             sprite: cleanSprite,
-            lineText: $"{successPercent:0} %        $ {reward}"
+            lineText: $"{successPercent:0} %        $ {sellPrice}"
         );
 
         BindRow(

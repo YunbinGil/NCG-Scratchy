@@ -10,16 +10,25 @@ public class ItemSpawner : MonoBehaviour
     [SerializeField] private RectTransform spawnTable;
     [SerializeField] public RectTransform dragArea;
 
-    public RectTransform SpawnTable => spawnTable;
+    [Header("레이어 분리 (복권 아래 / 봇 위)")]
+    [SerializeField] private RectTransform lotteryLayer;
+    [SerializeField] private RectTransform scratchBotLayer;
 
     [Header("도감 해금 아이템")]
     [SerializeField] private GameObject unlockPrefab;
     [SerializeField] private Texture2D lightTexture;
 
+    [Header("스크래치 봇")]
+    [SerializeField] private GameObject scratchBotPrefab;
+    [SerializeField] private Vector2 bottomRightPadding = new Vector2(120f, 120f);
+
     private List<RectTransform> spawnItems = new List<RectTransform>();
     private List<Vector2> targetpoints = new List<Vector2>();
 
     private float objectSpeed = 600f;
+
+    private GameObject spawnedScratchBot;
+    public GameObject SpawnedScratchBot => spawnedScratchBot;
 
     // 일반 아이템 랜덤 좌표 생성
     public bool TrySpawnItem(GameObject item)
@@ -60,9 +69,26 @@ public class ItemSpawner : MonoBehaviour
         bool centerOnTable,
         out GameObject spawnedObject)
     {
+        return TrySpawnItemInternal(
+            item,
+            targetpoint,
+            centerOnTable,
+            lotteryLayer != null ? lotteryLayer : spawnTable,
+            out spawnedObject
+        );
+    }
+
+    private bool TrySpawnItemInternal(
+        GameObject item,
+        Vector2 targetpoint,
+        bool centerOnTable,
+        RectTransform targetParent,
+        out GameObject spawnedObject)
+    {
         spawnedObject = null;
 
-        if (spawnTable == null || item == null ||
+        RectTransform parentRect = targetParent != null ? targetParent : spawnTable;
+        if (parentRect == null || item == null ||
             !item.TryGetComponent<RectTransform>(out _))
             return false;
 
@@ -70,7 +96,7 @@ public class ItemSpawner : MonoBehaviour
             item,
             transform.position,
             Quaternion.identity,
-            spawnTable
+            parentRect
         );
 
         RectTransform spawnItem =
@@ -80,9 +106,9 @@ public class ItemSpawner : MonoBehaviour
 
         if (centerOnTable)
         {
-            Vector2 itemCenter = spawnTable.InverseTransformPoint(
+            Vector2 itemCenter = parentRect.InverseTransformPoint(
                 spawnItem.TransformPoint(spawnItem.rect.center));
-            targetpoint = spawnItem.anchoredPosition + spawnTable.rect.center - itemCenter;
+            targetpoint = spawnItem.anchoredPosition + parentRect.rect.center - itemCenter;
         }
 
         Draggable draggable =
@@ -123,6 +149,41 @@ public class ItemSpawner : MonoBehaviour
         // 해금 이펙트 및 완료 콜백 전달
         unlock.Initialize(lightTexture, onComplete);
 
+        return true;
+    }
+
+    // 스크래치 봇 테이블 우측 하단 스폰 (LotteryLayer 위 레이어에 생성)
+    public bool TrySpawnScratchBot()
+    {
+        if (spawnedScratchBot != null)
+            return false;
+
+        if (ScratchBotUpgradeManager.Instance != null &&
+            !ScratchBotUpgradeManager.Instance.isBotUnlocked)
+            return false;
+
+        RectTransform baseRect = scratchBotLayer != null ? scratchBotLayer : spawnTable;
+        Debug.Log($"baseRect {baseRect.gameObject.name}");
+        if (baseRect == null || scratchBotPrefab == null ||
+            !scratchBotPrefab.TryGetComponent<RectTransform>(out _))
+        {
+            Debug.LogWarning("ScratchBot 프리팹 또는 레이어를 확인하세요.", this);
+            return false;
+        }
+
+        float targetX = (baseRect.rect.width * 0.5f) - bottomRightPadding.x;
+        float targetY = -(baseRect.rect.height * 0.5f) + bottomRightPadding.y;
+        Vector2 bottomRightTarget = new Vector2(targetX, targetY);
+
+        if (!TrySpawnItemInternal(
+            scratchBotPrefab,
+            bottomRightTarget,
+            false,
+            baseRect,
+            out GameObject botObj))
+            return false;
+
+        spawnedScratchBot = botObj;
         return true;
     }
 

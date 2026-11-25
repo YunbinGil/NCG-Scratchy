@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -187,7 +186,6 @@ public class InspectViewManager : MonoBehaviour
 
     public void OpenTrophyView(Trophy trophy)
     {
-        currentTarget = trophy;
         Sprite sprite = trophy.GetInspectSprite();
         float scale = Mathf.Max(0.1f, trophy.GetInspectScale());
 
@@ -269,41 +267,38 @@ public class InspectViewManager : MonoBehaviour
 
         if (overlay != null)
         {
-            Scratchable[] scratchables = SetupOverlayIconAreas(lottery, overlay);
+            Scratchable[] scratchables = SetupOverlayIconAreas(lottery, overlay, out IconArea[] areas);
             lottery.SetStainOverlay(overlay, scratchables);
-            ApplyIconsToOverlay(lottery, overlay);
+            ApplyIconsToOverlay(lottery, areas);
         }
 
         return overlay;
     }
 
-    private Scratchable[] SetupOverlayIconAreas(Lottery lottery, GameObject overlay)
-{
-    IconArea[] areas = overlay.GetComponentsInChildren<IconArea>(true);
-
-    var scratchableList = new List<Scratchable>(areas.Length);
-    for (int i = 0; i < areas.Length; i++)
+    private Scratchable[] SetupOverlayIconAreas(Lottery lottery, GameObject overlay, out IconArea[] areas)
     {
-        IconArea area = areas[i];
-        if (area == null) continue;
+        areas = overlay.GetComponentsInChildren<IconArea>(true);
 
-        area.SlotIndex = i;
-        if (area.Scratchable != null)
+        var scratchableList = new List<Scratchable>(areas.Length);
+        for (int i = 0; i < areas.Length; i++)
         {
-            area.Scratchable.CurrentItem = lottery;
-            scratchableList.Add(area.Scratchable);
+            IconArea area = areas[i];
+            if (area == null) continue;
+
+            area.SlotIndex = i;
+            if (area.Scratchable != null)
+            {
+                area.Scratchable.CurrentItem = lottery;
+                scratchableList.Add(area.Scratchable);
+            }
         }
+
+        return scratchableList.ToArray();
     }
 
-    return scratchableList.ToArray();
-}
-
-    private void ApplyIconsToOverlay(Lottery lottery, GameObject overlay)
+    private void ApplyIconsToOverlay(Lottery lottery, IconArea[] areas)
     {
-        if (lottery == null || lottery.currentLotteryIcons == null || overlay == null) return;
-
-        IconArea[] areas = overlay.GetComponentsInChildren<IconArea>(true);
-        Array.Sort(areas, (a, b) => string.CompareOrdinal(a.gameObject.name, b.gameObject.name));
+        if (lottery == null || lottery.currentLotteryIcons == null || areas == null) return;
 
         int count = Mathf.Min(areas.Length, lottery.currentLotteryIcons.Count);
         for (int i = 0; i < count; i++)

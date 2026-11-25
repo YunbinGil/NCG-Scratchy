@@ -1,26 +1,56 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class StartSceneController : MonoBehaviour
 {
-    [SerializeField] private string tutorialSceneName = "Game";
+    private const string LoadFlagKey = "ShouldLoadSavedData";
 
-    public void LoadTutorialScene()
+    [SerializeField] private string gameSceneName = "Game";
+    [SerializeField] private Button loadGameButton;
+
+    private void Start()
     {
-        SceneManager.LoadScene(tutorialSceneName);
+        if (loadGameButton != null)
+        {
+            loadGameButton.interactable = LocalJsonSaveSystem.HasSaveFile();
+        }
     }
 
-    public void LoadOption()
+    public void NewGameScene()
     {
-        
+        PlayerPrefs.SetInt(LoadFlagKey, 0);
+        PlayerPrefs.Save();
+
+        if (!string.IsNullOrEmpty(gameSceneName))
+        {
+            SceneManager.LoadScene(gameSceneName);
+        }
+    }
+
+    public void LoadGameScene()
+    {
+        if (!LocalJsonSaveSystem.HasSaveFile())
+        {
+            Debug.Log("불러올 저장 데이터가 없습니다.");
+            return;
+        }
+
+        PlayerPrefs.SetInt(LoadFlagKey, 1);
+        PlayerPrefs.Save();
+
+        if (!string.IsNullOrEmpty(gameSceneName))
+        {
+            SceneManager.LoadScene(gameSceneName);
+        }
     }
 
     public void QuitGame()
     {
-        Application.Quit();
-
 #if UNITY_EDITOR
         UnityEditor.EditorApplication.isPlaying = false;
+#else
+        Application.Quit();
 #endif
     }
 }

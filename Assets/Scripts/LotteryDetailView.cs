@@ -29,8 +29,8 @@ public class LotteryDetailView : MonoBehaviour
         int requiredMatchCount = Mathf.Max(1, data.requiredMatchCount);
 
         if (titleText != null) titleText.text = data.lotteryName;
-        if (matchRuleText != null) matchRuleText.text = $"{requiredMatchCount}match, win";
-        if (hardnessText != null) hardnessText.text = $"Hard: {data.hardness}";
+        Localization.Bind(matchRuleText, "detail.match_rule", "Match {0} to win", requiredMatchCount);
+        Localization.Bind(hardnessText, "detail.hardness", "Hard: {0}", data.hardness);
 
         BindSymbolRows(data, requiredMatchCount);
     }
