@@ -171,4 +171,22 @@ public class ScratchBotUpgradeManager : MonoBehaviour
 
         return unitIndex == 0 ? $"$ {num:F0}" : $"$ {num:F2} {units[unitIndex]}";
     }
+
+    public void SetUpgradeLevel(BotUpgradeType type, int level)
+    {
+        int clamped = Mathf.Clamp(level, 1, maxUpgradeLevel);
+
+        switch (type)
+        {
+            case BotUpgradeType.Speed:
+                speedLevel = clamped;
+                break;
+            case BotUpgradeType.Capacity:
+                capacityLevel = clamped;
+                break;
+            case BotUpgradeType.Power:
+                powerLevel = clamped;
+                break;
+        }
+    }
 }
