@@ -143,6 +143,8 @@ public class CatalogShop : MonoBehaviour
                 iconImage.preserveAspect = true;
         }
 
+        Localization.BindAuthoredLabels(catalog);
+
         if (ticketContent.TryGetComponent<VerticalLayoutGroup>(out var contentLayout))
             contentLayout.childForceExpandHeight = false;
 

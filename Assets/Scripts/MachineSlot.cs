@@ -29,9 +29,10 @@ public class MachineSlot : MonoBehaviour
 
     private void Start()
     {
-        nameText.text = equipmentName;
+        Localization.Bind(nameText, $"machine.{(equipmentName ?? string.Empty).ToLowerInvariant()}", equipmentName);
         priceText.text = equipmentPrice.ToString();
         purchaseText.text = string.Empty;
+        Localization.BindAuthoredLabels(gameObject);
 
         playerProgress = equipmentShop != null ? equipmentShop.PlayerProgress : null;
         if (playerProgress != null)
@@ -69,7 +70,7 @@ public class MachineSlot : MonoBehaviour
         {
             isPurchased = true;
 
-            purchaseText.text = "Sold Out";
+            Localization.Bind(purchaseText, "shop.sold_out", "Sold Out");
             purchaseButton.interactable = false;
             equipmentImage.color = Color.gray;
 

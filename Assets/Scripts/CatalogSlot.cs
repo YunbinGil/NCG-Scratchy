@@ -42,7 +42,7 @@ public class CatalogSlot : MonoBehaviour
         playerProgress = shop != null ? shop.PlayerProgress : null;
 
         if (nameText != null)
-            nameText.text = ticketName;
+            Localization.Bind(nameText, $"shop.item.{(ticketName ?? string.Empty).ToLowerInvariant()}", ticketName);
 
         if (priceText != null)
             priceText.text = price.ToString();
@@ -118,7 +118,7 @@ public class CatalogSlot : MonoBehaviour
 
         experienceRatio = level >= maxLevel ? 1f : Mathf.Clamp01((float)experience / GetRequiredExperience(level));
         if (levelText != null)
-            levelText.text = $"Lv. {level}";
+            Localization.Bind(levelText, "status.level", "Lv. {0}", level);
 
         UpdateMask();
     }

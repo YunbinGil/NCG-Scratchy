@@ -62,7 +62,7 @@ public class UpgradeSlot : MonoBehaviour
     private void UpdateUI()
     {
         nameText.text = upgradeName;
-        levelText.text = $"Lv. {upgradeLevel}";
+        Localization.Bind(levelText, "status.level", "Lv. {0}", upgradeLevel);
         costText.text = $"{upgradeCost:N0}";
     }
 }
