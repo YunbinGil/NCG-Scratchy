@@ -19,6 +19,7 @@ public class CatalogShop : MonoBehaviour
     [SerializeField] private ItemSpawner itemSpawner;
 
     internal GameManager PlayerProgress => gameManager;
+    public int CurrentCatalogIndexForSave => currentCatalogIndex;
 
     private int currentCatalogIndex = 0;
     private bool isUnlocking = false;
@@ -51,6 +52,24 @@ public class CatalogShop : MonoBehaviour
 
         // 다음 도감의 해금 조건 확인
         CheckUnlockCondition(gameManager.Level);
+    }
+
+    public void ApplyCatalogIndex(int savedIndex)
+    {
+        currentCatalogIndex = Mathf.Clamp(savedIndex, 0, catalogList.Count);
+
+        for (int i = 0; i < currentCatalogIndex; i++)
+        {
+            if (ticketContent != null &&
+                ticketContent.childCount <= i &&
+                catalogList[i].catalogPrefab != null)
+            {
+                AddCatalog(catalogList[i].catalogPrefab);
+            }
+        }
+
+        isUnlocking = false;
+        CheckUnlockCondition(gameManager != null ? gameManager.Level : 0);
     }
 
     // 해금 조건 확인

@@ -8,7 +8,7 @@ public class ScratchBotUpgradeSlot : MonoBehaviour
     [SerializeField] private BotUpgradeType upgradeType = BotUpgradeType.Speed;
     [SerializeField] private string upgradeName;
     [SerializeField] private int maxLevel = 5;
-    [SerializeField] private GameObject lockObject;
+    // [SerializeField] private GameObject lockObject;
 
     [Header("UI")]
     [SerializeField] private TMP_Text nameText;
@@ -95,7 +95,7 @@ public class ScratchBotUpgradeSlot : MonoBehaviour
         {
             if (levelText != null) levelText.text = "Lv. 1";
             if (costText != null) costText.text = "-";
-            if (lockObject != null) lockObject.SetActive(true);
+            // if (lockObject != null) lockObject.SetActive(true);
             if (upgradeButton != null) upgradeButton.interactable = false;
             return;
         }
@@ -115,10 +115,10 @@ public class ScratchBotUpgradeSlot : MonoBehaviour
             costText.text = isMax ? "MAX" : $"{manager.GetCost(upgradeType):N0}";
         }
 
-        if (lockObject != null)
-        {
-            lockObject.SetActive(!isBotUnlocked);
-        }
+        // if (lockObject != null)
+        // {
+        //     lockObject.SetActive(!isBotUnlocked);
+        // }
 
         if (upgradeButton != null)
         {

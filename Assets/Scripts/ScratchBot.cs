@@ -3,16 +3,17 @@ using UnityEngine;
 
 public class ScratchBot : MonoBehaviour
 {
-    [Header("흡입 및 모션 설정")]
-    [SerializeField] private float baseAbsorbSpeed = 160f;
-    [SerializeField] private float powerSpeedFactor = 4.5f;
-    [SerializeField] private float absorbStopDistance = 6f;
-    [SerializeField] private float absorbStartOffsetY = 90f;
-    [SerializeField] private float absorbEndScale = 0.75f;
+    public static readonly List<ScratchBot> ActiveBots = new List<ScratchBot>();
+
+    [Header("1자 하강 및 긁기 설정")]
+    [SerializeField] private float baseAbsorbSpeed = 45f;
+    [SerializeField] private float powerSpeedFactor = 1.8f;
+    [SerializeField] private float startOffsetY = 30f;
+    [SerializeField] private float endOffsetY = -100f;
     [SerializeField] private Transform holdContainer;
+    [SerializeField] private Transform lotteryLayer;
 
     private readonly List<AbsorbedLotteryEntry> absorbedLotteries = new List<AbsorbedLotteryEntry>();
-    private float scratchTimer = 0f;
 
     private class AbsorbedLotteryEntry
     {
@@ -20,14 +21,38 @@ public class ScratchBot : MonoBehaviour
         public RectTransform rectTransform;
         public Draggable draggable;
         public IInspectableSource inspectable;
-        public Vector3 initialLocalScale;
-        public float startDistance;
+        public Transform originalParent;
+        public float startY;
+        public float targetY;
         public float progress;
-        public bool isAbsorbed;
         public bool isScratchedComplete;
     }
 
-    private Transform HoldContainer => holdContainer != null ? holdContainer : transform;
+    private RectTransform BotRectTransform => GetComponent<RectTransform>();
+
+    private Transform BackLayerContainer
+    {
+        get
+        {
+            if (lotteryLayer != null)
+                return lotteryLayer;
+
+            if (transform.parent != null && transform.parent.parent != null)
+            {
+                Transform siblingLayer = transform.parent.parent.Find("LottertyLayer");
+                if (siblingLayer == null)
+                    siblingLayer = transform.parent.parent.Find("LotteryLayer");
+
+                if (siblingLayer != null)
+                {
+                    lotteryLayer = siblingLayer;
+                    return lotteryLayer;
+                }
+            }
+
+            return holdContainer != null ? holdContainer : transform;
+        }
+    }
 
     public int CurrentHeldCount => absorbedLotteries.Count;
 
@@ -36,34 +61,77 @@ public class ScratchBot : MonoBehaviour
             ? Mathf.Max(1, ScratchBotUpgradeManager.Instance.CurrentMaxCapacity)
             : 1;
 
-    private float CurrentScratchInterval =>
-        ScratchBotUpgradeManager.Instance != null
-            ? ScratchBotUpgradeManager.Instance.CurrentScratchInterval
-            : 0.5f;
-
     private float CurrentScratchPower =>
         ScratchBotUpgradeManager.Instance != null
-            ? ScratchBotUpgradeManager.Instance.CurrentScratchPower
+            ? Mathf.Max(0.01f, ScratchBotUpgradeManager.Instance.CurrentScratchPower)
             : 0.15f;
 
     private float CurrentEffectiveAbsorbSpeed =>
-        baseAbsorbSpeed * (1f + Mathf.Max(0f, CurrentScratchPower) * powerSpeedFactor);
+        baseAbsorbSpeed * (1f + CurrentScratchPower * powerSpeedFactor);
+
+    private void OnEnable()
+    {
+        if (!ActiveBots.Contains(this))
+            ActiveBots.Add(this);
+    }
+
+    private void OnDisable()
+    {
+        ActiveBots.Remove(this);
+    }
 
     private void Awake()
     {
         if (holdContainer == null)
             holdContainer = transform;
+
+        if (lotteryLayer == null && transform.parent != null && transform.parent.parent != null)
+        {
+            Transform siblingLayer = transform.parent.parent.Find("LottertyLayer");
+            if (siblingLayer == null)
+                siblingLayer = transform.parent.parent.Find("LotteryLayer");
+            lotteryLayer = siblingLayer;
+        }
     }
 
     private void Update()
     {
-        UpdateAbsorbingMovement();
-        UpdateAutoScratch();
+        UpdateAbsorbAndScratch();
+    }
+
+    public static bool TryRevealFromAnyBot(GameObject lotteryObj)
+    {
+        if (lotteryObj == null)
+            return false;
+
+        for (int i = 0; i < ActiveBots.Count; i++)
+        {
+            if (ActiveBots[i] != null && ActiveBots[i].TryRevealScratchedLottery(lotteryObj))
+                return true;
+        }
+        return false;
     }
 
     public bool CanAbsorbMore()
     {
         return CurrentHeldCount < MaxCapacity;
+    }
+
+    public bool TryGetScratchProgress(GameObject lotteryObj, out float progress)
+    {
+        progress = 0f;
+        if (lotteryObj == null)
+            return false;
+
+        for (int i = 0; i < absorbedLotteries.Count; i++)
+        {
+            if (absorbedLotteries[i].lotteryObject == lotteryObj)
+            {
+                progress = absorbedLotteries[i].progress;
+                return true;
+            }
+        }
+        return false;
     }
 
     public bool TryAbsorbLottery(GameObject lotteryObj)
@@ -82,20 +150,14 @@ public class ScratchBot : MonoBehaviour
         if (draggable != null)
             draggable.enabled = false;
 
-        Vector3 originalScale = rt.localScale;
-        Transform container = HoldContainer;
-        lotteryObj.transform.SetParent(container, true);
+        Transform prevParent = lotteryObj.transform.parent;
+        Transform targetParent = BackLayerContainer;
+
+        lotteryObj.transform.SetParent(targetParent, true);
         rt.SetAsLastSibling();
 
-        Vector3 targetWorldPos = container.position;
-        Vector3 startWorldPos = new Vector3(
-            rt.position.x,
-            Mathf.Max(rt.position.y, targetWorldPos.y + absorbStartOffsetY),
-            rt.position.z
-        );
-        rt.position = startWorldPos;
-
-        float dist = Mathf.Max(0.01f, Vector3.Distance(startWorldPos, targetWorldPos));
+        GetClampedVerticalRange(out float fixedX, out float startY, out float targetY, out float fixedZ);
+        rt.position = new Vector3(fixedX, startY, fixedZ);
 
         absorbedLotteries.Add(new AbsorbedLotteryEntry
         {
@@ -103,14 +165,14 @@ public class ScratchBot : MonoBehaviour
             rectTransform = rt,
             draggable = draggable,
             inspectable = lotteryObj.GetComponent<IInspectableSource>(),
-            initialLocalScale = originalScale,
-            startDistance = dist,
+            originalParent = prevParent,
+            startY = startY,
+            targetY = targetY,
             progress = 0f,
-            isAbsorbed = false,
             isScratchedComplete = false
         });
 
-        Debug.Log($"ScratchBot 복권 흡수 시작 ({CurrentHeldCount}/{MaxCapacity})");
+        Debug.Log($"ScratchBot 복권 긁는 중 ({CurrentHeldCount}/{MaxCapacity})");
         return true;
     }
 
@@ -158,8 +220,10 @@ public class ScratchBot : MonoBehaviour
                 continue;
 
             AbsorbedLotteryEntry entry = absorbedLotteries[i];
-            if (entry.rectTransform != null)
-                entry.rectTransform.localScale = entry.initialLocalScale;
+            if (entry.originalParent != null && entry.lotteryObject != null)
+            {
+                entry.lotteryObject.transform.SetParent(entry.originalParent, true);
+            }
 
             if (entry.draggable != null)
                 entry.draggable.enabled = true;
@@ -167,6 +231,33 @@ public class ScratchBot : MonoBehaviour
             absorbedLotteries.RemoveAt(i);
             break;
         }
+    }
+
+    private void GetClampedVerticalRange(out float centerX, out float clampedStartY, out float clampedTargetY, out float zPos)
+    {
+        RectTransform botRect = BotRectTransform;
+        float baseY = transform.position.y;
+        zPos = transform.position.z;
+
+        float desiredStartY = baseY + startOffsetY;
+        float desiredTargetY = baseY + endOffsetY;
+
+        if (botRect != null && botRect.rect.height > 0.01f)
+        {
+            Vector3[] corners = new Vector3[4];
+            botRect.GetWorldCorners(corners);
+            float minBoundY = corners[0].y;
+            float maxBoundY = corners[1].y;
+
+            centerX = (corners[0].x + corners[3].x) * 0.5f;
+            clampedStartY = Mathf.Clamp(desiredStartY, minBoundY, maxBoundY);
+            clampedTargetY = Mathf.Clamp(desiredTargetY, minBoundY, maxBoundY);
+            return;
+        }
+
+        centerX = transform.position.x;
+        clampedStartY = desiredStartY;
+        clampedTargetY = desiredTargetY;
     }
 
     private bool ContainsLottery(GameObject lotteryObj)
@@ -179,10 +270,10 @@ public class ScratchBot : MonoBehaviour
         return false;
     }
 
-    private void UpdateAbsorbingMovement()
+    private void UpdateAbsorbAndScratch()
     {
         float moveSpeed = CurrentEffectiveAbsorbSpeed;
-        Vector3 targetWorldPos = HoldContainer.position;
+        GetClampedVerticalRange(out float fixedX, out _, out float targetY, out float fixedZ);
 
         for (int i = absorbedLotteries.Count - 1; i >= 0; i--)
         {
@@ -193,66 +284,32 @@ public class ScratchBot : MonoBehaviour
                 continue;
             }
 
-            if (entry.isAbsorbed)
+            if (entry.isScratchedComplete)
+            {
+                entry.rectTransform.position = new Vector3(fixedX, entry.targetY, fixedZ);
                 continue;
+            }
 
-            entry.rectTransform.position = Vector3.MoveTowards(
-                entry.rectTransform.position,
-                targetWorldPos,
+            float nextY = Mathf.MoveTowards(
+                entry.rectTransform.position.y,
+                entry.targetY,
                 moveSpeed * Time.deltaTime
             );
 
-            float remainingDist = Vector3.Distance(entry.rectTransform.position, targetWorldPos);
-            float t = 1f - Mathf.Clamp01(remainingDist / entry.startDistance);
-            entry.rectTransform.localScale = entry.initialLocalScale * Mathf.Lerp(1f, absorbEndScale, t);
+            entry.rectTransform.position = new Vector3(fixedX, nextY, fixedZ);
 
-            if (remainingDist <= absorbStopDistance)
+            float totalDist = Mathf.Max(0.01f, Mathf.Abs(entry.startY - entry.targetY));
+            float traveledDist = Mathf.Abs(entry.startY - nextY);
+            float t = Mathf.Clamp01(traveledDist / totalDist);
+            entry.progress = t;
+
+            if (Mathf.Abs(nextY - entry.targetY) <= 1f || t >= 1f)
             {
-                entry.rectTransform.localPosition = Vector3.zero;
-                entry.isAbsorbed = true;
-            }
-        }
-    }
-
-    private void UpdateAutoScratch()
-    {
-        if (!HasPendingScratch())
-        {
-            scratchTimer = 0f;
-            return;
-        }
-
-        scratchTimer += Time.deltaTime;
-        if (scratchTimer < CurrentScratchInterval)
-            return;
-
-        scratchTimer = 0f;
-        float power = CurrentScratchPower;
-
-        for (int i = 0; i < absorbedLotteries.Count; i++)
-        {
-            AbsorbedLotteryEntry entry = absorbedLotteries[i];
-            if (entry.lotteryObject == null || entry.isScratchedComplete)
-                continue;
-
-            entry.progress = Mathf.Min(1f, entry.progress + power);
-
-            if (entry.progress >= 1f)
-            {
+                entry.rectTransform.position = new Vector3(fixedX, entry.targetY, fixedZ);
+                entry.progress = 1f;
                 entry.isScratchedComplete = true;
                 Debug.Log("봇이 복권을 다 긁었습니다. 복권을 눌러 당첨 결과를 확인하세요.");
             }
         }
-    }
-
-    private bool HasPendingScratch()
-    {
-        for (int i = 0; i < absorbedLotteries.Count; i++)
-        {
-            AbsorbedLotteryEntry entry = absorbedLotteries[i];
-            if (entry.lotteryObject != null && !entry.isScratchedComplete)
-                return true;
-        }
-        return false;
     }
 }

@@ -25,7 +25,7 @@ MonoBehaviour:
   sellPriceProductId: 0
   sellPriceBonusPerLevel: 10
   breakPenalty: 2
-  breakChance: 0.1
+  breakChance: 0.656
   breakChanceReductionPerLevel: 0.01
   baseCleanRequirement: 100
   cleanCompleteRatio: 0.8

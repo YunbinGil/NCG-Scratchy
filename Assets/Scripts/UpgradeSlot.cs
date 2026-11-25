@@ -17,13 +17,18 @@ public class UpgradeSlot : MonoBehaviour
     [SerializeField] private TMP_Text costText;
     [SerializeField] private Button upgradeButton;
 
+    public UpgradeType UpgradeTypeValue => upgradeType;
+    public int UpgradeLevelValue => upgradeLevel;
+    public float UpgradeCostValue => upgradeCost;
+
     private void Awake()
     {
-        if(upgradeButton == null)
+        if (upgradeButton == null)
         {
             upgradeButton = GetComponent<Button>();
         }
     }
+
     private void Start()
     {
         upgradeButton.onClick.AddListener(UpgradeLevelUp);
@@ -37,6 +42,14 @@ public class UpgradeSlot : MonoBehaviour
         upgradeLevel++;
         upgradeCost += upgradeCost * costMultiplier;
 
+        ApplyUpgrade();
+        UpdateUI();
+    }
+
+    public void ApplySaveData(int savedLevel, float savedCost)
+    {
+        upgradeLevel = Mathf.Max(0, savedLevel);
+        upgradeCost = Mathf.Max(0f, savedCost);
         ApplyUpgrade();
         UpdateUI();
     }

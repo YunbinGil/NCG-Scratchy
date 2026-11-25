@@ -1,4 +1,3 @@
-
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -11,14 +10,27 @@ public class MachineShop : MonoBehaviour
     public Transform equipmentContent;
     public RectTransform canvasRect;
 
-    [Header("임시 골드")]
-    public int currentGold = 1000;
+    [Header("초기 골드 (GameManager 없을 때 폴백)")]
+    [SerializeField] private int fallbackGold = 1000;
 
     [SerializeField] private GameManager gameManager;
 
     internal GameManager PlayerProgress => gameManager;
 
-    private Vector3 spawnPoint;
+    public int Gold
+    {
+        get => gameManager != null ? gameManager.Money : fallbackGold;
+        private set
+        {
+            if (gameManager != null)
+                gameManager.SetMoney(value);
+            else
+                fallbackGold = value;
+        }
+    }
+
+    private readonly List<string> purchasedEquipmentNames = new List<string>();
+    public IReadOnlyList<string> PurchasedEquipmentNames => purchasedEquipmentNames;
 
     private void Start()
     {
@@ -30,26 +42,46 @@ public class MachineShop : MonoBehaviour
 
     private void CreateEquipmentUI()
     {
-        foreach (GameObject equipment in equipmentPrefabs)
+        foreach (GameObject equipmentPrefab in equipmentPrefabs)
         {
-            GameObject item = Instantiate(equipment, equipmentContent);
+            if (equipmentPrefab == null)
+                continue;
 
-            MachineSlot equipmentItem = item.GetComponent<MachineSlot>();
-            equipmentItem.equipmentShop = this;
+            GameObject slotObj = Instantiate(equipmentPrefab, equipmentContent);
+
+            MachineSlot slot = slotObj.GetComponent<MachineSlot>();
+            if (slot != null)
+            {
+                slot.equipmentShop = this;
+            }
         }
     }
 
     public bool PurchaseEquipment(int price)
     {
-        if (currentGold < price)
+        if (price < 0)
+            return false;
+
+        if (gameManager != null)
+        {
+            if (!gameManager.TrySpendMoney(price))
+            {
+                Debug.Log("골드가 부족합니다.");
+                return false;
+            }
+
+            Debug.Log("남은 골드: " + gameManager.Money);
+            return true;
+        }
+
+        if (fallbackGold < price)
         {
             Debug.Log("골드가 부족합니다.");
             return false;
         }
 
-        currentGold -= price;
-
-        Debug.Log("남은 골드: " + currentGold);
+        fallbackGold -= price;
+        Debug.Log("남은 골드: " + fallbackGold);
         return true;
     }
 
@@ -58,11 +90,9 @@ public class MachineShop : MonoBehaviour
         if (equipmentPrefab == null || canvasRect == null)
             return;
 
-        // Canvas를 부모로 지정해서 생성
         GameObject equipment = Instantiate(equipmentPrefab, canvasRect);
 
         RectTransform rect = equipment.GetComponent<RectTransform>();
-
         if (rect == null)
         {
             Debug.LogWarning("장비 프리팹에 RectTransform이 없습니다.");
@@ -70,14 +100,47 @@ public class MachineShop : MonoBehaviour
             return;
         }
 
-        // 오른쪽 하단 기준
         rect.anchorMin = new Vector2(1f, 0f);
         rect.anchorMax = new Vector2(1f, 0f);
         rect.pivot = new Vector2(1f, 0f);
-
-        // 오른쪽 하단에서 안쪽으로 50만큼 이동
         rect.anchoredPosition = new Vector2(-50f, 50f);
-
         rect.SetAsLastSibling();
+    }
+
+    public void RecordPurchasedEquipment(string equipmentName, GameObject equipmentPrefab)
+    {
+        if (!string.IsNullOrEmpty(equipmentName) && !purchasedEquipmentNames.Contains(equipmentName))
+        {
+            purchasedEquipmentNames.Add(equipmentName);
+        }
+
+        SpawnEquipment(equipmentPrefab);
+    }
+
+    public void RestorePurchasedEquipments(List<string> savedEquipmentNames)
+    {
+        purchasedEquipmentNames.Clear();
+        if (savedEquipmentNames == null)
+            return;
+
+        foreach (string equipmentName in savedEquipmentNames)
+        {
+            if (!string.IsNullOrEmpty(equipmentName) && !purchasedEquipmentNames.Contains(equipmentName))
+            {
+                purchasedEquipmentNames.Add(equipmentName);
+            }
+        }
+
+        foreach (GameObject equipmentPrefab in equipmentPrefabs)
+        {
+            if (equipmentPrefab == null)
+                continue;
+
+            MachineSlot slot = equipmentPrefab.GetComponent<MachineSlot>();
+            if (slot != null && purchasedEquipmentNames.Contains(slot.equipmentName))
+            {
+                SpawnEquipment(equipmentPrefab);
+            }
+        }
     }
 }

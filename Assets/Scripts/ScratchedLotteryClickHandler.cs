@@ -12,6 +12,9 @@ public class ScratchedLotteryClickHandler : MonoBehaviour, IPointerClickHandler
         if (bot != null)
         {
             bot.TryRevealScratchedLottery(gameObject);
+            return;
         }
+
+        ScratchBot.TryRevealFromAnyBot(gameObject);
     }
 }

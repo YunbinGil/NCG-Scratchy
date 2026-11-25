@@ -6,15 +6,16 @@ public class PhoneCallTrigger : MonoBehaviour
 {
     [Header("전화기 울림 연출")]
     [SerializeField] private GameObject ringingIndicator; // 느낌표/발광 등 울림 표시 오브젝트
+    // 오디오
     // [SerializeField] private AudioSource phoneAudioSource;
     // [SerializeField] private AudioClip ringClip;
     [SerializeField] private float ringShakeAngle = 8f;
     [SerializeField] private float ringShakeSpeed = 28f;
 
-
     private Button Button;
     private string[] QueuedLines;
     private bool IsRinging;
+    private bool isPaused;
     private Quaternion BaseRotation;
 
     private void Awake()
@@ -30,10 +31,20 @@ public class PhoneCallTrigger : MonoBehaviour
 
     private void Update()
     {
-        if (!IsRinging) return;
+        if (!IsRinging || isPaused) return;
 
-        float angle = Mathf.Sin(Time.unscaledTime * ringShakeSpeed) * ringShakeAngle;
+        float angle = Mathf.Sin(Time.time * ringShakeSpeed) * ringShakeAngle;
         transform.localRotation = BaseRotation * Quaternion.Euler(0f, 0f, angle);
+    }
+
+    public void SetPaused(bool paused)
+    {
+        isPaused = paused;
+
+        if (isPaused && IsRinging)
+        {
+            transform.localRotation = BaseRotation;
+        }
     }
 
     // 새 컨텐츠가 추가될 때마다 호출
@@ -42,7 +53,7 @@ public class PhoneCallTrigger : MonoBehaviour
         QueuedLines = (lines != null && lines.Length > 0) ? lines : null;
         IsRinging = true;
         SetRingingVisual(true);
-
+        // 오디오
         // if (phoneAudioSource != null && ringClip != null && !phoneAudioSource.isPlaying)
         // {
         //     phoneAudioSource.clip = ringClip;
@@ -56,7 +67,7 @@ public class PhoneCallTrigger : MonoBehaviour
         IsRinging = false;
         transform.localRotation = BaseRotation;
         SetRingingVisual(false);
-
+        // 오디오
         // if (phoneAudioSource != null && phoneAudioSource.isPlaying)
         // {
         //     phoneAudioSource.Stop();
@@ -65,7 +76,7 @@ public class PhoneCallTrigger : MonoBehaviour
 
     private void OnPhoneClicked()
     {
-        if (!IsRinging) return;
+        if (!IsRinging || isPaused) return;
 
         string[] linesToPlay = (QueuedLines != null && QueuedLines.Length > 0) ? QueuedLines : null;
 

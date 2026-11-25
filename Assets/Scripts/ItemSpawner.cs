@@ -163,6 +163,7 @@ public class ItemSpawner : MonoBehaviour
             return false;
 
         RectTransform baseRect = scratchBotLayer != null ? scratchBotLayer : spawnTable;
+        Debug.Log($"baseRect {baseRect.gameObject.name}");
         if (baseRect == null || scratchBotPrefab == null ||
             !scratchBotPrefab.TryGetComponent<RectTransform>(out _))
         {
