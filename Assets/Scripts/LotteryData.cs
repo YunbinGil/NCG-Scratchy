@@ -14,6 +14,7 @@ public class LotteryData : ScriptableObject
     public Sprite tableSprite;
     public Sprite inspectSprite;
     public Sprite scratchCoverSprite;
+    public GameObject lotteryPrefab;
 
     [Header("복권 규칙")]
     [Range(1, 10)] public int scratchCount = 3;

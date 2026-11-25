@@ -10,6 +10,7 @@ public class Lottery : MonoBehaviour, IInspectableSource
 
     [Header("UI 버튼")]
     [SerializeField] private Button lotteryButton;
+    [SerializeField] private Image image;
     
     private GameObject stainOverlay;
 
@@ -20,6 +21,10 @@ public class Lottery : MonoBehaviour, IInspectableSource
 
     public bool IsCleaned { get; } = false;
     //TODO: 다 긁어서 결과 나오면 true로 변경
+    public void Awake()
+    {
+        image.sprite = lotteryData.tableSprite;
+    }
 
     public void HandleClick()
     {
