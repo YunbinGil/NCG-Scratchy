@@ -134,14 +134,14 @@ public class MachineSlot : MonoBehaviour
         purchaseButton.interactable = !isLocked && !isPurchased;
     }
 
-    private void OnDestroy()
-    {
-        if (playerProgress != null)
-            playerProgress.OnLevelChanged -= UpdateLock;
+    // private void OnDestroy()
+    // {
+    //     if (playerProgress != null)
+    //         playerProgress.OnLevelChanged -= UpdateLock;
 
-        if (purchaseButton != null)
-            purchaseButton.onClick.RemoveListener(Purchase);
-    }
+    //     if (purchaseButton != null)
+    //         purchaseButton.onClick.RemoveListener(Purchase);
+    // }
 
     private void Purchase()
     {
