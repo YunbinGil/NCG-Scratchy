@@ -30,9 +30,12 @@ public class MachineSlot : MonoBehaviour
     public MachineShop equipmentShop;
 
     private GameManager playerProgress;
-    private bool isLocked;
-    private bool isPurchased = false;
     private GameManager gameManager;
+    private bool isLocked;
+    private bool isPurchased;
+
+    private int EffectiveRequiredLevel =>
+        isScratchBotSlot ? Mathf.Max(requiredPlayerLevel, unlockLevel) : requiredPlayerLevel;
 
     private void Start()
     {
@@ -40,17 +43,22 @@ public class MachineSlot : MonoBehaviour
         if (priceText != null) priceText.text = equipmentPrice.ToString();
         if (purchaseText != null) purchaseText.text = string.Empty;
 
-        playerProgress = equipmentShop != null ? equipmentShop.PlayerProgress : null;
+        gameManager = FindFirstObjectByType<GameManager>();
+        playerProgress = equipmentShop != null && equipmentShop.PlayerProgress != null
+            ? equipmentShop.PlayerProgress
+            : gameManager;
+
         if (playerProgress != null)
             playerProgress.OnLevelChanged += UpdateLock;
 
-        UpdateLock(playerProgress != null ? playerProgress.Level : 0);
-        purchaseButton.onClick.AddListener(Purchase);
-        gameManager = FindFirstObjectByType<GameManager>();
-        if (gameManager != null)
+        if (gameManager != null && gameManager != playerProgress)
         {
-            gameManager.OnLevelChanged += HandleLevelChanged;
-            gameManager.OnScratchBotUnlockAvailable += RefreshScratchBotLock;
+            gameManager.OnLevelChanged += UpdateLock;
+            gameManager.OnScratchBotUnlockAvailable += HandleScratchBotUnlockAvailable;
+        }
+        else if (gameManager != null)
+        {
+            gameManager.OnScratchBotUnlockAvailable += HandleScratchBotUnlockAvailable;
         }
 
         if (requiresScratchBotUnlocked && ScratchBotUpgradeManager.Instance != null)
@@ -58,27 +66,35 @@ public class MachineSlot : MonoBehaviour
             ScratchBotUpgradeManager.Instance.OnUpgraded += RefreshScratchBotLock;
         }
 
-        RefreshScratchBotLock();
-
         if (purchaseButton != null)
+        {
+            purchaseButton.onClick.RemoveListener(Purchase);
             purchaseButton.onClick.AddListener(Purchase);
+        }
+
+        int currentLevel = playerProgress != null ? playerProgress.Level : 0;
+        UpdateLock(currentLevel);
     }
 
     private void OnDestroy()
     {
+        if (playerProgress != null)
+            playerProgress.OnLevelChanged -= UpdateLock;
+
         if (gameManager != null)
         {
-            gameManager.OnLevelChanged -= HandleLevelChanged;
-            gameManager.OnScratchBotUnlockAvailable -= RefreshScratchBotLock;
+            gameManager.OnLevelChanged -= UpdateLock;
+            gameManager.OnScratchBotUnlockAvailable -= HandleScratchBotUnlockAvailable;
         }
 
         if (ScratchBotUpgradeManager.Instance != null)
-        {
             ScratchBotUpgradeManager.Instance.OnUpgraded -= RefreshScratchBotLock;
-        }
+
+        if (purchaseButton != null)
+            purchaseButton.onClick.RemoveListener(Purchase);
     }
 
-    private void HandleLevelChanged(int _)
+    private void HandleScratchBotUnlockAvailable()
     {
         RefreshScratchBotLock();
     }
@@ -89,44 +105,90 @@ public class MachineSlot : MonoBehaviour
                ScratchBotUpgradeManager.Instance.isBotUnlocked;
     }
 
-    public void RefreshScratchBotLock()
+    public void UpdateLock(int currentLevel)
     {
         if (isPurchased)
+        {
+            isLocked = false;
+            ApplyLockVisuals();
+            return;
+        }
+
+        bool levelLocked = currentLevel < EffectiveRequiredLevel;
+        bool botDependencyLocked = requiresScratchBotUnlocked && !IsBotActuallyUnlocked();
+        isLocked = levelLocked || botDependencyLocked;
+
+        ApplyLockVisuals();
+    }
+
+    public void RefreshScratchBotLock()
+    {
+        int currentLevel = playerProgress != null ? playerProgress.Level : 0;
+        UpdateLock(currentLevel);
+    }
+
+    private void ApplyLockVisuals()
+    {
+        if (lockOverlay != null)
+            lockOverlay.SetActive(isLocked);
+
+        if (lockObject != null)
+            lockObject.SetActive(isLocked);
+
+        if (purchaseButton != null)
+            purchaseButton.interactable = !isPurchased && !isLocked;
+
+        if (isPurchased && purchaseText != null)
+            purchaseText.text = "Sold Out";
+    }
+
+    public void Purchase()
+    {
+        if (isPurchased || isLocked)
             return;
 
-        if (equipmentShop.PurchaseEquipment(equipmentPrice))
+        if (equipmentShop == null)
         {
-            isPurchased = true;
-
-            if (purchaseText != null)
-                purchaseText.text = "Sold Out";
-
-            if (purchaseButton != null)
-                purchaseButton.interactable = false;
-
-            if (equipmentImage != null)
-                equipmentImage.color = Color.gray;
-
-            if (lockObject != null)
-                lockObject.SetActive(false);
-
-            if (isScratchBotSlot)
-            {
-                if (ScratchBotUpgradeManager.Instance != null)
-                {
-                    ScratchBotUpgradeManager.Instance.isBotUnlocked = true;
-                    ScratchBotUpgradeManager.Instance.NotifyUpgraded();
-                }
-
-                ItemSpawner spawner = FindFirstObjectByType<ItemSpawner>();
-                spawner?.TrySpawnScratchBot();
-            }
-            else if (!requiresScratchBotUnlocked)
-            {
-                equipmentShop.SpawnEquipment(equipmentPrefab);
-            }
-
-            Debug.Log(equipmentName + " 구매 완료!");
+            Debug.LogWarning($"{name}: equipmentShop이 연결되지 않았습니다.");
+            return;
         }
+
+        if (!equipmentShop.PurchaseEquipment(equipmentPrice))
+            return;
+
+        isPurchased = true;
+
+        if (purchaseText != null)
+            purchaseText.text = "Sold Out";
+
+        if (purchaseButton != null)
+            purchaseButton.interactable = false;
+
+        if (equipmentImage != null)
+            equipmentImage.color = Color.gray;
+
+        if (lockOverlay != null)
+            lockOverlay.SetActive(false);
+
+        if (lockObject != null)
+            lockObject.SetActive(false);
+
+        if (isScratchBotSlot)
+        {
+            if (ScratchBotUpgradeManager.Instance != null)
+            {
+                ScratchBotUpgradeManager.Instance.isBotUnlocked = true;
+                ScratchBotUpgradeManager.Instance.NotifyUpgraded();
+            }
+
+            ItemSpawner spawner = FindFirstObjectByType<ItemSpawner>();
+            spawner?.TrySpawnScratchBot();
+        }
+        else if (!requiresScratchBotUnlocked && equipmentPrefab != null)
+        {
+            equipmentShop.SpawnEquipment(equipmentPrefab);
+        }
+
+        Debug.Log(equipmentName + " 구매 완료!");
     }
 }
