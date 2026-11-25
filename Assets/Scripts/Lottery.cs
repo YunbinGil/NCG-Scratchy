@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -21,9 +22,85 @@ public class Lottery : MonoBehaviour, IInspectableSource
 
     public bool IsCleaned { get; } = false;
     //TODO: 다 긁어서 결과 나오면 true로 변경
+    public List<LotteryIconData> currentLotteryIcons;
     public void Awake()
     {
-        image.sprite = lotteryData.tableSprite;
+        if (lotteryData != null)
+        {
+            Initialize(lotteryData);
+        }
+    }
+    public void Initialize(LotteryData data)
+    {
+        lotteryData = data;
+        if (lotteryData == null) return;
+
+        if (image != null && lotteryData.tableSprite != null)
+        {
+            image.sprite = lotteryData.tableSprite;
+        }
+
+        currentLotteryIcons = RollWeightedIcons(lotteryData.availableIcons, lotteryData.scratchCount);
+    }
+    private static List<LotteryIconData> RollWeightedIcons(List<LotteryIconData> candidates, int count)
+    {
+        var result = new List<LotteryIconData>(count);
+        if (candidates == null || candidates.Count == 0 || count <= 0)
+        {
+            return result;
+        }
+
+        // 유효 아이콘(null 제외, spawnWeight > 0) 필터링 및 총 가중치 계산
+        float totalWeight = 0f;
+        var validIcons = new List<LotteryIconData>(candidates.Count);
+
+        foreach (var icon in candidates)
+        {
+            if (icon != null && icon.spawnWeight > 0f)
+            {
+                validIcons.Add(icon);
+                totalWeight += icon.spawnWeight;
+            }
+        }
+
+        // 가중치가 모두 0 이하일 경우 균등 fallback
+        if (totalWeight <= 0f)
+        {
+            var fallback = new List<LotteryIconData>();
+            foreach (var icon in candidates)
+            {
+                if (icon != null) fallback.Add(icon);
+            }
+
+            if (fallback.Count == 0) return result;
+
+            for (int i = 0; i < count; i++)
+            {
+                result.Add(fallback[Random.Range(0, fallback.Count)]);
+            }
+            return result;
+        }
+
+        for (int i = 0; i < count; i++)
+        {
+            float roll = Random.Range(0f, totalWeight);
+            float cumulative = 0f;
+            LotteryIconData picked = validIcons[validIcons.Count - 1];
+
+            foreach (var icon in validIcons)
+            {
+                cumulative += icon.spawnWeight;
+                if (roll < cumulative)
+                {
+                    picked = icon;
+                    break;
+                }
+            }
+
+            result.Add(picked);
+        }
+
+        return result;
     }
 
     public void HandleClick()

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using NUnit.Framework;
 using TMPro;
 using UnityEditor.IMGUI.Controls;
@@ -52,7 +53,9 @@ public class InspectViewManager : MonoBehaviour
     private GameManager gameManager;
     private IInspectableSource currentTarget;
     private GameObject currentActiveOverlay;
-
+    private List<GameObject> LotteryPrefabs = new List<GameObject>(); //prefab들 넣어두기
+    private List<GameObject> LotteryPreviews = new List<GameObject>(); //실제 생성된 GO들 넣고 icons랑 stainoverlay만 바꿀
+    private LotteryPreviewItem currentLotteryPreview;
     private void Awake()
     {
         centerPreviewRect = centerPreview.GetComponent<RectTransform>();
@@ -129,7 +132,7 @@ public class InspectViewManager : MonoBehaviour
     public void OpenInspect(IInspectableSource target)
     {
         if (target == null) return;
-        
+
         if (currentActiveOverlay != null)
         {
             currentActiveOverlay.SetActive(false);
@@ -191,7 +194,48 @@ public class InspectViewManager : MonoBehaviour
     }
     public void OpenLotteryView(Lottery lottery)
     {
-        
+        if (lottery == null || lottery.Data == null || lottery.Data.lotteryPrefab == null)
+        {
+            Debug.LogWarning("OpenLotteryView: lottery 또는 lotteryPrefab이 null입니다.");
+            return;
+        }
+        GameObject lotteryPrefab = lottery.Data.lotteryPrefab;
+        GameObject targetInstance = null;
+        foreach (var previewObj in LotteryPreviews)
+        {
+            if (previewObj != null && previewObj.name.StartsWith(lotteryPrefab.name))
+            {
+                targetInstance = previewObj;
+                break;
+            }
+        }
+        if (targetInstance == null)
+        {
+            targetInstance = Instantiate(lotteryPrefab, centerPreviewRect);
+            targetInstance.name = lotteryPrefab.name;
+            LotteryPreviews.Add(targetInstance);
+            // TODO: 위치
+        }
+        targetInstance.SetActive(true);
+        currentLotteryPreview = targetInstance.GetComponent<LotteryPreviewItem>();
+        if (currentLotteryPreview == null)
+        {
+            Debug.LogWarning($"{targetInstance.name}에 LotteryPreviewItem 컴포넌트가 없습니다.");
+            return;
+        }
+
+        SpriteRenderer[] iconSprites = currentLotteryPreview.GetIconSprites();
+        GameObject[] iconAreas = currentLotteryPreview.GetIconAreas();
+        Scratchable[] scratchables = currentLotteryPreview.GetScratchables();
+        for (int i = 0; i < lottery.Data.scratchCount; i++)
+        {
+            iconSprites[i].sprite = lottery.currentLotteryIcons[i].iconSprite;
+            scratchables[i].gameObject.SetActive(false);
+        }
+
+
+
+
     }
 
     public void CloseInspect()
@@ -216,6 +260,11 @@ public class InspectViewManager : MonoBehaviour
         {
             currentActiveOverlay.SetActive(false);
             currentActiveOverlay = null;
+        }
+        if (currentLotteryPreview != null)
+        {
+            currentLotteryPreview.gameObject.SetActive(false);
+            currentLotteryPreview = null;
         }
         currentTarget = null;
 
@@ -291,7 +340,7 @@ public class InspectViewManager : MonoBehaviour
     }
     public void OnLotteryCleaned(Lottery lottery)
     {
-        
+
     }
     private void ShowResultButton(IInspectableSource target)
     {

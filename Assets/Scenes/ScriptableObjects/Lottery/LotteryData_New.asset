@@ -16,9 +16,9 @@ MonoBehaviour:
   lotteryName: TREASURE CHEST
   description: '2 match, win '
   tableSprite: {fileID: 543601121251698270, guid: 864f73d075f40a240b3aa4babd66d0d7, type: 3}
-  inspectSprite: {fileID: 21300000, guid: 0fec5af316e25954397094c0f0dc41c4, type: 3}
+  inspectSprite: {fileID: -7483596747600999457, guid: 55279b33b638a184fbf3fa6f51df392f, type: 3}
   scratchCoverSprite: {fileID: 21300000, guid: a351e42dc615d48c8a3399456a53345f, type: 3}
-  lotteryPrefab: {fileID: 8521418617708834342, guid: 85a4710918584214b9fb590002c13ee0, type: 3}
+  lotteryPrefab: {fileID: 2621140978157270999, guid: 38d27eab8245e2745b85f2e510639a88, type: 3}
   scratchCount: 3
   requiredMatchCount: 2
   hardness: 0
