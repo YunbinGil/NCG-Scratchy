@@ -263,11 +263,7 @@ public class InspectViewManager : MonoBehaviour
         GameObject overlay = lottery.GetStainOverlay();
         if (overlay == null && currentLotteryPreview.IconAreasPrefab != null)
         {
-            Transform parentTransform = currentLotteryPreview.StainArea != null
-                ? currentLotteryPreview.StainArea.transform
-                : currentLotteryPreview.transform;
-
-            overlay = Instantiate(currentLotteryPreview.IconAreasPrefab, parentTransform, false);
+            overlay = Instantiate(currentLotteryPreview.IconAreasPrefab, currentLotteryPreview.transform);
             overlay.name = $"{lottery.name}_StainOverlay";
         }
 
@@ -282,26 +278,25 @@ public class InspectViewManager : MonoBehaviour
     }
 
     private Scratchable[] SetupOverlayIconAreas(Lottery lottery, GameObject overlay)
+{
+    IconArea[] areas = overlay.GetComponentsInChildren<IconArea>(true);
+
+    var scratchableList = new List<Scratchable>(areas.Length);
+    for (int i = 0; i < areas.Length; i++)
     {
-        IconArea[] areas = overlay.GetComponentsInChildren<IconArea>(true);
-        Array.Sort(areas, (a, b) => string.CompareOrdinal(a.gameObject.name, b.gameObject.name));
+        IconArea area = areas[i];
+        if (area == null) continue;
 
-        var scratchableList = new List<Scratchable>(areas.Length);
-        for (int i = 0; i < areas.Length; i++)
+        area.SlotIndex = i;
+        if (area.Scratchable != null)
         {
-            IconArea area = areas[i];
-            if (area == null) continue;
-
-            area.SlotIndex = i;
-            if (area.Scratchable != null)
-            {
-                area.Scratchable.CurrentItem = lottery;
-                scratchableList.Add(area.Scratchable);
-            }
+            area.Scratchable.CurrentItem = lottery;
+            scratchableList.Add(area.Scratchable);
         }
-
-        return scratchableList.ToArray();
     }
+
+    return scratchableList.ToArray();
+}
 
     private void ApplyIconsToOverlay(Lottery lottery, GameObject overlay)
     {
