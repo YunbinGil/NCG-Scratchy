@@ -34,6 +34,7 @@ public class CatalogShop : MonoBehaviour
         // 0레벨 도감은 시작과 동시에 상점에 등록
         while (currentCatalogIndex < catalogList.Count)
         {
+            Debug.Log("0레벨 도감 등록");
             CatalogData catalog = catalogList[currentCatalogIndex];
 
             if (catalog.unlockLevel != 0)
