@@ -2,15 +2,14 @@ using UnityEngine;
 
 public class LotteryPreviewItem : MonoBehaviour
 {
-    [SerializeField] private GameObject[] iconAreas;
-    [SerializeField] private SpriteRenderer[] iconSprites;
-    [SerializeField] private GameObject[] scratchables;
+    [SerializeField] private IconArea[] iconAreas;
     [SerializeField] private GameObject stainArea;
     [SerializeField] private GameObject iconAreasPrefab;
-    [SerializeField] private Vector3 offset;
-    public GameObject[] GetIconAreas() => iconAreas;
-    public SpriteRenderer[] GetIconSprites() => iconSprites;
-    public GameObject[] GetScratchables() => scratchables;
-    public GameObject GetIconAreasPrefab() => iconAreasPrefab;
-    public Vector3 GetOffset() => offset;
+    [SerializeField] private Transform offsetTransform;
+
+    public IconArea[] IconAreas => iconAreas;
+    public int IconCount => iconAreas != null ? iconAreas.Length : 0;
+    public GameObject StainArea => stainArea;
+    public GameObject IconAreasPrefab => iconAreasPrefab;
+    public Vector3 Offset => offsetTransform != null ? offsetTransform.localPosition : Vector3.zero;
 }

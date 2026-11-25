@@ -45,7 +45,7 @@ public class Scratchable : MonoBehaviour
     }
     void OnEnable()
     {
-        Debug.Log($"{gameObject.name} active: {gameObject.activeSelf}");
+        // Debug.Log($"{gameObject.name} active: {gameObject.activeSelf}");
     }
 
     void BuildBrushMask()
@@ -244,10 +244,10 @@ public class Scratchable : MonoBehaviour
         {
             IsCompleted = true;
             dirtyRenderer.enabled = false;
-            Debug.Log($"세척 완료! ({ratio * 100f:F1}%)");
-            if (OnScratchCompleted != null)
+            Debug.Log($"{this.gameObject.name} 세척 완료! ({ratio * 100f:F1}%)");
+            if (CurrentItem is Lottery currentLottery)
             {
-                OnScratchCompleted.Invoke(this);
+                currentLottery.HandleSlotCompleted(this);
             }
             else
             {

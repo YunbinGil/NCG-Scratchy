@@ -33,6 +33,7 @@ public class Lottery : MonoBehaviour, IInspectableSource
     private readonly List<int> currentOpened = new List<int>();
     private readonly HashSet<int> highlightedSlots = new HashSet<int>();
     private Coroutine glowRoutine;
+
     public void Awake()
     {
         if (lotteryData != null)
@@ -40,6 +41,7 @@ public class Lottery : MonoBehaviour, IInspectableSource
             Initialize(lotteryData);
         }
     }
+
     public void Initialize(LotteryData data)
     {
         lotteryData = data;
@@ -56,7 +58,13 @@ public class Lottery : MonoBehaviour, IInspectableSource
         }
 
         currentLotteryIcons = RollWeightedIcons(lotteryData.availableIcons, lotteryData.scratchCount);
+        Debug.Log("복권 아이콘 랜덤으로 정하기 완료");
+        foreach (var icon in currentLotteryIcons)
+        {
+            Debug.Log($"{icon.iconName}");
+        }
     }
+
     private static List<LotteryIconData> RollWeightedIcons(List<LotteryIconData> candidates, int count)
     {
         var result = new List<LotteryIconData>(count);
@@ -111,7 +119,6 @@ public class Lottery : MonoBehaviour, IInspectableSource
                     break;
                 }
             }
-
             result.Add(picked);
         }
 
@@ -152,15 +159,28 @@ public class Lottery : MonoBehaviour, IInspectableSource
     {
         Destroy(gameObject);
     }
+
     public GameObject GetStainOverlay()
     {
         return stainOverlay;
     }
-    public void SetStainOverlay(GameObject overlay)
+
+    public void SetStainOverlay(GameObject overlay, Scratchable[] scratchables)
     {
         stainOverlay = overlay;
-        // stainOverlay.GetComponent<Scratchable>().CurrentItem = this;
+        ownedScratchables = scratchables;
+
+        if (scratchables == null) return;
+
+        foreach (var scratchable in scratchables)
+        {
+            if (scratchable != null)
+            {
+                scratchable.CurrentItem = this;
+            }
+        }
     }
+
     private void OnDestroy()
     {
         if (stainOverlay != null)
@@ -174,6 +194,7 @@ public class Lottery : MonoBehaviour, IInspectableSource
     {
         IsCleaned = true;
     }
+
     public void RefreshScratchablesActiveState()
     {
         if (ownedScratchables == null) return;
@@ -185,7 +206,8 @@ public class Lottery : MonoBehaviour, IInspectableSource
             ownedScratchables[i].gameObject.SetActive(!isOpened);
         }
     }
-    private void HandleSlotCompleted(Scratchable slot)
+
+    public void HandleSlotCompleted(Scratchable slot)
     {
         if (slot == null || lotteryData == null) return;
 
@@ -204,6 +226,7 @@ public class Lottery : MonoBehaviour, IInspectableSource
             InspectViewManager.Instance?.OnCleaned(this);
         }
     }
+
     private void EvaluateOpenedSlots()
     {
         if (lotteryData == null || currentLotteryIcons == null) return;
@@ -212,7 +235,8 @@ public class Lottery : MonoBehaviour, IInspectableSource
         var slotsByIcon = new Dictionary<LotteryIconData, List<int>>();
 
         foreach (int slotIdx in currentOpened)
-        {
+        {   
+            Debug.Log($"slotindex {slotIdx}");
             if (slotIdx < 0 || slotIdx >= currentLotteryIcons.Count) continue;
             LotteryIconData icon = currentLotteryIcons[slotIdx];
             if (icon == null) continue;
@@ -236,6 +260,7 @@ public class Lottery : MonoBehaviour, IInspectableSource
 
             if (matchCount >= lotteryData.requiredMatchCount)
             {
+                Debug.Log($"{icon.name} matched: {matchCount}개");
                 totalReward += icon.GetPayoutForMatchCount(matchCount);
                 foreach (int sIdx in slotsByIcon[icon])
                 {
@@ -249,46 +274,55 @@ public class Lottery : MonoBehaviour, IInspectableSource
         }
 
         Reward = totalReward;
+        Debug.Log($"Reward: {Reward}");
 
-        if (newlyMatchedSlots.Count > 0 && matchedGlowSprite != null)
-        {
-            if (glowRoutine != null) StopCoroutine(glowRoutine);
-            glowRoutine = StartCoroutine(FlashMatchedSlotsRoutine(newlyMatchedSlots));
-        }
+        // if (newlyMatchedSlots.Count > 0 && matchedGlowSprite != null)
+        // {
+        //     if (glowRoutine != null) StopCoroutine(glowRoutine);
+        //     glowRoutine = StartCoroutine(FlashMatchedSlotsRoutine(newlyMatchedSlots));
+        // }
     }
-    private IEnumerator FlashMatchedSlotsRoutine(List<int> slotIndices)
-    {
-        var preview = InspectViewManager.Instance != null
-            ? InspectViewManager.Instance.GetComponentInChildren<LotteryPreviewItem>()
-            : null;
-        GameObject[] iconAreas = preview != null ? preview.GetIconAreas() : null;
 
-        if (iconAreas == null) yield break;
+    // private IEnumerator FlashMatchedSlotsRoutine(List<int> slotIndices)
+    // {
+    //     var preview = InspectViewManager.Instance != null
+    //         ? InspectViewManager.Instance.GetComponentInChildren<LotteryPreviewItem>()
+    //         : null;
+    //     if (preview == null) yield break;
 
-        var originalSprites = new Dictionary<int, Sprite>();
-        foreach (int idx in slotIndices)
-        {
-            if (idx < 0 || idx >= iconAreas.Length || iconAreas[idx] == null) continue;
+    //     var originalSprites = new Dictionary<int, Sprite>();
+    //     foreach (int idx in slotIndices)
+    //     {
+    //         if (idx < 0 || idx >= preview.IconCount) continue;
 
-            var sr = iconAreas[idx].GetComponent<SpriteRenderer>();
-            if (sr != null)
-            {
-                originalSprites[idx] = sr.sprite;
-                sr.sprite = matchedGlowSprite;
-            }
-        }
+    //         LotteryPreviewItem.IconSlot slot = preview.GetSlot(idx);
+    //         SpriteRenderer sr = slot.sprite != null
+    //             ? slot.sprite
+    //             : (slot.area != null ? slot.area.GetComponent<SpriteRenderer>() : null);
 
-        yield return new WaitForSeconds(glowDuration);
+    //         if (sr != null)
+    //         {
+    //             originalSprites[idx] = sr.sprite;
+    //             sr.sprite = matchedGlowSprite;
+    //         }
+    //     }
 
-        foreach (var kv in originalSprites)
-        {
-            if (iconAreas[kv.Key] == null) continue;
-            var sr = iconAreas[kv.Key].GetComponent<SpriteRenderer>();
-            if (sr != null)
-            {
-                sr.sprite = kv.Value;
-            }
-        }
-        glowRoutine = null;
-    }
+    //     yield return new WaitForSeconds(glowDuration);
+
+    //     foreach (var kv in originalSprites)
+    //     {
+    //         if (kv.Key < 0 || kv.Key >= preview.IconCount) continue;
+
+    //         LotteryPreviewItem.IconSlot slot = preview.GetSlot(kv.Key);
+    //         SpriteRenderer sr = slot.sprite != null
+    //             ? slot.sprite
+    //             : (slot.area != null ? slot.area.GetComponent<SpriteRenderer>() : null);
+
+    //         if (sr != null)
+    //         {
+    //             sr.sprite = kv.Value;
+    //         }
+    //     }
+    //     glowRoutine = null;
+    // }
 }

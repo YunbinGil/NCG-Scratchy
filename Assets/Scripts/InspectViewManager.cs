@@ -29,7 +29,6 @@ public class InspectViewManager : MonoBehaviour
     [Header("Inspect 상태에서만 켜지는 루트")]
     [SerializeField] private GameObject inspectOverlayRoot;
 
-
     [Header("배경 및 중앙 확대 이미지")]
     [SerializeField] private Button closeDimmedBackgroundButton;
     [SerializeField] private GameObject centerPreview;
@@ -41,23 +40,30 @@ public class InspectViewManager : MonoBehaviour
     [Header("우측 상세 패널")]
     [SerializeField] private InspectDetailPanel detailPanel;
     [SerializeField] private Button resultButton;
+
     [Header("얼룩 오브젝트 생성 설정")]
     [SerializeField] private GameObject stainOverlayPrefab; // SpriteRenderer + Scratchable이 붙은 프리팹
     [SerializeField] private Transform stainOverlayParent; // 생성할 부모(없으면 null)
 
     public ViewState CurrentState { get; private set; } = ViewState.Table;
     public bool IsInspecting => CurrentState == ViewState.Inspect;
+
     private UiManager uiManager;
     private GameManager gameManager;
     private IInspectableSource currentTarget;
     private GameObject currentActiveOverlay;
-    private List<GameObject> LotteryPreviews = new List<GameObject>(); //실제 생성된 GO들 넣고 icons랑 stainoverlay만 바꿀
+    private List<GameObject> LotteryPreviews = new List<GameObject>(); // 실제 생성된 GO들 넣고 icons랑 stainoverlay만 바꿀
     private LotteryPreviewItem currentLotteryPreview;
+
     private void Awake()
     {
-        centerPreviewRect = centerPreview.GetComponent<RectTransform>();
-        centerPreviewImage = centerPreview.GetComponent<Image>();
-        centerPreviewRenderer = centerPreview.GetComponent<SpriteRenderer>();
+        if (centerPreview != null)
+        {
+            centerPreviewRect = centerPreview.GetComponent<RectTransform>();
+            centerPreviewImage = centerPreview.GetComponent<Image>();
+            centerPreviewRenderer = centerPreview.GetComponent<SpriteRenderer>();
+        }
+
         if (Instance != null && Instance != this)
         {
             Destroy(gameObject);
@@ -75,9 +81,14 @@ public class InspectViewManager : MonoBehaviour
 
     private void Start()
     {
-        uiManager = GameObject.FindWithTag("GameController").GetComponent<UiManager>();
-        gameManager = GameObject.FindWithTag("GameController").GetComponent<GameManager>();
+        GameObject controllerObj = GameObject.FindWithTag("GameController");
+        if (controllerObj != null)
+        {
+            uiManager = controllerObj.GetComponent<UiManager>();
+            gameManager = controllerObj.GetComponent<GameManager>();
+        }
     }
+
     private void HandleDimmedBackgroundClick()
     {
         RectTransform previewArea = GetCenterPreviewRectTransform();
@@ -135,15 +146,16 @@ public class InspectViewManager : MonoBehaviour
             currentActiveOverlay.SetActive(false);
             currentActiveOverlay = null;
         }
-        currentTarget = target as Trophy;
-        if (currentTarget != null)
+
+        currentTarget = target;
+
+        if (target is Trophy trophy)
         {
-            OpenTrophyView(currentTarget as Trophy);
+            OpenTrophyView(trophy);
         }
-        currentTarget = target as Lottery;
-        if (currentTarget != null)
+        else if (target is Lottery lottery)
         {
-            OpenLotteryView(currentTarget as Lottery);
+            OpenLotteryView(lottery);
         }
 
         if (currentActiveOverlay != null)
@@ -157,16 +169,22 @@ public class InspectViewManager : MonoBehaviour
             detailPanel.Show();
             target.OpenInDetailPanel(detailPanel);
         }
-        if (target.IsCleaned)
+
+        if (resultButton != null)
         {
-            ShowResultButton(target);
+            if (target.IsCleaned)
+            {
+                ShowResultButton(target);
+            }
+            else
+            {
+                resultButton.gameObject.SetActive(false);
+            }
         }
-        else
-        {
-            resultButton.gameObject.SetActive(false);
-        }
+
         SetState(ViewState.Inspect);
     }
+
     public void OpenTrophyView(Trophy trophy)
     {
         currentTarget = trophy;
@@ -189,6 +207,7 @@ public class InspectViewManager : MonoBehaviour
 
         currentActiveOverlay = GetOrCreateOverlayForTrophy(trophy);
     }
+
     public void OpenLotteryView(Lottery lottery)
     {
         if (lottery == null || lottery.Data == null || lottery.Data.lotteryPrefab == null)
@@ -196,8 +215,10 @@ public class InspectViewManager : MonoBehaviour
             Debug.LogWarning("OpenLotteryView: lottery 또는 lotteryPrefab이 null입니다.");
             return;
         }
+
         GameObject lotteryPrefab = lottery.Data.lotteryPrefab;
         GameObject targetInstance = null;
+
         foreach (var previewObj in LotteryPreviews)
         {
             if (previewObj != null && previewObj.name.StartsWith(lotteryPrefab.name))
@@ -206,42 +227,98 @@ public class InspectViewManager : MonoBehaviour
                 break;
             }
         }
+
         if (targetInstance == null)
         {
-            targetInstance = Instantiate(lotteryPrefab, centerPreviewRect);
-            currentLotteryPreview = targetInstance.GetComponent<LotteryPreviewItem>();
-            if (currentLotteryPreview == null)
+            targetInstance = Instantiate(lotteryPrefab, centerPreviewRect, false);
+            LotteryPreviewItem previewItem = targetInstance.GetComponent<LotteryPreviewItem>();
+            if (previewItem == null)
             {
                 Debug.LogWarning($"{targetInstance.name}에 LotteryPreviewItem 컴포넌트가 없습니다.");
                 return;
             }
-            targetInstance.transform.localPosition = currentLotteryPreview.GetOffset();
+
+            currentLotteryPreview = previewItem;
+            targetInstance.transform.localPosition = currentLotteryPreview.Offset;
             targetInstance.name = lotteryPrefab.name;
             LotteryPreviews.Add(targetInstance);
         }
-        targetInstance.SetActive(true);
-
-        SpriteRenderer[] iconSprites = currentLotteryPreview.GetIconSprites();
-        for (int i = 0; i < lottery.Data.scratchCount; i++)
+        else
         {
-            iconSprites[i].sprite = lottery.currentLotteryIcons[i].iconSprite;
+            currentLotteryPreview = targetInstance.GetComponent<LotteryPreviewItem>();
+            if (currentLotteryPreview != null)
+            {
+                targetInstance.transform.localPosition = currentLotteryPreview.Offset;
+            }
         }
-        GameObject[] scratchables = currentLotteryPreview.GetScratchables();
+
+        targetInstance.SetActive(true);
         currentActiveOverlay = GetOrCreateOverlayForLottery(lottery);
     }
 
     private GameObject GetOrCreateOverlayForLottery(Lottery lottery)
     {
-        if (lottery == null) return null;
+        if (lottery == null || currentLotteryPreview == null) return null;
 
         GameObject overlay = lottery.GetStainOverlay();
-        if (overlay == null && currentLotteryPreview != null)
+        if (overlay == null && currentLotteryPreview.IconAreasPrefab != null)
         {
-            overlay = Instantiate(currentLotteryPreview.GetIconAreasPrefab(), currentLotteryPreview.transform);
+            Transform parentTransform = currentLotteryPreview.StainArea != null
+                ? currentLotteryPreview.StainArea.transform
+                : currentLotteryPreview.transform;
+
+            overlay = Instantiate(currentLotteryPreview.IconAreasPrefab, parentTransform, false);
             overlay.name = $"{lottery.name}_StainOverlay";
-            lottery.SetStainOverlay(overlay);
         }
+
+        if (overlay != null)
+        {
+            Scratchable[] scratchables = SetupOverlayIconAreas(lottery, overlay);
+            lottery.SetStainOverlay(overlay, scratchables);
+            ApplyIconsToOverlay(lottery, overlay);
+        }
+
         return overlay;
+    }
+
+    private Scratchable[] SetupOverlayIconAreas(Lottery lottery, GameObject overlay)
+    {
+        IconArea[] areas = overlay.GetComponentsInChildren<IconArea>(true);
+        Array.Sort(areas, (a, b) => string.CompareOrdinal(a.gameObject.name, b.gameObject.name));
+
+        var scratchableList = new List<Scratchable>(areas.Length);
+        for (int i = 0; i < areas.Length; i++)
+        {
+            IconArea area = areas[i];
+            if (area == null) continue;
+
+            area.SlotIndex = i;
+            if (area.Scratchable != null)
+            {
+                area.Scratchable.CurrentItem = lottery;
+                scratchableList.Add(area.Scratchable);
+            }
+        }
+
+        return scratchableList.ToArray();
+    }
+
+    private void ApplyIconsToOverlay(Lottery lottery, GameObject overlay)
+    {
+        if (lottery == null || lottery.currentLotteryIcons == null || overlay == null) return;
+
+        IconArea[] areas = overlay.GetComponentsInChildren<IconArea>(true);
+        Array.Sort(areas, (a, b) => string.CompareOrdinal(a.gameObject.name, b.gameObject.name));
+
+        int count = Mathf.Min(areas.Length, lottery.currentLotteryIcons.Count);
+        for (int i = 0; i < count; i++)
+        {
+            LotteryIconData iconData = lottery.currentLotteryIcons[i];
+            if (areas[i] != null && iconData != null)
+            {
+                areas[i].SetIconSprite(iconData.iconSprite);
+            }
+        }
     }
 
     public void CloseInspect()
@@ -262,13 +339,14 @@ public class InspectViewManager : MonoBehaviour
             centerPreviewRenderer.sprite = null;
             centerPreviewRenderer.enabled = false;
         }
+
         if (currentActiveOverlay != null)
         {
             currentActiveOverlay.SetActive(false);
             currentActiveOverlay = null;
         }
 
-        if (currentTarget is Lottery currentLottery)
+        if (currentTarget is Lottery)
         {
             if (currentLotteryPreview != null)
             {
@@ -279,7 +357,10 @@ public class InspectViewManager : MonoBehaviour
         currentTarget = null;
 
         SetState(ViewState.Table);
-        uiManager.SetDefaultCursor();
+        if (uiManager != null)
+        {
+            uiManager.SetDefaultCursor();
+        }
     }
 
     public void SetState(ViewState nextState)
@@ -300,7 +381,7 @@ public class InspectViewManager : MonoBehaviour
         GameObject overlay = trophy.GetStainOverlay();
         if (overlay == null && stainOverlayPrefab != null)
         {
-            overlay = Instantiate(stainOverlayPrefab, stainOverlayParent);
+            overlay = Instantiate(stainOverlayPrefab, stainOverlayParent, false);
             overlay.name = $"{trophy.gameObject.name}_StainOverlay";
             overlay.GetComponent<Scratchable>().CurrentItem = trophy;
 
@@ -319,19 +400,20 @@ public class InspectViewManager : MonoBehaviour
     {
         if (target == null) return;
 
-        currentTarget = target as Trophy;
-        if (currentTarget != null)
+        currentTarget = target;
+
+        if (target is Trophy trophy)
         {
-            OnTrophyCleaned(currentTarget as Trophy);
+            OnTrophyCleaned(trophy);
         }
-        currentTarget = target as Lottery;
-        if (currentTarget != null)
+        else if (target is Lottery lottery)
         {
-            OnLotteryCleaned(currentTarget as Lottery);
+            OnLotteryCleaned(lottery);
         }
 
         ShowResultButton(target);
     }
+
     public void OnTrophyCleaned(Trophy trophy)
     {
         Sprite resultSprite = trophy.Reward > 0 ? trophy.GetInspectSprite() : trophy.GetBrokenSprite();
@@ -348,10 +430,12 @@ public class InspectViewManager : MonoBehaviour
         if (trophy.Reward < 0)
             PhoneEventController.Instance?.TriggerBrokenOrLossCall();
     }
+
     public void OnLotteryCleaned(Lottery lottery)
     {
 
     }
+
     private void ShowResultButton(IInspectableSource target)
     {
         resultButton.onClick.RemoveAllListeners();
