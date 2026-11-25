@@ -23,7 +23,7 @@ public class MachineSlot : MonoBehaviour
     [Header("스크래치 봇 해금 설정 (추가)")]
     [SerializeField] private bool isScratchBotSlot = false;
     [SerializeField] private bool requiresScratchBotUnlocked = false;
-    [SerializeField] private int unlockLevel = 6;
+    // [SerializeField] private int unlockLevel = 6;
     [SerializeField] private GameObject lockObject;
 
     [HideInInspector]
@@ -34,8 +34,8 @@ public class MachineSlot : MonoBehaviour
     private bool isLocked;
     private bool isPurchased;
 
-    private int EffectiveRequiredLevel =>
-        isScratchBotSlot ? Mathf.Max(requiredPlayerLevel, unlockLevel) : requiredPlayerLevel;
+    // private int EffectiveRequiredLevel =>
+    //     isScratchBotSlot ? Mathf.Max(requiredPlayerLevel, requiredPlayerLevel) : requiredPlayerLevel;
 
     private void Start()
     {
@@ -74,24 +74,7 @@ public class MachineSlot : MonoBehaviour
 
         int currentLevel = playerProgress != null ? playerProgress.Level : 0;
         UpdateLock(currentLevel);
-    }
-
-    private void OnDestroy()
-    {
-        if (playerProgress != null)
-            playerProgress.OnLevelChanged -= UpdateLock;
-
-        if (gameManager != null)
-        {
-            gameManager.OnLevelChanged -= UpdateLock;
-            gameManager.OnScratchBotUnlockAvailable -= HandleScratchBotUnlockAvailable;
-        }
-
-        if (ScratchBotUpgradeManager.Instance != null)
-            ScratchBotUpgradeManager.Instance.OnUpgraded -= RefreshScratchBotLock;
-
-        if (purchaseButton != null)
-            purchaseButton.onClick.RemoveListener(Purchase);
+        ApplyLockVisuals();
     }
 
     private void HandleScratchBotUnlockAvailable()
@@ -110,15 +93,19 @@ public class MachineSlot : MonoBehaviour
         if (isPurchased)
         {
             isLocked = false;
-            ApplyLockVisuals();
-            return;
+        }
+        else
+        {
+            bool levelLocked = currentLevel < requiredPlayerLevel;
+            bool botDependencyLocked = requiresScratchBotUnlocked && !IsBotActuallyUnlocked();
+            isLocked = levelLocked || botDependencyLocked;
         }
 
-        bool levelLocked = currentLevel < EffectiveRequiredLevel;
-        bool botDependencyLocked = requiresScratchBotUnlocked && !IsBotActuallyUnlocked();
-        isLocked = levelLocked || botDependencyLocked;
+        if (lockOverlay != null)
+            lockOverlay.SetActive(isLocked);
 
-        ApplyLockVisuals();
+        if (purchaseButton != null)
+            purchaseButton.interactable = !isLocked && !isPurchased;
     }
 
     public void RefreshScratchBotLock()
@@ -129,22 +116,49 @@ public class MachineSlot : MonoBehaviour
 
     private void ApplyLockVisuals()
     {
-        if (lockOverlay != null)
-            lockOverlay.SetActive(isLocked);
+        if (!isScratchBotSlot)
+            return;
 
-        if (lockObject != null)
-            lockObject.SetActive(isLocked);
+        Localization.Bind(nameText, $"machine.{(equipmentName ?? string.Empty).ToLowerInvariant()}", equipmentName);
+        Localization.BindAuthoredLabels(gameObject);
 
-        if (purchaseButton != null)
-            purchaseButton.interactable = !isPurchased && !isLocked;
+        if (equipmentShop != null && equipmentShop.PlayerProgress != null && equipmentShop.PlayerProgress != playerProgress)
+        {
+            equipmentShop.PlayerProgress.OnLevelChanged -= UpdateLock;
+            equipmentShop.PlayerProgress.OnLevelChanged += UpdateLock;
+        }
+    }
+
+    private void OnDestroy()
+    {
+        if (playerProgress != null)
+            playerProgress.OnLevelChanged -= UpdateLock;
 
         if (isPurchased && purchaseText != null)
             purchaseText.text = "Sold Out";
+
+        if (playerProgress != null)
+            playerProgress.OnLevelChanged -= UpdateLock;
+
+        if (gameManager != null)
+        {
+            gameManager.OnLevelChanged -= UpdateLock;
+            gameManager.OnScratchBotUnlockAvailable -= HandleScratchBotUnlockAvailable;
+        }
+
+        if (ScratchBotUpgradeManager.Instance != null)
+            ScratchBotUpgradeManager.Instance.OnUpgraded -= RefreshScratchBotLock;
+
+        if (purchaseButton != null)
+        {
+            purchaseButton.interactable = !isPurchased && !isLocked;
+            purchaseButton.onClick.RemoveListener(Purchase);
+        }
     }
 
     public void Purchase()
     {
-        if (isPurchased || isLocked)
+        if (isPurchased || isLocked || equipmentShop == null)
             return;
 
         if (equipmentShop == null)
@@ -160,6 +174,9 @@ public class MachineSlot : MonoBehaviour
 
         if (purchaseText != null)
             purchaseText.text = "Sold Out";
+        Localization.Bind(purchaseText, "shop.sold_out", "Sold Out");
+        purchaseButton.interactable = false;
+        equipmentImage.color = Color.gray;
 
         if (purchaseButton != null)
             purchaseButton.interactable = false;
@@ -170,8 +187,8 @@ public class MachineSlot : MonoBehaviour
         if (lockOverlay != null)
             lockOverlay.SetActive(false);
 
-        if (lockObject != null)
-            lockObject.SetActive(false);
+        // if (lockObject != null)
+        //     lockObject.SetActive(false);
 
         if (isScratchBotSlot)
         {

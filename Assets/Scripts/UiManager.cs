@@ -84,7 +84,7 @@ public class UiManager : MonoBehaviour
     public void SetLevelText(int exp, int goalExp)
     {
         if (levelText != null)
-            levelText.text = $"{exp} / {goalExp}";
+            Localization.Bind(levelText, "status.experience", "{0} / {1}", exp, goalExp);
 
         experienceRatio = goalExp > 0 ? Mathf.Clamp01((float)exp / goalExp) : 0f;
         UpdateLevelMask();

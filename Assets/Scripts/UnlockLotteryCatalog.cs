@@ -25,7 +25,7 @@ public class UnlockLotteryCatalog : MonoBehaviour
 
         TMP_Text label = GetComponentInChildren<TMP_Text>();
         if (label != null)
-            label.text = "Unlock";
+            Localization.Bind(label, "unlock.interact", "Unlock");
     }
 
     private void BeginReveal()
@@ -88,7 +88,8 @@ public class UnlockLotteryCatalog : MonoBehaviour
     {
         GameObject labelObject = new GameObject("Catalog Unlock Text", typeof(RectTransform), typeof(TextMeshProUGUI));
         revealLabel = labelObject.GetComponent<TextMeshProUGUI>();
-        revealLabel.text = revealMessage;
+        string key = revealMessage == "Upgrades Unlocked!" ? "unlock.upgrades.complete" : "unlock.catalog.complete";
+        Localization.Bind(revealLabel, key, revealMessage);
         revealLabel.alignment = TextAlignmentOptions.Center;
         revealLabel.fontSize = 30f;
         revealLabel.fontStyle = FontStyles.Bold;
