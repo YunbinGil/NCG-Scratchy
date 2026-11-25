@@ -18,6 +18,8 @@ public class CatalogShop : MonoBehaviour
     [SerializeField] private GameManager gameManager;
     [SerializeField] private ItemSpawner itemSpawner;
 
+    internal GameManager PlayerProgress => gameManager;
+
     private int currentCatalogIndex = 0;
     private bool isUnlocking = false;
 

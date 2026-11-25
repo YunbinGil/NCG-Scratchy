@@ -22,14 +22,24 @@ public class CatalogSlot : MonoBehaviour
     [SerializeField, Min(0)] private int experienceIncreasePerLevel = 2;
     [SerializeField, Min(0)] private int maxLevel = 10;
 
+    [Header("잠금 해제")]
+    [SerializeField, Min(0)] private int requiredPlayerLevel;
+    [SerializeField] private GameObject lockOverlay;
+
     private CatalogShop shop;
+    private GameManager playerProgress;
+    private bool isLocked;
     private ProductProgress productProgress;
     private string activeProductId;
     private float experienceRatio;
 
     public void Initialize(CatalogShop ticketShop)
     {
+        if (playerProgress != null)
+            playerProgress.OnLevelChanged -= UpdateLock;
+
         shop = ticketShop;
+        playerProgress = shop != null ? shop.PlayerProgress : null;
 
         if (nameText != null)
             nameText.text = ticketName;
@@ -46,6 +56,10 @@ public class CatalogSlot : MonoBehaviour
             purchaseButton.onClick.AddListener(Purchase);
         }
 
+        if (playerProgress != null)
+            playerProgress.OnLevelChanged += UpdateLock;
+
+        UpdateLock(playerProgress != null ? playerProgress.Level : 0);
         ConnectProgress();
     }
 
@@ -68,9 +82,20 @@ public class CatalogSlot : MonoBehaviour
             productProgress.GetExperience(activeProductId));
     }
 
+    private void UpdateLock(int playerLevel)
+    {
+        isLocked = playerLevel < requiredPlayerLevel;
+
+        if (lockOverlay != null)
+            lockOverlay.SetActive(isLocked);
+
+        if (purchaseButton != null)
+            purchaseButton.interactable = !isLocked;
+    }
+
     private void Purchase()
     {
-        if (shop == null || !shop.TryPurchase(ticketPrefab, price))
+        if (isLocked || shop == null || !shop.TryPurchase(ticketPrefab, price))
             return;
 
         if (productProgress != null)
@@ -117,6 +142,9 @@ public class CatalogSlot : MonoBehaviour
 
     private void OnDestroy()
     {
+        if (playerProgress != null)
+            playerProgress.OnLevelChanged -= UpdateLock;
+
         if (purchaseButton != null)
             purchaseButton.onClick.RemoveListener(Purchase);
 
