@@ -24,18 +24,18 @@ public class Scratchable : MonoBehaviour
     private bool isErasing;
     private Vector2 prevWorldPos;
     private float nextCheckTime;
-    private bool isCompleted;
-
+    public bool IsCompleted {get; private set;}
     // 브러시 알파 마스크 캐시 (0 ~ 1)
     private float[] brushMask;
     private int brushMaskSize = 64;
     
     private InspectViewManager inspectViewManager;
     public IInspectableSource CurrentItem {get;set;}
+    public int SlotIndex { get; set; }
+    public event Action<Scratchable> OnScratchCompleted;
 
     void Start()
     {
-
         inspectViewManager = GameObject.FindWithTag("GameController").GetComponent<InspectViewManager>();
         if (targetCamera == null) targetCamera = Camera.main;
         if (dirtyRenderer == null || dirtyRenderer.sprite == null) return;
@@ -138,7 +138,7 @@ public class Scratchable : MonoBehaviour
 
     void Update()
     {
-        if (isCompleted || runtimeTex == null) return;
+        if (IsCompleted || runtimeTex == null) return;
 
         HandleEraseInput();
 
@@ -242,11 +242,18 @@ public class Scratchable : MonoBehaviour
         float ratio = (float)erasedPixels / totalInitialOpaquePixels;
         if (ratio >= cleanThreshold)
         {
-            isCompleted = true;
+            IsCompleted = true;
             dirtyRenderer.enabled = false;
             Debug.Log($"세척 완료! ({ratio * 100f:F1}%)");
-            CurrentItem.CompleteScratch();
-            inspectViewManager.OnCleaned(CurrentItem);
+            if (OnScratchCompleted != null)
+            {
+                OnScratchCompleted.Invoke(this);
+            }
+            else
+            {
+                CurrentItem?.CompleteScratch();
+                inspectViewManager?.OnCleaned(CurrentItem);
+            }
         }
     }
 

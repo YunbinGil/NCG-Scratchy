@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -12,17 +13,26 @@ public class Lottery : MonoBehaviour, IInspectableSource
     [Header("UI 버튼")]
     [SerializeField] private Button lotteryButton;
     [SerializeField] private Image image;
-    
+
+    [Header("매칭 발광 연출")]
+    [SerializeField] private Sprite matchedGlowSprite;
+    [SerializeField] private float glowDuration = 0.6f;
+
     private GameObject stainOverlay;
+    private GameObject scratchOverlayRoot;
+    private Scratchable[] ownedScratchables;
 
     public LotteryData Data => lotteryData;
 
-    public int Reward => throw new System.NotImplementedException();
+    public int Reward { get; private set; }
     //TODO: rotteryData, rotteryIconData 확률에 따라 결과계산 후 Reward반영
 
-    public bool IsCleaned { get; } = false;
+    public bool IsCleaned { get; private set; } = false;
     //TODO: 다 긁어서 결과 나오면 true로 변경
     public List<LotteryIconData> currentLotteryIcons;
+    private readonly List<int> currentOpened = new List<int>();
+    private readonly HashSet<int> highlightedSlots = new HashSet<int>();
+    private Coroutine glowRoutine;
     public void Awake()
     {
         if (lotteryData != null)
@@ -33,6 +43,11 @@ public class Lottery : MonoBehaviour, IInspectableSource
     public void Initialize(LotteryData data)
     {
         lotteryData = data;
+        currentOpened.Clear();
+        highlightedSlots.Clear();
+        Reward = 0;
+        IsCleaned = false;
+
         if (lotteryData == null) return;
 
         if (image != null && lotteryData.tableSprite != null)
@@ -110,7 +125,7 @@ public class Lottery : MonoBehaviour, IInspectableSource
 
         if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
         {
-            
+
         }
 
         InspectViewManager.Instance?.OpenInspect(this);
@@ -153,10 +168,183 @@ public class Lottery : MonoBehaviour, IInspectableSource
             Destroy(stainOverlay);
             stainOverlay = null;
         }
+        if (scratchOverlayRoot != null)
+        {
+            Destroy(scratchOverlayRoot);
+            scratchOverlayRoot = null;
+        }
     }
 
     public void CompleteScratch()
     {
-        throw new System.NotImplementedException();
+        IsCleaned = true;
+    }
+
+    public GameObject GetOrCreateScratchOverlay(Transform parent, Scratchable[] templateScratchables)
+    {
+        if (scratchOverlayRoot == null && templateScratchables != null && templateScratchables.Length > 0)
+        {
+            scratchOverlayRoot = new GameObject($"{gameObject.name}_ScratchOverlay");
+            if (parent != null)
+            {
+                scratchOverlayRoot.transform.SetParent(parent, false);
+            }
+
+            int count = templateScratchables.Length;
+            ownedScratchables = new Scratchable[count];
+
+            for (int i = 0; i < count; i++)
+            {
+                Scratchable src = templateScratchables[i];
+                if (src == null) continue;
+
+                Scratchable clone = Instantiate(src, scratchOverlayRoot.transform);
+                clone.name = $"{src.gameObject.name}_{i}";
+                clone.transform.localPosition = src.transform.localPosition;
+                clone.transform.localRotation = src.transform.localRotation;
+                clone.transform.localScale = src.transform.localScale;
+                clone.SlotIndex = i;
+                clone.CurrentItem = this;
+                clone.OnScratchCompleted -= HandleSlotCompleted;
+                clone.OnScratchCompleted += HandleSlotCompleted;
+
+                bool isOpened = currentOpened.Contains(i);
+                clone.gameObject.SetActive(!isOpened);
+                ownedScratchables[i] = clone;
+            }
+        }
+
+        if (scratchOverlayRoot != null)
+        {
+            scratchOverlayRoot.SetActive(true);
+            RefreshScratchablesActiveState();
+        }
+
+        return scratchOverlayRoot;
+    }
+    public void HideScratchOverlay()
+    {
+        if (scratchOverlayRoot != null)
+        {
+            scratchOverlayRoot.SetActive(false);
+        }
+    }
+
+    public void RefreshScratchablesActiveState()
+    {
+        if (ownedScratchables == null) return;
+
+        for (int i = 0; i < ownedScratchables.Length; i++)
+        {
+            if (ownedScratchables[i] == null) continue;
+            bool isOpened = currentOpened.Contains(i);
+            ownedScratchables[i].gameObject.SetActive(!isOpened);
+        }
+    }
+    private void HandleSlotCompleted(Scratchable slot)
+    {
+        if (slot == null || lotteryData == null) return;
+
+        int slotIndex = slot.SlotIndex;
+        if (!currentOpened.Contains(slotIndex))
+        {
+            currentOpened.Add(slotIndex);
+            slot.gameObject.SetActive(false);
+        }
+
+        EvaluateOpenedSlots();
+
+        if (currentOpened.Count >= lotteryData.scratchCount)
+        {
+            CompleteScratch();
+            InspectViewManager.Instance?.OnCleaned(this);
+        }
+    }
+    private void EvaluateOpenedSlots()
+    {
+        if (lotteryData == null || currentLotteryIcons == null) return;
+
+        var counts = new Dictionary<LotteryIconData, int>();
+        var slotsByIcon = new Dictionary<LotteryIconData, List<int>>();
+
+        foreach (int slotIdx in currentOpened)
+        {
+            if (slotIdx < 0 || slotIdx >= currentLotteryIcons.Count) continue;
+            LotteryIconData icon = currentLotteryIcons[slotIdx];
+            if (icon == null) continue;
+
+            if (!counts.ContainsKey(icon))
+            {
+                counts[icon] = 0;
+                slotsByIcon[icon] = new List<int>();
+            }
+            counts[icon]++;
+            slotsByIcon[icon].Add(slotIdx);
+        }
+
+        int totalReward = 0;
+        var newlyMatchedSlots = new List<int>();
+
+        foreach (var pair in counts)
+        {
+            LotteryIconData icon = pair.Key;
+            int matchCount = pair.Value;
+
+            if (matchCount >= lotteryData.requiredMatchCount)
+            {
+                totalReward += icon.GetPayoutForMatchCount(matchCount);
+                foreach (int sIdx in slotsByIcon[icon])
+                {
+                    if (!highlightedSlots.Contains(sIdx))
+                    {
+                        highlightedSlots.Add(sIdx);
+                        newlyMatchedSlots.Add(sIdx);
+                    }
+                }
+            }
+        }
+
+        Reward = totalReward;
+
+        if (newlyMatchedSlots.Count > 0 && matchedGlowSprite != null)
+        {
+            if (glowRoutine != null) StopCoroutine(glowRoutine);
+            glowRoutine = StartCoroutine(FlashMatchedSlotsRoutine(newlyMatchedSlots));
+        }
+    }
+    private IEnumerator FlashMatchedSlotsRoutine(List<int> slotIndices)
+    {
+        var preview = InspectViewManager.Instance != null
+            ? InspectViewManager.Instance.GetComponentInChildren<LotteryPreviewItem>()
+            : null;
+        GameObject[] iconAreas = preview != null ? preview.GetIconAreas() : null;
+
+        if (iconAreas == null) yield break;
+
+        var originalSprites = new Dictionary<int, Sprite>();
+        foreach (int idx in slotIndices)
+        {
+            if (idx < 0 || idx >= iconAreas.Length || iconAreas[idx] == null) continue;
+
+            var sr = iconAreas[idx].GetComponent<SpriteRenderer>();
+            if (sr != null)
+            {
+                originalSprites[idx] = sr.sprite;
+                sr.sprite = matchedGlowSprite;
+            }
+        }
+
+        yield return new WaitForSeconds(glowDuration);
+
+        foreach (var kv in originalSprites)
+        {
+            if (iconAreas[kv.Key] == null) continue;
+            var sr = iconAreas[kv.Key].GetComponent<SpriteRenderer>();
+            if (sr != null)
+            {
+                sr.sprite = kv.Value;
+            }
+        }
+        glowRoutine = null;
     }
 }
