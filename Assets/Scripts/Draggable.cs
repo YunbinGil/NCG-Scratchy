@@ -140,5 +140,10 @@ public class Draggable : MonoBehaviour,
     public void OnEndDrag(PointerEventData eventData)
     {
         SetDragging(false);
+
+        if (TryGetComponent(out LotteryDropToBotByCollider dropByCollider))
+        {
+            dropByCollider.TryHandleDropToBot();
+        }
     }
 }
