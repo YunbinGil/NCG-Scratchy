@@ -100,32 +100,6 @@ public class ItemSpawner : MonoBehaviour
         return true;
     }
 
-    // 도감 해금 아이템 생성
-    public bool TrySpawnUnlockItem(System.Action onComplete)
-    {
-        if (unlockPrefab == null ||
-            !unlockPrefab.TryGetComponent<UnlockLotteryCatalog>(out _))
-        {
-            Debug.LogWarning("해금 프리팹을 확인하세요.", this);
-            return false;
-        }
-
-        if (!TrySpawnItemAtTableCenter(
-            unlockPrefab,
-            out GameObject spawnedObject))
-        {
-            return false;
-        }
-
-        UnlockLotteryCatalog unlock =
-            spawnedObject.GetComponent<UnlockLotteryCatalog>();
-
-        // 해금 이펙트 및 완료 콜백 전달
-        unlock.Initialize(lightTexture, onComplete);
-
-        return true;
-    }
-
     private void Update()
     {
         // 테스트용 일반 아이템 생성
