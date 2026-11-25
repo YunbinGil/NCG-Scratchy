@@ -16,17 +16,29 @@ public class UiManager : MonoBehaviour
     // [SerializeField] private Ticket[] tickets;
     // [SerializeField] private Equipment[] equips;
     private GameManager gameManager;
+    private RectMask2D levelMask;
+    private float experienceRatio;
+    private float lastMaskWidth = -1f;
 
     private void Awake()
     {
         gameManager = GameObject.FindWithTag("GameController").GetComponent<GameManager>();
         if (targetCamera == null) targetCamera = Camera.main;
         SetDefaultCursor();
+
+        if (levelImage != null)
+        {
+            levelMask = levelImage.GetComponentInParent<RectMask2D>();
+            levelImage.enabled = false;
+        }
     }
 
     private void Update()
     {
         FollowMouse();
+
+        if (levelMask != null && levelMask.rectTransform.rect.width != lastMaskWidth)
+            UpdateLevelMask();
     }
 
     private void FollowMouse()
@@ -71,8 +83,22 @@ public class UiManager : MonoBehaviour
     }
     public void SetLevelText(int exp, int goalExp)
     {
-        levelText.text = $"{exp} / {goalExp}";
-        levelImage.fillAmount = (float)exp / goalExp;
-        Debug.Log($"exp {exp}, goalExp {goalExp} ");
+        if (levelText != null)
+            levelText.text = $"{exp} / {goalExp}";
+
+        experienceRatio = goalExp > 0 ? Mathf.Clamp01((float)exp / goalExp) : 0f;
+        UpdateLevelMask();
+    }
+
+    private void UpdateLevelMask()
+    {
+        if (levelMask == null || levelImage == null)
+            return;
+
+        lastMaskWidth = levelMask.rectTransform.rect.width;
+        Vector4 padding = levelMask.padding;
+        padding.z = lastMaskWidth * (1f - experienceRatio);
+        levelMask.padding = padding;
+        levelImage.enabled = experienceRatio > 0f;
     }
 }

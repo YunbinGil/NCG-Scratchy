@@ -14,10 +14,18 @@ public class Trophy : MonoBehaviour, IInspectableSource
 
     public TrophyData Data => dishData;
     private UiManager uiManager;
+    private int sellPriceAtSpawn;
+    private float breakChanceAtSpawn;
     public bool IsCleaned { get; private set; }
     public int Reward { get; private set; }
 
 
+
+    private void Awake()
+    {
+        sellPriceAtSpawn = dishData != null ? dishData.GetSellPriceAfterClean() : 0;
+        breakChanceAtSpawn = dishData != null ? dishData.GetBreakChance() : 0f;
+    }
 
     private void Start()
     {
@@ -72,7 +80,7 @@ public class Trophy : MonoBehaviour, IInspectableSource
     public void OpenInDetailPanel(InspectDetailPanel detailPanel)
     {
         if (detailPanel == null || dishData == null) return;
-        detailPanel.ShowDish(dishData);
+        detailPanel.ShowDish(dishData, sellPriceAtSpawn, breakChanceAtSpawn);
     }
     public GameObject GetStainOverlay()
     {
@@ -89,9 +97,9 @@ public class Trophy : MonoBehaviour, IInspectableSource
     {
         if (dishData == null) return;
         IsCleaned = true;
-        Reward = Random.value < dishData.breakChance
+        Reward = Random.value < breakChanceAtSpawn
             ? -Mathf.Abs(dishData.breakPenalty)
-            : dishData.sellPriceAfterClean;
+            : sellPriceAtSpawn;
     }
 
     public void DestoryItem()

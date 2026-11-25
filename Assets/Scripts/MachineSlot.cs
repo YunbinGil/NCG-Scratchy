@@ -16,6 +16,10 @@ public class MachineSlot : MonoBehaviour
     public TMP_Text purchaseText;
     public Image equipmentImage;
 
+    [Header("잠금 해제")]
+    [SerializeField, Min(0)] private int requiredPlayerLevel;
+    [SerializeField] private GameObject lockOverlay;
+
     [Header("스크래치 봇 해금 설정 (추가)")]
     [SerializeField] private bool isScratchBotSlot = false;
     [SerializeField] private bool requiresScratchBotUnlocked = false;
@@ -25,6 +29,8 @@ public class MachineSlot : MonoBehaviour
     [HideInInspector]
     public MachineShop equipmentShop;
 
+    private GameManager playerProgress;
+    private bool isLocked;
     private bool isPurchased = false;
     private GameManager gameManager;
 
@@ -34,6 +40,12 @@ public class MachineSlot : MonoBehaviour
         if (priceText != null) priceText.text = equipmentPrice.ToString();
         if (purchaseText != null) purchaseText.text = string.Empty;
 
+        playerProgress = equipmentShop != null ? equipmentShop.PlayerProgress : null;
+        if (playerProgress != null)
+            playerProgress.OnLevelChanged += UpdateLock;
+
+        UpdateLock(playerProgress != null ? playerProgress.Level : 0);
+        purchaseButton.onClick.AddListener(Purchase);
         gameManager = FindFirstObjectByType<GameManager>();
         if (gameManager != null)
         {
@@ -81,49 +93,6 @@ public class MachineSlot : MonoBehaviour
     {
         if (isPurchased)
             return;
-
-        if (requiresScratchBotUnlocked)
-        {
-            bool botUnlocked = IsBotActuallyUnlocked();
-
-            if (lockObject != null)
-                lockObject.SetActive(!botUnlocked);
-
-            if (purchaseButton != null)
-                purchaseButton.interactable = botUnlocked;
-            return;
-        }
-
-        if (!isScratchBotSlot)
-            return;
-
-        int currentLv = gameManager != null ? gameManager.Level : 0;
-        bool canUnlock = currentLv >= unlockLevel ||
-            (gameManager != null && gameManager.CanUnlockScratchBot);
-
-        if (lockObject != null)
-            lockObject.SetActive(!canUnlock);
-
-        if (purchaseButton != null)
-            purchaseButton.interactable = canUnlock;
-    }
-
-    private void Purchase()
-    {
-        if (isPurchased || equipmentShop == null)
-            return;
-
-        if (requiresScratchBotUnlocked && !IsBotActuallyUnlocked())
-            return;
-
-        if (isScratchBotSlot)
-        {
-            int currentLv = gameManager != null ? gameManager.Level : 0;
-            bool canUnlock = currentLv >= unlockLevel ||
-                (gameManager != null && gameManager.CanUnlockScratchBot);
-            if (!canUnlock)
-                return;
-        }
 
         if (equipmentShop.PurchaseEquipment(equipmentPrice))
         {

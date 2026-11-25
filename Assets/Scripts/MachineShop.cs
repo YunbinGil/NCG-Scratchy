@@ -14,10 +14,17 @@ public class MachineShop : MonoBehaviour
     [Header("임시 골드")]
     public int currentGold = 1000;
 
+    [SerializeField] private GameManager gameManager;
+
+    internal GameManager PlayerProgress => gameManager;
+
     private Vector3 spawnPoint;
 
     private void Start()
     {
+        if (gameManager == null)
+            gameManager = FindFirstObjectByType<GameManager>();
+
         CreateEquipmentUI();
     }
 
