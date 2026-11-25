@@ -159,7 +159,7 @@ public class Lottery : MonoBehaviour, IInspectableSource
     public void SetStainOverlay(GameObject overlay)
     {
         stainOverlay = overlay;
-        stainOverlay.GetComponent<Scratchable>().CurrentItem = this;
+        // stainOverlay.GetComponent<Scratchable>().CurrentItem = this;
     }
     private void OnDestroy()
     {
@@ -168,68 +168,12 @@ public class Lottery : MonoBehaviour, IInspectableSource
             Destroy(stainOverlay);
             stainOverlay = null;
         }
-        if (scratchOverlayRoot != null)
-        {
-            Destroy(scratchOverlayRoot);
-            scratchOverlayRoot = null;
-        }
     }
 
     public void CompleteScratch()
     {
         IsCleaned = true;
     }
-
-    public GameObject GetOrCreateScratchOverlay(Transform parent, Scratchable[] templateScratchables)
-    {
-        if (scratchOverlayRoot == null && templateScratchables != null && templateScratchables.Length > 0)
-        {
-            scratchOverlayRoot = new GameObject($"{gameObject.name}_ScratchOverlay");
-            if (parent != null)
-            {
-                scratchOverlayRoot.transform.SetParent(parent, false);
-            }
-
-            int count = templateScratchables.Length;
-            ownedScratchables = new Scratchable[count];
-
-            for (int i = 0; i < count; i++)
-            {
-                Scratchable src = templateScratchables[i];
-                if (src == null) continue;
-
-                Scratchable clone = Instantiate(src, scratchOverlayRoot.transform);
-                clone.name = $"{src.gameObject.name}_{i}";
-                clone.transform.localPosition = src.transform.localPosition;
-                clone.transform.localRotation = src.transform.localRotation;
-                clone.transform.localScale = src.transform.localScale;
-                clone.SlotIndex = i;
-                clone.CurrentItem = this;
-                clone.OnScratchCompleted -= HandleSlotCompleted;
-                clone.OnScratchCompleted += HandleSlotCompleted;
-
-                bool isOpened = currentOpened.Contains(i);
-                clone.gameObject.SetActive(!isOpened);
-                ownedScratchables[i] = clone;
-            }
-        }
-
-        if (scratchOverlayRoot != null)
-        {
-            scratchOverlayRoot.SetActive(true);
-            RefreshScratchablesActiveState();
-        }
-
-        return scratchOverlayRoot;
-    }
-    public void HideScratchOverlay()
-    {
-        if (scratchOverlayRoot != null)
-        {
-            scratchOverlayRoot.SetActive(false);
-        }
-    }
-
     public void RefreshScratchablesActiveState()
     {
         if (ownedScratchables == null) return;

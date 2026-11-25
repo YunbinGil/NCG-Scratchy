@@ -1,10 +1,8 @@
+using System;
 using System.Collections.Generic;
-using NUnit.Framework;
 using TMPro;
-using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngineInternal.XR.WSA;
 
 public enum ViewState
 {
@@ -148,6 +146,11 @@ public class InspectViewManager : MonoBehaviour
             OpenLotteryView(currentTarget as Lottery);
         }
 
+        if (currentActiveOverlay != null)
+        {
+            Debug.Log($"{currentActiveOverlay.name}: {currentActiveOverlay.activeSelf}");
+            currentActiveOverlay.SetActive(true);
+        }
 
         if (detailPanel != null)
         {
@@ -185,11 +188,6 @@ public class InspectViewManager : MonoBehaviour
         }
 
         currentActiveOverlay = GetOrCreateOverlayForTrophy(trophy);
-        if (currentActiveOverlay != null)
-        {
-            Debug.Log($"{currentActiveOverlay.name}: {currentActiveOverlay.activeSelf}");
-            currentActiveOverlay.SetActive(true);
-        }
     }
     public void OpenLotteryView(Lottery lottery)
     {
@@ -198,15 +196,6 @@ public class InspectViewManager : MonoBehaviour
             Debug.LogWarning("OpenLotteryView: lottery 또는 lotteryPrefab이 null입니다.");
             return;
         }
-
-        foreach (var previewObj in LotteryPreviews)
-        {
-            if (previewObj != null)
-            {
-                previewObj.SetActive(false);
-            }
-        }
-
         GameObject lotteryPrefab = lottery.Data.lotteryPrefab;
         GameObject targetInstance = null;
         foreach (var previewObj in LotteryPreviews)
@@ -220,36 +209,39 @@ public class InspectViewManager : MonoBehaviour
         if (targetInstance == null)
         {
             targetInstance = Instantiate(lotteryPrefab, centerPreviewRect);
+            currentLotteryPreview = targetInstance.GetComponent<LotteryPreviewItem>();
+            if (currentLotteryPreview == null)
+            {
+                Debug.LogWarning($"{targetInstance.name}에 LotteryPreviewItem 컴포넌트가 없습니다.");
+                return;
+            }
+            targetInstance.transform.localPosition = currentLotteryPreview.GetOffset();
             targetInstance.name = lotteryPrefab.name;
             LotteryPreviews.Add(targetInstance);
-            // TODO: 위치
         }
         targetInstance.SetActive(true);
-        currentLotteryPreview = targetInstance.GetComponent<LotteryPreviewItem>();
-        if (currentLotteryPreview == null)
-        {
-            Debug.LogWarning($"{targetInstance.name}에 LotteryPreviewItem 컴포넌트가 없습니다.");
-            return;
-        }
 
         SpriteRenderer[] iconSprites = currentLotteryPreview.GetIconSprites();
         for (int i = 0; i < lottery.Data.scratchCount; i++)
         {
             iconSprites[i].sprite = lottery.currentLotteryIcons[i].iconSprite;
         }
-        Scratchable[] scratchables = currentLotteryPreview.GetScratchables();
-        if (scratchables != null)
-        {
-            for (int i = 0; i < scratchables.Length; i++)
-            {
-                if (scratchables[i] != null)
-                {
-                    scratchables[i].gameObject.SetActive(false);
-                }
-            }
-        }
-        currentActiveOverlay = lottery.GetOrCreateScratchOverlay(targetInstance.transform, scratchables);
+        GameObject[] scratchables = currentLotteryPreview.GetScratchables();
+        currentActiveOverlay = GetOrCreateOverlayForLottery(lottery);
+    }
 
+    private GameObject GetOrCreateOverlayForLottery(Lottery lottery)
+    {
+        if (lottery == null) return null;
+
+        GameObject overlay = lottery.GetStainOverlay();
+        if (overlay == null && currentLotteryPreview != null)
+        {
+            overlay = Instantiate(currentLotteryPreview.GetIconAreasPrefab(), currentLotteryPreview.transform);
+            overlay.name = $"{lottery.name}_StainOverlay";
+            lottery.SetStainOverlay(overlay);
+        }
+        return overlay;
     }
 
     public void CloseInspect()
@@ -278,11 +270,9 @@ public class InspectViewManager : MonoBehaviour
 
         if (currentTarget is Lottery currentLottery)
         {
-            currentLottery.HideScratchOverlay();
             if (currentLotteryPreview != null)
             {
                 currentLotteryPreview.gameObject.SetActive(false);
-                currentLotteryPreview = null;
             }
         }
 
