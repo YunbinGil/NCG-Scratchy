@@ -12,6 +12,7 @@ public class ScratchBot : MonoBehaviour
     [SerializeField] private float endOffsetY = -100f;
     [SerializeField] private Transform holdContainer;
     [SerializeField] private Transform lotteryLayer;
+    private Draggable draggable;
 
     private readonly List<AbsorbedLotteryEntry> absorbedLotteries = new List<AbsorbedLotteryEntry>();
 
@@ -146,7 +147,7 @@ public class ScratchBot : MonoBehaviour
         if (rt == null)
             return false;
 
-        Draggable draggable = lotteryObj.GetComponent<Draggable>();
+        draggable = lotteryObj.GetComponent<Draggable>();
         if (draggable != null)
             draggable.enabled = false;
 
@@ -316,6 +317,9 @@ public class ScratchBot : MonoBehaviour
                 entry.inspectable?.CompleteScratch();
                 Debug.Log("봇이 복권을 다 긁었습니다. 복권을 눌러 당첨 결과를 확인하세요.");
             }
+            
+            if (draggable != null)
+                draggable.enabled = true;
         }
     }
 }
