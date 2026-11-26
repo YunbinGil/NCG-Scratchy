@@ -22,6 +22,7 @@ public class MachineSlot : MonoBehaviour
     internal int UnlockLevel { get; set; }
     internal UnlockLotteryCatalog UnlockRevealPrefab { get; set; }
     internal bool IsReadyForUnlockReveal { get; private set; }
+    internal bool IsScratchBotSlot => isScratchBotSlot;
 
     [Header("스크래치 봇 해금 설정 (추가)")]
     [SerializeField] private bool isScratchBotSlot = false;
@@ -38,12 +39,17 @@ public class MachineSlot : MonoBehaviour
     internal bool IsLocked => isLocked;
     private bool isPurchased;
 
+    public string EffectiveEquipmentName =>
+        !string.IsNullOrWhiteSpace(equipmentName)
+            ? equipmentName
+            : (equipmentPrefab != null ? equipmentPrefab.name : gameObject.name);
+
     private void Start()
     {
         upgradeSlot = GetComponent<ScratchBotUpgradeSlot>();
         if (nameText != null) nameText.text = equipmentName;
         if (priceText != null) priceText.text = equipmentPrice.ToString();
-        if (purchaseText != null) purchaseText.text = string.Empty;
+        if (purchaseText != null && !isPurchased) purchaseText.text = string.Empty;
 
         gameManager = FindFirstObjectByType<GameManager>();
         playerProgress = equipmentShop != null && equipmentShop.PlayerProgress != null
@@ -74,9 +80,19 @@ public class MachineSlot : MonoBehaviour
             purchaseButton.onClick.AddListener(Purchase);
         }
 
+        if (equipmentShop != null && equipmentShop.IsEquipmentPurchased(EffectiveEquipmentName))
+        {
+            isPurchased = true;
+        }
+
         int currentLevel = playerProgress != null ? playerProgress.Level : 0;
         UpdateLock(currentLevel);
         ApplyLockVisuals();
+
+        if (isPurchased)
+        {
+            ApplyPurchasedState(true);
+        }
     }
 
     private void HandleScratchBotUnlockAvailable()
@@ -92,13 +108,27 @@ public class MachineSlot : MonoBehaviour
 
     public void UpdateLock(int currentLevel)
     {
+        if (isPurchased)
+        {
+            IsReadyForUnlockReveal = false;
+            isLocked = false;
+
+            if (lockOverlay != null)
+                lockOverlay.SetActive(false);
+
+            if (purchaseButton != null && upgradeSlot == null)
+                purchaseButton.interactable = false;
+
+            return;
+        }
+
         bool levelLocked = currentLevel < UnlockLevel;
         bool botUnlocked = IsBotActuallyUnlocked();
         bool botDependencyLocked = requiresScratchBotUnlocked && !botUnlocked;
         bool needsReveal = UnlockRevealPrefab != null && equipmentShop != null &&
-                           !(isScratchBotSlot && botUnlocked) && !equipmentShop.HasRevealedEquipment(equipmentName);
-        IsReadyForUnlockReveal = !isPurchased && !levelLocked && !botDependencyLocked && needsReveal;
-        isLocked = !isPurchased && (levelLocked || botDependencyLocked || needsReveal);
+                           !(isScratchBotSlot && botUnlocked) && !equipmentShop.HasRevealedEquipment(EffectiveEquipmentName);
+        IsReadyForUnlockReveal = !levelLocked && !botDependencyLocked && needsReveal;
+        isLocked = levelLocked || botDependencyLocked || needsReveal;
 
         if (lockOverlay != null)
             lockOverlay.SetActive(isLocked);
@@ -106,13 +136,41 @@ public class MachineSlot : MonoBehaviour
         if (upgradeSlot != null)
             upgradeSlot.RefreshLock();
         else if (purchaseButton != null)
-            purchaseButton.interactable = !isLocked && !isPurchased;
+            purchaseButton.interactable = !isLocked;
     }
 
     public void RefreshScratchBotLock()
     {
         int currentLevel = playerProgress != null ? playerProgress.Level : 0;
         UpdateLock(currentLevel);
+    }
+
+    public void ApplyPurchasedState(bool purchased)
+    {
+        isPurchased = purchased;
+        if (!purchased)
+            return;
+
+        isLocked = false;
+        IsReadyForUnlockReveal = false;
+
+        if (purchaseText != null)
+        {
+            purchaseText.text = "Sold Out";
+            Localization.Bind(purchaseText, "shop.sold_out", "Sold Out");
+        }
+
+        if (purchaseButton != null)
+            purchaseButton.interactable = false;
+
+        if (equipmentImage != null)
+            equipmentImage.color = Color.gray;
+
+        if (lockOverlay != null)
+            lockOverlay.SetActive(false);
+
+        if (lockObject != null)
+            lockObject.SetActive(false);
     }
 
     private void ApplyLockVisuals()
@@ -135,12 +193,6 @@ public class MachineSlot : MonoBehaviour
         if (playerProgress != null)
             playerProgress.OnLevelChanged -= UpdateLock;
 
-        if (isPurchased && purchaseText != null)
-            purchaseText.text = "Sold Out";
-
-        if (playerProgress != null)
-            playerProgress.OnLevelChanged -= UpdateLock;
-
         if (gameManager != null)
         {
             gameManager.OnLevelChanged -= UpdateLock;
@@ -152,7 +204,6 @@ public class MachineSlot : MonoBehaviour
 
         if (purchaseButton != null)
         {
-            purchaseButton.interactable = !isPurchased && !isLocked;
             purchaseButton.onClick.RemoveListener(Purchase);
         }
     }
@@ -162,34 +213,10 @@ public class MachineSlot : MonoBehaviour
         if (isPurchased || isLocked || equipmentShop == null || upgradeSlot != null)
             return;
 
-        if (equipmentShop == null)
-        {
-            Debug.LogWarning($"{name}: equipmentShop이 연결되지 않았습니다.");
-            return;
-        }
-
         if (!equipmentShop.PurchaseEquipment(equipmentPrice))
             return;
 
-        isPurchased = true;
-
-        if (purchaseText != null)
-            purchaseText.text = "Sold Out";
-        Localization.Bind(purchaseText, "shop.sold_out", "Sold Out");
-        purchaseButton.interactable = false;
-        equipmentImage.color = Color.gray;
-
-        if (purchaseButton != null)
-            purchaseButton.interactable = false;
-
-        if (equipmentImage != null)
-            equipmentImage.color = Color.gray;
-
-        if (lockOverlay != null)
-            lockOverlay.SetActive(false);
-
-        // if (lockObject != null)
-        //     lockObject.SetActive(false);
+        ApplyPurchasedState(true);
 
         if (isScratchBotSlot)
         {
@@ -202,11 +229,9 @@ public class MachineSlot : MonoBehaviour
             ItemSpawner spawner = FindFirstObjectByType<ItemSpawner>();
             spawner?.TrySpawnScratchBot();
         }
-        else if (!requiresScratchBotUnlocked && equipmentPrefab != null)
-        {
-            equipmentShop.SpawnEquipment(equipmentPrefab);
-        }
 
-        Debug.Log(equipmentName + " 구매 완료!");
+        equipmentShop.RecordPurchasedEquipment(EffectiveEquipmentName, equipmentPrefab, isScratchBotSlot);
+
+        Debug.Log(EffectiveEquipmentName + " 구매 완료!");
     }
 }
