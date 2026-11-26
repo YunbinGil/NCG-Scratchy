@@ -72,14 +72,22 @@ public class CatalogSlot : MonoBehaviour
         if (experienceMask == null || shop == null || ticketPrefab == null)
             return;
 
-        activeProductId = string.IsNullOrWhiteSpace(productId) ? $"lottery:{ticketPrefab.name}" : productId;
+        activeProductId = string.IsNullOrWhiteSpace(productId)
+            ? $"lottery:{ticketPrefab.name}"
+            : productId;
+
         productProgress = FindFirstObjectByType<ProductProgress>();
         if (productProgress == null)
             productProgress = shop.gameObject.AddComponent<ProductProgress>();
 
+        productProgress.ProgressChanged -= UpdateProgress;
         productProgress.ProgressChanged += UpdateProgress;
-        UpdateProgress(activeProductId, productProgress.GetLevel(activeProductId),
-            productProgress.GetExperience(activeProductId));
+
+        UpdateProgress(
+            activeProductId,
+            productProgress.GetLevel(activeProductId),
+            productProgress.GetExperience(activeProductId)
+        );
     }
 
     private void UpdateLock(int playerLevel)
@@ -131,13 +139,19 @@ public class CatalogSlot : MonoBehaviour
 
     private void UpdateMask()
     {
-        if (experienceFill != null)
-            experienceFill.enabled = experienceRatio > 0f;
+        if (experienceMask == null)
+            return;
 
-        float width = experienceMask.rectTransform.rect.width;
+        Canvas.ForceUpdateCanvases();
+        LayoutRebuilder.ForceRebuildLayoutImmediate(experienceMask.rectTransform);
+
+        float width = Mathf.Max(0f, experienceMask.rectTransform.rect.width);
         Vector4 padding = experienceMask.padding;
-        padding.z = width * (1f - experienceRatio);
+        padding.z = width * (1f - Mathf.Clamp01(experienceRatio));
         experienceMask.padding = padding;
+
+        if (experienceFill != null)
+            experienceFill.enabled = experienceRatio > 0f && width > 0f;
     }
 
     private void OnDestroy()

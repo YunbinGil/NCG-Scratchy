@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -5,6 +8,34 @@ using UnityEngine.UI;
 
 public class PausePanelController : MonoBehaviour
 {
+    [Serializable]
+    private class PauseUpgradeSlotSnapshot
+    {
+        public UpgradeType upgradeType;
+        public int level;
+        public float cost;
+    }
+
+    [Serializable]
+    private class ProductProgressSnapshot
+    {
+        public string productId;
+        public int level;
+        public int experience;
+    }
+
+    [Serializable]
+    private class PauseUpgradeSaveSnapshot
+    {
+        public bool isUpgradeUnlocked;
+        public List<PauseUpgradeSlotSnapshot> slots = new List<PauseUpgradeSlotSnapshot>();
+        public List<ProductProgressSnapshot> productProgresses = new List<ProductProgressSnapshot>();
+    }
+
+    private const string UpgradeUnlockedPrefKey = "UpgradePanel_IsUnlocked";
+    private static string UpgradeSnapshotPath =>
+        Path.Combine(Application.persistentDataPath, "upgrade_panel_save.json");
+
     [Header("세팅 패널 & 기본 버튼")]
     [SerializeField] private GameObject settingPanel;
     [SerializeField] private Button settingToggleButton;
@@ -14,11 +45,11 @@ public class PausePanelController : MonoBehaviour
 
     [Header("진행도 초기화 (3초 홀드 -> 최종 확인 팝업)")]
     [SerializeField] private Button holdResetButton;
-    [SerializeField] private Image holdFillImage; // Fill Method: Horizontal, Fill Origin: Left
+    [SerializeField] private Image holdFillImage;
     [SerializeField] private float holdDuration = 3f;
-    [SerializeField] private TMP_Text tapHintText; // 짧게 눌렀을 때 뜰 힌트 TMP
-    [SerializeField] private GameObject finalConfirmGroup; // 확인 팝업 패널
-    [SerializeField] private TMP_Text confirmPromptText; // 팝업 안 안내 문구 TMP
+    [SerializeField] private TMP_Text tapHintText;
+    [SerializeField] private GameObject finalConfirmGroup;
+    [SerializeField] private TMP_Text confirmPromptText;
     [SerializeField] private Button finalConfirmResetButton;
     [SerializeField] private Button cancelConfirmButton;
 
@@ -32,6 +63,7 @@ public class PausePanelController : MonoBehaviour
 
     [Header("연동 대상")]
     [SerializeField] private PhoneCallTrigger phoneCallTrigger;
+    [SerializeField] private UpgradeUnlock upgradeUnlock;
 
     [Header("열렸을 때 정지 여부")]
     [SerializeField] private bool pauseTimeWhenOpen = true;
@@ -44,6 +76,9 @@ public class PausePanelController : MonoBehaviour
     {
         if (phoneCallTrigger == null)
             phoneCallTrigger = FindFirstObjectByType<PhoneCallTrigger>();
+
+        if (upgradeUnlock == null)
+            upgradeUnlock = FindFirstObjectByType<UpgradeUnlock>();
 
         if (settingToggleButton != null)
             settingToggleButton.onClick.AddListener(TogglePanel);
@@ -65,6 +100,7 @@ public class PausePanelController : MonoBehaviour
 
         ResetHoldState(clearMessage: true);
         SetPanelActive(false);
+        LoadUpgradeSnapshot();
     }
 
     private void Update()
@@ -148,6 +184,7 @@ public class PausePanelController : MonoBehaviour
     public void ConfirmResetAndRestart()
     {
         LocalJsonSaveSystem.DeleteSaveFile();
+        DeleteUpgradeSnapshot();
         ResetHoldState(clearMessage: true);
 
         Time.timeScale = 1f;
@@ -200,6 +237,8 @@ public class PausePanelController : MonoBehaviour
 
     public void SaveGame()
     {
+        SaveUpgradeSnapshot();
+
         LocalJsonSaveSystem saveSystem = LocalJsonSaveSystem.Instance != null
             ? LocalJsonSaveSystem.Instance
             : FindFirstObjectByType<LocalJsonSaveSystem>();
@@ -211,6 +250,147 @@ public class PausePanelController : MonoBehaviour
         }
 
         saveSystem.SaveToFile();
+    }
+
+    private void SaveUpgradeSnapshot()
+    {
+        if (upgradeUnlock == null)
+            upgradeUnlock = FindFirstObjectByType<UpgradeUnlock>();
+
+        bool unlocked = (upgradeUnlock != null && upgradeUnlock.IsUnlocked) ||
+                        PlayerPrefs.GetInt(UpgradeUnlockedPrefKey, 0) == 1;
+
+        PlayerPrefs.SetInt(UpgradeUnlockedPrefKey, unlocked ? 1 : 0);
+        PlayerPrefs.Save();
+
+        PauseUpgradeSaveSnapshot snapshot = new PauseUpgradeSaveSnapshot
+        {
+            isUpgradeUnlocked = unlocked
+        };
+
+        UpgradeSlot[] slots = FindObjectsByType<UpgradeSlot>(FindObjectsSortMode.None);
+        foreach (UpgradeSlot slot in slots)
+        {
+            if (slot == null) continue;
+            snapshot.slots.Add(new PauseUpgradeSlotSnapshot
+            {
+                upgradeType = slot.UpgradeTypeValue,
+                level = slot.UpgradeLevelValue,
+                cost = slot.UpgradeCostValue
+            });
+        }
+
+        CollectProductProgresses(snapshot.productProgresses);
+
+        File.WriteAllText(UpgradeSnapshotPath, JsonUtility.ToJson(snapshot, true));
+    }
+
+    
+    private void CollectProductProgresses(List<ProductProgressSnapshot> targetList)
+    {
+        if (targetList == null)
+            return;
+
+        targetList.Clear();
+
+        ProductProgress progress = FindFirstObjectByType<ProductProgress>();
+        if (progress == null)
+            return;
+
+        foreach (ProductProgress.SaveEntry entry in progress.GetSaveEntries())
+        {
+            targetList.Add(new ProductProgressSnapshot
+            {
+                productId = entry.productId,
+                level = entry.level,
+                experience = entry.experience
+            });
+        }
+    }
+
+    private void ApplyProductProgresses(List<ProductProgressSnapshot> savedList)
+    {
+        if (savedList == null || savedList.Count == 0)
+            return;
+
+        ProductProgress progress = FindFirstObjectByType<ProductProgress>();
+        if (progress == null)
+            return;
+
+        List<ProductProgress.SaveEntry> restoreList = new List<ProductProgress.SaveEntry>(savedList.Count);
+        foreach (ProductProgressSnapshot item in savedList)
+        {
+            if (item == null || string.IsNullOrWhiteSpace(item.productId))
+                continue;
+
+            restoreList.Add(new ProductProgress.SaveEntry
+            {
+                productId = item.productId,
+                level = item.level,
+                experience = item.experience
+            });
+        }
+
+        progress.RestoreSaveEntries(restoreList);
+    }
+
+
+    private void LoadUpgradeSnapshot()
+    {
+        if (upgradeUnlock == null)
+            upgradeUnlock = FindFirstObjectByType<UpgradeUnlock>();
+
+        bool prefUnlocked = PlayerPrefs.GetInt(UpgradeUnlockedPrefKey, 0) == 1;
+        if (!File.Exists(UpgradeSnapshotPath))
+        {
+            if (prefUnlocked && upgradeUnlock != null)
+                upgradeUnlock.ApplySavedUnlockState(true);
+            return;
+        }
+
+        PauseUpgradeSaveSnapshot snapshot = JsonUtility.FromJson<PauseUpgradeSaveSnapshot>(
+            File.ReadAllText(UpgradeSnapshotPath));
+        if (snapshot == null)
+            return;
+
+        bool unlocked = snapshot.isUpgradeUnlocked || prefUnlocked;
+        if (unlocked)
+        {
+            PlayerPrefs.SetInt(UpgradeUnlockedPrefKey, 1);
+            PlayerPrefs.Save();
+        }
+
+        if (upgradeUnlock != null)
+            upgradeUnlock.ApplySavedUnlockState(unlocked);
+
+        if (snapshot.slots != null && snapshot.slots.Count > 0)
+        {
+            UpgradeSlot[] slots = FindObjectsByType<UpgradeSlot>(FindObjectsSortMode.None);
+            foreach (UpgradeSlot slot in slots)
+            {
+                if (slot == null) continue;
+                foreach (PauseUpgradeSlotSnapshot savedSlot in snapshot.slots)
+                {
+                    if (savedSlot.upgradeType == slot.UpgradeTypeValue)
+                    {
+                        slot.ApplySaveData(savedSlot.level, savedSlot.cost);
+                        break;
+                    }
+                }
+            }
+        }
+
+        ApplyProductProgresses(snapshot.productProgresses);
+    }
+
+
+    private static void DeleteUpgradeSnapshot()
+    {
+        PlayerPrefs.SetInt(UpgradeUnlockedPrefKey, 0);
+        PlayerPrefs.Save();
+
+        if (File.Exists(UpgradeSnapshotPath))
+            File.Delete(UpgradeSnapshotPath);
     }
 
     public void GoToTitleScene()

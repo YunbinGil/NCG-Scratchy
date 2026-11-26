@@ -18,6 +18,9 @@ public class PhoneCallTrigger : MonoBehaviour
     private bool isPaused;
     private Quaternion BaseRotation;
 
+    public bool IsCurrentlyRinging => IsRinging;
+    public string[] CurrentQueuedLines => QueuedLines;
+
     private void Awake()
     {
         Button = GetComponent<Button>();
@@ -62,9 +65,22 @@ public class PhoneCallTrigger : MonoBehaviour
         // }
     }
 
+    public void RestoreRingingState(bool ringing, string[] lines)
+    {
+        if (ringing)
+        {
+            RingPhone(lines);
+        }
+        else
+        {
+            StopRinging();
+        }
+    }
+
     public void StopRinging()
     {
         IsRinging = false;
+        QueuedLines = null;
         transform.localRotation = BaseRotation;
         SetRingingVisual(false);
         // 오디오
@@ -81,6 +97,7 @@ public class PhoneCallTrigger : MonoBehaviour
         string[] linesToPlay = (QueuedLines != null && QueuedLines.Length > 0) ? QueuedLines : null;
 
         StopRinging();
+        PhoneEventController.Instance?.NotifyCallAnswered();
 
         if (DialogueManager.Instance != null)
         {

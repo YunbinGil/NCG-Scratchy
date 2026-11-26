@@ -20,6 +20,7 @@ public class CatalogShop : MonoBehaviour
 
     private int currentCatalogIndex;
     private bool isUnlocking;
+    private GameObject activeUnlockObject;
 
     private void Start()
     {
@@ -43,6 +44,8 @@ public class CatalogShop : MonoBehaviour
             currentCatalogIndex++;
         }
 
+        // 레벨 상승 이벤트 구독
+        gameManager.OnLevelChanged -= CheckUnlockCondition;
         gameManager.OnLevelChanged += CheckUnlockCondition;
 
         CheckUnlockCondition(gameManager.Level);
@@ -50,6 +53,15 @@ public class CatalogShop : MonoBehaviour
 
     public void ApplyCatalogIndex(int savedIndex)
     {
+        ClearActiveUnlockObject();
+        isUnlocking = false;
+
+        if (catalogList == null || catalogList.Count == 0)
+        {
+            currentCatalogIndex = 0;
+            return;
+        }
+
         currentCatalogIndex = Mathf.Clamp(savedIndex, 0, catalogList.Count);
 
         for (int i = 0; i < currentCatalogIndex; i++)
@@ -62,13 +74,18 @@ public class CatalogShop : MonoBehaviour
             }
         }
 
-        isUnlocking = false;
-        CheckUnlockCondition(gameManager != null ? gameManager.Level : 0);
+        if (currentCatalogIndex < catalogList.Count && gameManager != null)
+        {
+            CheckUnlockCondition(gameManager.Level);
+        }
     }
 
     private void CheckUnlockCondition(int level)
     {
-        if (isUnlocking || currentCatalogIndex >= catalogList.Count)
+        if (isUnlocking || activeUnlockObject != null)
+            return;
+
+        if (catalogList == null || currentCatalogIndex < 0 || currentCatalogIndex >= catalogList.Count)
             return;
 
         CatalogData catalog = catalogList[currentCatalogIndex];
@@ -81,6 +98,12 @@ public class CatalogShop : MonoBehaviour
 
     private void SpawnUnlockItem(GameObject unlockPrefab)
     {
+        if (catalogList == null || currentCatalogIndex < 0 || currentCatalogIndex >= catalogList.Count)
+        {
+            isUnlocking = false;
+            return;
+        }
+
         if (unlockPrefab == null ||
             !unlockPrefab.TryGetComponent<UnlockLotteryCatalog>(out _))
         {
@@ -88,6 +111,7 @@ public class CatalogShop : MonoBehaviour
             return;
         }
 
+        ClearActiveUnlockObject();
         isUnlocking = true;
 
         if (!itemSpawner.TrySpawnItemAtTableCenter(unlockPrefab, out GameObject spawnedObject))
@@ -96,12 +120,22 @@ public class CatalogShop : MonoBehaviour
             return;
         }
 
+        activeUnlockObject = spawnedObject;
+
         UnlockLotteryCatalog unlock = spawnedObject.GetComponent<UnlockLotteryCatalog>();
         unlock.Initialize(lightTexture, CompleteUnlock);
     }
 
     private void CompleteUnlock()
     {
+        activeUnlockObject = null;
+
+        if (catalogList == null || currentCatalogIndex < 0 || currentCatalogIndex >= catalogList.Count)
+        {
+            isUnlocking = false;
+            return;
+        }
+
         CatalogData catalog = catalogList[currentCatalogIndex];
 
         AddCatalog(catalog.catalogPrefab);
@@ -109,12 +143,25 @@ public class CatalogShop : MonoBehaviour
         currentCatalogIndex++;
         isUnlocking = false;
 
-        CheckUnlockCondition(gameManager.Level);
+        // 다음 도감의 해금 조건 확인
+        if (gameManager != null)
+        {
+            CheckUnlockCondition(gameManager.Level);
+        }
+    }
+
+    private void ClearActiveUnlockObject()
+    {
+        if (activeUnlockObject != null)
+        {
+            Destroy(activeUnlockObject);
+            activeUnlockObject = null;
+        }
     }
 
     private void AddCatalog(GameObject catalogPrefab)
     {
-        if (catalogPrefab == null)
+        if (catalogPrefab == null || ticketContent == null)
             return;
 
         GameObject catalog = Instantiate(catalogPrefab, ticketContent);
@@ -151,7 +198,7 @@ public class CatalogShop : MonoBehaviour
 
     public bool TryPurchase(GameObject ticketPrefab, int price)
     {
-        if (price < 0 || gameManager.Money < price)
+        if (price < 0 || gameManager == null || gameManager.Money < price)
             return false;
 
         if (!itemSpawner.TrySpawnItem(ticketPrefab))
@@ -164,5 +211,8 @@ public class CatalogShop : MonoBehaviour
     {
         if (gameManager != null)
             gameManager.OnLevelChanged -= CheckUnlockCondition;
+        }
+
+        ClearActiveUnlockObject();
     }
 }
