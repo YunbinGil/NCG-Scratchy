@@ -93,6 +93,7 @@ public class Scratchable : MonoBehaviour
 
     void InitRuntimeTexture()
     {
+        Debug.Log($"[Scratchable] obj={name}, sprite={dirtyRenderer?.sprite?.name}, tex={dirtyRenderer?.sprite?.texture?.name}, readable={dirtyRenderer?.sprite?.texture?.isReadable}", this);
         Sprite srcSprite = dirtyRenderer.sprite;
         Texture2D srcTex = srcSprite.texture;
 
