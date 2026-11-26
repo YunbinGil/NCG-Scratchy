@@ -6,13 +6,14 @@ public sealed class PlayerUpgradeManager
 {
     private const int MaxSizeLevel = 5;
     private const int MaxCoinLevel = 2;
+    private const int MaxLuckLevel = 5;
     private const int BaseCost = 100;
     private const double CostFactor = 2.5;
 
     private readonly GameManager gameManager;
     private int sizeLevel;
     private int coinLevel;
-    private UpgradeSaveEntry savedLuck;
+    private int luckLevel;
 
     public event Action Changed;
 
@@ -27,7 +28,7 @@ public sealed class PlayerUpgradeManager
         {
             UpgradeType.Siez => sizeLevel,
             UpgradeType.Kind => coinLevel,
-            UpgradeType.Luk => savedLuck?.level ?? 0,
+            UpgradeType.Luk => luckLevel,
             _ => 0
         };
     }
@@ -43,6 +44,7 @@ public sealed class PlayerUpgradeManager
         {
             UpgradeType.Siez => sizeLevel < MaxSizeLevel,
             UpgradeType.Kind => coinLevel < MaxCoinLevel,
+            UpgradeType.Luk => luckLevel < MaxLuckLevel,
             _ => false
         };
     }
@@ -52,10 +54,18 @@ public sealed class PlayerUpgradeManager
         if (!CanUpgrade(type) || !gameManager.TrySpendMoney(GetCost(type)))
             return false;
 
-        if (type == UpgradeType.Siez)
-            sizeLevel++;
-        else
-            coinLevel++;
+        switch (type)
+        {
+            case UpgradeType.Siez:
+                sizeLevel++;
+                break;
+            case UpgradeType.Kind:
+                coinLevel++;
+                break;
+            case UpgradeType.Luk:
+                luckLevel++;
+                break;
+        }
 
         ApplyEffects();
         return true;
@@ -63,22 +73,19 @@ public sealed class PlayerUpgradeManager
 
     public List<UpgradeSaveEntry> Capture()
     {
-        var entries = new List<UpgradeSaveEntry>
+        return new List<UpgradeSaveEntry>
         {
             new UpgradeSaveEntry { upgradeType = UpgradeType.Siez, level = sizeLevel, cost = GetCost(UpgradeType.Siez) },
-            new UpgradeSaveEntry { upgradeType = UpgradeType.Kind, level = coinLevel, cost = GetCost(UpgradeType.Kind) }
+            new UpgradeSaveEntry { upgradeType = UpgradeType.Kind, level = coinLevel, cost = GetCost(UpgradeType.Kind) },
+            new UpgradeSaveEntry { upgradeType = UpgradeType.Luk, level = luckLevel, cost = GetCost(UpgradeType.Luk) }
         };
-        if (savedLuck != null)
-            entries.Add(savedLuck);
-
-        return entries;
     }
 
     public void Restore(List<UpgradeSaveEntry> entries)
     {
         sizeLevel = 0;
         coinLevel = 0;
-        savedLuck = null;
+        luckLevel = 0;
 
         if (entries != null)
         {
@@ -96,7 +103,7 @@ public sealed class PlayerUpgradeManager
                         coinLevel = Mathf.Clamp(entry.level, 0, MaxCoinLevel);
                         break;
                     case UpgradeType.Luk:
-                        savedLuck = entry;
+                        luckLevel = Mathf.Clamp(entry.level, 0, MaxLuckLevel);
                         break;
                 }
             }
@@ -109,6 +116,7 @@ public sealed class PlayerUpgradeManager
     {
         gameManager.UpgradeCursorSize(sizeLevel);
         gameManager.UpgradeLeadCoinAlpha(coinLevel);
+        gameManager.UpgradeLuck(luckLevel);
         Changed?.Invoke();
     }
 }

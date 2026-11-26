@@ -16,28 +16,39 @@ public class LotteryDetailView : MonoBehaviour
 {
     [Header("기본 정보 텍스트")]
     [SerializeField] private TMP_Text titleText;
+    [SerializeField] private TMP_Text descriptionText;
     [SerializeField] private TMP_Text matchRuleText;
     [SerializeField] private TMP_Text hardnessText;
 
     [Header("심볼 확률 및 매칭 보상금 행 리스트")]
     [SerializeField] private List<LotterySymbolRow> symbolRows = new List<LotterySymbolRow>();
 
-    public void Bind(LotteryData data)
+    public void Bind(LotteryData data, float luckMultiplier = 1f)
     {
         if (data == null) return;
 
         int requiredMatchCount = Mathf.Max(1, data.requiredMatchCount);
 
-        if (titleText != null) titleText.text = data.lotteryName;
+        BindText(titleText, data.nameKey, data.lotteryName);
+        BindText(descriptionText, data.descriptionKey, data.description);
         Localization.Bind(matchRuleText, "detail.match_rule", "Match {0} to win", requiredMatchCount);
         Localization.Bind(hardnessText, "detail.hardness", "Hard: {0}", data.hardness);
 
-        BindSymbolRows(data, requiredMatchCount);
+        BindSymbolRows(data, requiredMatchCount, luckMultiplier);
+    }
+
+    private static void BindText(TMP_Text label, string key, string fallback)
+    {
+        if (string.IsNullOrWhiteSpace(key))
+            Localization.Clear(label, fallback);
+        else
+            Localization.Bind(label, key, fallback);
     }
 
     public void Clear()
     {
-        if (titleText != null) titleText.text = string.Empty;
+        Localization.Clear(titleText, string.Empty);
+        Localization.Clear(descriptionText, string.Empty);
         if (matchRuleText != null) matchRuleText.text = string.Empty;
         if (hardnessText != null) hardnessText.text = string.Empty;
 
@@ -54,17 +65,10 @@ public class LotteryDetailView : MonoBehaviour
         }
     }
 
-    private void BindSymbolRows(LotteryData data, int requiredMatchCount)
+    private void BindSymbolRows(LotteryData data, int requiredMatchCount, float luckMultiplier)
     {
         var icons = data.availableIcons;
         int iconCount = icons != null ? icons.Count : 0;
-
-        float totalWeight = 0f;
-        for (int i = 0; i < iconCount; i++)
-        {
-            if (icons[i] != null && icons[i].spawnWeight > 0f)
-                totalWeight += icons[i].spawnWeight;
-        }
 
         for (int i = 0; i < symbolRows.Count; i++)
         {
@@ -78,7 +82,7 @@ public class LotteryDetailView : MonoBehaviour
             if (!hasData) continue;
 
             LotteryIconData iconData = icons[i];
-            float probPercent = totalWeight > 0f ? (iconData.spawnWeight / totalWeight) * 100f : 0f;
+            float probPercent = data.GetSymbolProbabilityPercent(iconData, luckMultiplier);
             int payout = iconData.GetPayoutForMatchCount(requiredMatchCount);
 
             if (row.iconImage != null)
@@ -89,7 +93,7 @@ public class LotteryDetailView : MonoBehaviour
 
             if (row.probText != null)
             {
-                row.probText.text = $"{probPercent:0} %        $ {payout}";
+                row.probText.text = $"{probPercent:0.##} %        $ {payout}";
             }
         }
     }

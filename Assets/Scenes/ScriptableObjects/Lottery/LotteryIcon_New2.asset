@@ -15,5 +15,5 @@ MonoBehaviour:
   id: 1
   iconName: Symbol1-2
   iconSprite: {fileID: 21300000, guid: ccba3f2509f44204795b3076c875db35, type: 3}
-  spawnWeight: 0
+  spawnWeight: 30
   matchPayouts: 000000001e0000001e000000
