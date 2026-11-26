@@ -2067,7 +2067,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7994922925460622214, guid: 30e7eb5b629f65642a207e4b9a476236, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 0.0006713867
+      value: 0.00015258789
       objectReference: {fileID: 0}
     - target: {fileID: 8026055554778373793, guid: 30e7eb5b629f65642a207e4b9a476236, type: 3}
       propertyPath: m_AnchorMax.y
@@ -2615,6 +2615,14 @@ PrefabInstance:
       propertyPath: scratchBotLayer
       value: 
       objectReference: {fileID: 969263738}
+    - target: {fileID: 8026929555053945897, guid: 3065bfd795393b142bc4a3cbc99bc7c4, type: 3}
+      propertyPath: bottomRightPadding.x
+      value: 650
+      objectReference: {fileID: 0}
+    - target: {fileID: 8026929555053945897, guid: 3065bfd795393b142bc4a3cbc99bc7c4, type: 3}
+      propertyPath: bottomRightPadding.y
+      value: 400
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
