@@ -23,11 +23,10 @@ public class CatalogSlot : MonoBehaviour
     [SerializeField, Min(0)] private int maxLevel = 10;
 
     [Header("잠금 해제")]
-    [SerializeField, Min(0)] private int requiredPlayerLevel;
     [SerializeField] private GameObject lockOverlay;
 
     private CatalogShop shop;
-    private GameManager playerProgress;
+    private UnlockEffect.Registration unlockRegistration;
     private bool isLocked;
     private ProductProgress productProgress;
     private string activeProductId;
@@ -35,13 +34,12 @@ public class CatalogSlot : MonoBehaviour
 
     public void Initialize(CatalogShop ticketShop)
     {
-        if (playerProgress != null)
-            playerProgress.OnLevelChanged -= UpdateLock;
+        unlockRegistration?.Cancel();
 
         shop = ticketShop;
-        playerProgress = shop != null ? shop.PlayerProgress : null;
+        GameManager playerProgress = shop != null ? shop.PlayerProgress : null;
 
-        if (nameText != null)
+        if (nameText != null && !LocalizedLabel.HasKey(nameText))
             Localization.Bind(nameText, $"shop.item.{(ticketName ?? string.Empty).ToLowerInvariant()}", ticketName);
 
         if (priceText != null)
@@ -56,10 +54,11 @@ public class CatalogSlot : MonoBehaviour
             purchaseButton.onClick.AddListener(Purchase);
         }
 
-        if (playerProgress != null)
-            playerProgress.OnLevelChanged += UpdateLock;
+        UnlockEffect unlock = GetComponent<UnlockEffect>();
+        SetLocked(unlock != null && !unlock.MeetsLevel(playerProgress != null ? playerProgress.Level : 0));
+        if (isLocked && playerProgress != null)
+            unlockRegistration = playerProgress.UnlockEffects.Watch(this, unlock, () => SetLocked(false));
 
-        UpdateLock(playerProgress != null ? playerProgress.Level : 0);
         ConnectProgress();
     }
 
@@ -90,9 +89,9 @@ public class CatalogSlot : MonoBehaviour
         );
     }
 
-    private void UpdateLock(int playerLevel)
+    private void SetLocked(bool locked)
     {
-        isLocked = playerLevel < requiredPlayerLevel;
+        isLocked = locked;
 
         if (lockOverlay != null)
             lockOverlay.SetActive(isLocked);
@@ -156,8 +155,7 @@ public class CatalogSlot : MonoBehaviour
 
     private void OnDestroy()
     {
-        if (playerProgress != null)
-            playerProgress.OnLevelChanged -= UpdateLock;
+        unlockRegistration?.Cancel();
 
         if (purchaseButton != null)
             purchaseButton.onClick.RemoveListener(Purchase);

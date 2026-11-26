@@ -98,7 +98,7 @@ public class LocalJsonSaveSystem : MonoBehaviour
             itemSpawner = FindFirstObjectByType<ItemSpawner>();
 
         if (upgradeUnlock == null || !upgradeUnlock)
-            upgradeUnlock = UpgradeUnlock.Instance ?? FindFirstObjectByType<UpgradeUnlock>();
+            upgradeUnlock = FindFirstObjectByType<UpgradeUnlock>(FindObjectsInactive.Include);
 
         if (productProgress == null || !productProgress)
             productProgress = FindFirstObjectByType<ProductProgress>();

@@ -17,13 +17,18 @@ public class GameManager : MonoBehaviour
     public event Action OnScratchBotUnlockAvailable;
 
     private ItemSpawner itemSpawner;
+    internal ItemSpawner ItemSpawner => itemSpawner;
+    internal RectTransform TableEffectParent => itemSpawner != null ? itemSpawner.TableEffectParent : null;
     private UiManager uiManager;
+    private bool hasRestoredPlayerState;
 
     public int Level { get; private set; }
     public int Exp { get; private set; }
     public int Money { get; private set; }
 
     public event Action<int> OnLevelChanged;
+    internal UnlockEffect.Scheduler UnlockEffects { get; private set; }
+    public PlayerUpgradeManager Upgrades { get; private set; }
     public float CoinSizeMultiplier { get; private set; } = 1f;
     public float CoinAlphaMultiplier { get; private set; } = 1f;
     public float LuckMultiplier { get; private set; } = 1f; //Lottery.RollWeightedIcons또는 Lottery.RollWeightedIcons에서 참조
@@ -31,13 +36,20 @@ public class GameManager : MonoBehaviour
 
     private void Awake()
     {
+        Upgrades = new PlayerUpgradeManager(this);
+        UnlockEffects = new UnlockEffect.Scheduler(this);
         uiManager = GetComponent<UiManager>();
         if (itemSpawner == null)
             itemSpawner = FindFirstObjectByType<ItemSpawner>();
+
+        FindFirstObjectByType<UpgradeUnlock>(FindObjectsInactive.Include)?.Initialize(this);
     }
 
     private void Start()
     {
+        if (hasRestoredPlayerState)
+            return;
+
         SetMoney(startingMoney);
         Exp = 0;
         Level = 0;
@@ -92,6 +104,7 @@ public class GameManager : MonoBehaviour
         bool canUnlockBot,
         bool isBotUnlockedByLevel)
     {
+        hasRestoredPlayerState = true;
         Level = Mathf.Max(0, savedLevel);
         Exp = Mathf.Max(0, savedExp);
         CanUnlockScratchBot = canUnlockBot || Level >= scratchBotUnlockLevel;
@@ -103,7 +116,13 @@ public class GameManager : MonoBehaviour
         if (CanUnlockScratchBot)
             OnScratchBotUnlockAvailable?.Invoke();
 
+        UnlockEffects.SuppressAutomaticOnRestore();
         OnLevelChanged?.Invoke(Level);
+    }
+
+    private void LateUpdate()
+    {
+        UnlockEffects.Tick();
     }
 
     private void RefreshLevelUI()
@@ -145,14 +164,14 @@ public class GameManager : MonoBehaviour
         }
 #endif
     }
-    public void UpgradeCursorSize()
+    public void UpgradeCursorSize(int level)
     {
-        CoinSizeMultiplier += 0.2f; // 원하는 증가량/테이블로 조정
+        CoinSizeMultiplier = 1f + 0.2f * level;
     }
 
-    public void UpgradeLeadCoinAlpha()
+    public void UpgradeLeadCoinAlpha(int level)
     {
-        CoinAlphaMultiplier += 0.25f;
+        CoinAlphaMultiplier = 1f + 0.25f * level;
     }
 
     public void UpgradeLuck()
