@@ -12,6 +12,12 @@ EditorBuildSettings:
     path: Assets/Scenes/StartScenes.unity
     guid: a376095db5b9d804faa6eb057c4f7e2c
   - enabled: 1
+    path: Assets/Scenes/Game.unity
+    guid: 4efaa18d22834284db3f7c63cac16701
+  - enabled: 1
+    path: Assets/Scenes/Fix.unity
+    guid: fb92d215a9133214d9f85215a2f09ae3
+  - enabled: 0
     path: Assets/Scenes/SaveMenu.unity
     guid: 6266186f77bbf494fa25c4709618578f
   - enabled: 0

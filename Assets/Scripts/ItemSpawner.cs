@@ -46,7 +46,6 @@ public class ItemSpawner : MonoBehaviour
     private GameObject spawnedScratchBot;
     public GameObject SpawnedScratchBot => spawnedScratchBot;
 
-    // 일반 아이템 랜덤 좌표 생성
     public bool TrySpawnItem(GameObject item)
     {
         if (spawnTable == null)
@@ -65,7 +64,6 @@ public class ItemSpawner : MonoBehaviour
         return TrySpawnItem(item, targetpoint, out _);
     }
 
-    // 공통 아이템 생성 메서드
     public bool TrySpawnItem(
         GameObject item,
         Vector2 targetpoint,
@@ -137,7 +135,6 @@ public class ItemSpawner : MonoBehaviour
 
         RegisterSpawnedTableItem(spawnedObject);
 
-        // 생성된 아이템과 목표 좌표 저장
         spawnItems.Add(spawnItem);
         targetpoints.Add(targetpoint);
 
@@ -287,7 +284,6 @@ public class ItemSpawner : MonoBehaviour
         return null;
     }
 
-    // 도감 해금 아이템 생성
     public bool TrySpawnUnlockItem(System.Action onComplete)
     {
         if (unlockPrefab == null ||
@@ -307,13 +303,12 @@ public class ItemSpawner : MonoBehaviour
         UnlockLotteryCatalog unlock =
             spawnedObject.GetComponent<UnlockLotteryCatalog>();
 
-        // 해금 이펙트 및 완료 콜백 전달
         unlock.Initialize(lightTexture, onComplete);
 
         return true;
     }
 
-    // 스크래치 봇 테이블 우측 하단 스폰 (LotteryLayer 위 레이어에 생성)
+    // 스크래치 봇 테이블 우측 하단 스폰 (프리팹 앵커/피벗/오프셋 유지, 중복 생성 방지)
     public bool TrySpawnScratchBot()
     {
         if (spawnedScratchBot != null)
@@ -324,25 +319,27 @@ public class ItemSpawner : MonoBehaviour
             return false;
 
         RectTransform baseRect = scratchBotLayer != null ? scratchBotLayer : spawnTable;
-        Debug.Log($"baseRect {baseRect.gameObject.name}");
         if (baseRect == null || scratchBotPrefab == null ||
-            !scratchBotPrefab.TryGetComponent<RectTransform>(out _))
+            !scratchBotPrefab.TryGetComponent<RectTransform>(out RectTransform prefabRect))
         {
             Debug.LogWarning("ScratchBot 프리팹 또는 레이어를 확인하세요.", this);
             return false;
         }
 
-        float targetX = (baseRect.rect.width * 0.5f) - bottomRightPadding.x;
-        float targetY = -(baseRect.rect.height * 0.5f) + bottomRightPadding.y;
-        Vector2 bottomRightTarget = new Vector2(targetX, targetY);
-
-        if (!TrySpawnItemInternal(
-            scratchBotPrefab,
-            bottomRightTarget,
-            false,
-            baseRect,
-            out GameObject botObj))
+        if (baseRect.GetComponentInChildren<ScratchBot>(true) != null)
             return false;
+
+        GameObject botObj = Instantiate(scratchBotPrefab, baseRect);
+        RectTransform botRect = botObj.GetComponent<RectTransform>();
+        if (botRect != null)
+        {
+            botRect.anchorMin = prefabRect.anchorMin;
+            botRect.anchorMax = prefabRect.anchorMax;
+            botRect.pivot = prefabRect.pivot;
+            botRect.anchoredPosition = prefabRect.anchoredPosition;
+            botRect.localScale = prefabRect.localScale;
+            botRect.SetAsLastSibling();
+        }
 
         spawnedScratchBot = botObj;
         return true;
@@ -350,7 +347,6 @@ public class ItemSpawner : MonoBehaviour
 
     private void Update()
     {
-        // 테스트용 일반 아이템 생성
         if (Input.GetKeyDown(KeyCode.Alpha1))
         {
             if (items != null && items.Count > 0)
@@ -360,7 +356,6 @@ public class ItemSpawner : MonoBehaviour
             }
         }
 
-        // 모든 아이템 이동 처리
         for (int i = spawnItems.Count - 1; i >= 0; i--)
         {
             if (spawnItems[i] == null)
@@ -376,7 +371,6 @@ public class ItemSpawner : MonoBehaviour
                 objectSpeed * Time.deltaTime
             );
 
-            // 목표 지점에 도착하면 목록에서 제거
             if (Vector2.Distance(
                 spawnItems[i].anchoredPosition,
                 targetpoints[i]) < 0.01f)

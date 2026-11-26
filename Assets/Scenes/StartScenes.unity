@@ -496,7 +496,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 47bde55392c33e74d96dd8518c980f7b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::StartSceneController
-  gameSceneName: Fix
+  gameSceneName: Game
   loadGameButton: {fileID: 1953101760}
 --- !u!4 &1482102163
 Transform:

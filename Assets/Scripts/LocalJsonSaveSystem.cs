@@ -190,11 +190,6 @@ public class LocalJsonSaveSystem : MonoBehaviour
             data.phoneEventData = phoneEventController.ExportSaveData();
         }
 
-        if (itemSpawner != null && itemSpawner)
-        {
-            data.spawnedTableItems.AddRange(itemSpawner.ExportSpawnedTableItems());
-        }
-
         string json = JsonUtility.ToJson(data, true);
         File.WriteAllText(SaveFilePath, json);
         Debug.Log($"로컬 JSON 저장 완료: {SaveFilePath}");
@@ -215,7 +210,6 @@ public class LocalJsonSaveSystem : MonoBehaviour
         if (data == null)
             return;
 
-        // 1. 플레이어 레벨/경험치/돈 복원
         if (gameManager != null && gameManager)
         {
             gameManager.ApplySaveData(
@@ -227,25 +221,21 @@ public class LocalJsonSaveSystem : MonoBehaviour
             );
         }
 
-        // 2. 도감 인덱스 및 상점 슬롯 복원 (기존 해금 모션 오브젝트 정리 포함)
         if (catalogShop != null && catalogShop)
         {
             catalogShop.ApplyCatalogIndex(data.currentCatalogIndex);
         }
 
-        // 3. 업그레이드 패널 해금 상태 복원 (이미 해금됐으면 모션 없이 바로 오픈)
         if (upgradeUnlock != null && upgradeUnlock)
         {
             upgradeUnlock.ApplySavedUnlockState(data.isUpgradePanelUnlocked);
         }
 
-        // 4. 복권 및 트로피 레벨/경험치 복원
         if (productProgress != null && productProgress && data.productProgresses != null)
         {
             productProgress.RestoreSaveEntries(data.productProgresses);
         }
 
-        // 5. 스크래치 봇 복원
         if (botUpgradeManager != null && botUpgradeManager)
         {
             botUpgradeManager.isBotUnlocked = data.isBotUnlocked;
@@ -260,13 +250,11 @@ public class LocalJsonSaveSystem : MonoBehaviour
             }
         }
 
-        // 6. 테이블 위 복권/트로피 아이템 복원
         if (itemSpawner != null && itemSpawner && data.spawnedTableItems != null)
         {
             itemSpawner.RestoreSpawnedTableItems(data.spawnedTableItems);
         }
 
-        // 7. 업그레이드 슬롯 레벨/비용 복원
         UpgradeSlot[] slots = FindObjectsByType<UpgradeSlot>(FindObjectsSortMode.None);
         foreach (UpgradeSlot slot in slots)
         {
@@ -281,18 +269,16 @@ public class LocalJsonSaveSystem : MonoBehaviour
             }
         }
 
-        // 8. 전화 알림 복원
+        if (machineShop != null && machineShop)
+        {
+            machineShop.RestorePurchasedEquipments(data.purchasedEquipmentNames);
+            machineShop.RestoreRevealedEquipments(data.revealedEquipmentNames);
+        }
+
         PhoneEventController phoneEventController = PhoneEventController.Instance ?? FindFirstObjectByType<PhoneEventController>();
         if (phoneEventController != null && data.phoneEventData != null)
         {
             phoneEventController.RestoreSaveData(data.phoneEventData);
-        }
-
-        // 9. 구매한 장비 복원
-        if (machineShop != null && machineShop && data.purchasedEquipmentNames != null)
-        {
-            machineShop.RestorePurchasedEquipments(data.purchasedEquipmentNames);
-            machineShop.RestoreRevealedEquipments(data.revealedEquipmentNames);
         }
 
         Debug.Log("로컬 JSON 저장 데이터를 불러왔습니다.");
