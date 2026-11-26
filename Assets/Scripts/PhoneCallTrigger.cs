@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 [RequireComponent(typeof(Button))]
 public class PhoneCallTrigger : MonoBehaviour
@@ -88,13 +89,24 @@ public class PhoneCallTrigger : MonoBehaviour
             ? System.Array.ConvertAll(queuedLineKeys, key => Localization.Get(key, key))
             : queuedLegacyLines;
 
+        var phoneEvents = PhoneEventController.Instance;
+        bool isEnding = phoneEvents != null && phoneEvents.IsEndingCallPending;
         StopRinging();
-        PhoneEventController.Instance?.NotifyCallAnswered();
+        phoneEvents?.NotifyCallAnswered();
 
         if (DialogueManager.Instance != null)
         {
-            DialogueManager.Instance.StartDialog(linesToPlay);
+            DialogueManager.Instance.StartDialog(linesToPlay, isEnding ? LoadEnding : null, isEnding);
         }
+        else if (isEnding)
+        {
+            LoadEnding();
+        }
+    }
+
+    private static void LoadEnding()
+    {
+        SceneManager.LoadScene("Ending");
     }
 
     private void SetRingingVisual(bool ringing)

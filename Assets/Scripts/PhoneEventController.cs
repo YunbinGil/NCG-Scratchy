@@ -103,7 +103,13 @@ public class PhoneEventController : MonoBehaviour
             phoneCallTrigger = FindFirstObjectByType<PhoneCallTrigger>();
     }
 
+    private static readonly string[] EndingLineKeys =
+    {
+        "phone.ending.01", "phone.ending.02", "phone.ending.03"
+    };
+
     private bool endingCallStarted;
+    public bool IsEndingCallPending => _hasPendingCall && _pendingEventType == PhoneCallEventType.EndingGoalReached;
 
     public bool TryRingEndingCall(out PhoneCallTrigger phone)
     {
@@ -114,8 +120,8 @@ public class PhoneEventController : MonoBehaviour
         endingCallStarted = true;
         _hasPendingCall = true;
         _pendingEventType = PhoneCallEventType.EndingGoalReached;
-        _pendingLines = null;
-        phone.RingPhone();
+        _pendingLegacyLines = null;
+        phone.RingPhone(EndingLineKeys);
         return true;
     }
 
@@ -195,7 +201,9 @@ public class PhoneEventController : MonoBehaviour
         if (saveData != null && saveData.hasPendingCall)
         {
             PhoneCallScriptEntry entry = callEntries.Find(e => e.eventType == saveData.pendingEventType);
-            string[] lineKeys = entry?.lineKeys;
+            string[] lineKeys = saveData.pendingEventType == PhoneCallEventType.EndingGoalReached
+                ? EndingLineKeys
+                : entry?.lineKeys;
             _pendingLegacyLines = lineKeys == null || lineKeys.Length == 0 ? saveData.pendingLines : null;
             _hasPendingCall = true;
             _pendingEventType = saveData.pendingEventType;

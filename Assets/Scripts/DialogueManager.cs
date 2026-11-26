@@ -19,8 +19,15 @@ public class DialogueManager : MonoBehaviour, IPointerClickHandler
     private bool isActive;
     private float ignoreInputUntil;
     private Action onDialogComplete;
+    private bool useUnscaledTyping;
+    [SerializeField] private TMP_FontAsset endingDialogueFont;
 
     public bool IsActive => isActive;
+
+    public bool OwnsDialogueGraphic(Graphic graphic)
+    {
+        return dialoguePanel != null && graphic.transform.IsChildOf(dialoguePanel.transform);
+    }
 
     private void Awake()
     {
@@ -69,13 +76,16 @@ public class DialogueManager : MonoBehaviour, IPointerClickHandler
         }
     }
 
-    public void StartDialog(string[] texts, Action onComplete = null)
+    public void StartDialog(string[] texts, Action onComplete = null, bool isEnding = false)
     {
         if (texts == null || texts.Length == 0) return;
 
         lines = texts;
         index = 0;
         onDialogComplete = onComplete;
+        useUnscaledTyping = isEnding;
+        if (isEnding && endingDialogueFont != null)
+            dialogueText.font = endingDialogueFont;
         isActive = true;
         ignoreInputUntil = Time.unscaledTime + 1f; // 전화기 클릭 직후 첫 줄 스킵 방지
 
@@ -100,7 +110,7 @@ public class DialogueManager : MonoBehaviour, IPointerClickHandler
         foreach (char c in line)
         {
             dialogueText.text += c;
-            yield return new WaitForSeconds(typingSpeed);
+            yield return useUnscaledTyping ? (object)new WaitForSecondsRealtime(typingSpeed) : new WaitForSeconds(typingSpeed);
         }
         typingCoroutine = null;
     }

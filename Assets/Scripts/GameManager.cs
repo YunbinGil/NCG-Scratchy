@@ -151,14 +151,16 @@ public class GameManager : MonoBehaviour
         isEndingLocked = true;
         FindFirstObjectByType<PausePanelController>()?.ContinueGame();
         FindFirstObjectByType<InspectViewManager>()?.CloseInspect();
-        DialogueManager.Instance?.DismissForEndingCall();
+        var dialogue = DialogueManager.Instance;
+        dialogue?.DismissForEndingCall();
 
         if (EventSystem.current != null)
             EventSystem.current.SetSelectedGameObject(null);
 
         foreach (Graphic graphic in FindObjectsByType<Graphic>(FindObjectsInactive.Include, FindObjectsSortMode.None))
         {
-            if (!graphic.transform.IsChildOf(phone.transform))
+            if (!graphic.transform.IsChildOf(phone.transform) &&
+                (dialogue == null || !dialogue.OwnsDialogueGraphic(graphic)))
                 graphic.raycastTarget = false;
         }
 

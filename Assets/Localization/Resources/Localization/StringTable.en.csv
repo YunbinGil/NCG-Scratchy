@@ -62,3 +62,6 @@
 "pause.reset.confirm_prompt","Your save file will be deleted. Continue?"
 "ending.new_game","NEW GAME"
 "ending.quit_game","QUIT GAME"
+"phone.ending.01","You've already reached your savings goal!"
+"phone.ending.02","Congratulations!"
+"phone.ending.03","You're rich now!"
