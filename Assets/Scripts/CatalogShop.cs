@@ -211,7 +211,7 @@ public class CatalogShop : MonoBehaviour
     {
         if (gameManager != null)
             gameManager.OnLevelChanged -= CheckUnlockCondition;
-        }
+        
 
         ClearActiveUnlockObject();
     }

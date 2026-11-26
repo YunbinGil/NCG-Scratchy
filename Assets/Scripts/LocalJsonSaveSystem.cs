@@ -195,12 +195,6 @@ public class LocalJsonSaveSystem : MonoBehaviour
             data.spawnedTableItems.AddRange(itemSpawner.ExportSpawnedTableItems());
         }
 
-        PhoneEventController phoneEventController = PhoneEventController.Instance ?? FindFirstObjectByType<PhoneEventController>();
-        if (phoneEventController != null)
-        {
-            data.phoneEventData = phoneEventController.ExportSaveData();
-        }
-
         string json = JsonUtility.ToJson(data, true);
         File.WriteAllText(SaveFilePath, json);
         Debug.Log($"로컬 JSON 저장 완료: {SaveFilePath}");

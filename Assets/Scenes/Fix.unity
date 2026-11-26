@@ -1883,7 +1883,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7994922925460622214, guid: 30e7eb5b629f65642a207e4b9a476236, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 0.004211426
+      value: 0.000030517578
       objectReference: {fileID: 0}
     - target: {fileID: 8026055554778373793, guid: 30e7eb5b629f65642a207e4b9a476236, type: 3}
       propertyPath: m_AnchorMax.y
@@ -3062,8 +3062,12 @@ MonoBehaviour:
   targetCamera: {fileID: 519420031}
   cursorRenderer: {fileID: 804973837}
   defaultCursorSprite: {fileID: 21300000, guid: c1f26e40e6717044ca9f00697c1e416b, type: 3}
+  useCursorSprite: {fileID: -7477855649285851107, guid: ce53761f6ab1519419fe88bf947ca400, type: 3}
   scrubberSprite: {fileID: 21300000, guid: 42de889494198864ba81e4d67c62b1ae, type: 3}
-  scrubCoinSprite: {fileID: 21300000, guid: 3696812e049d5804e941dfc4570410d0, type: 3}
+  useScrubberSprite: {fileID: 21300000, guid: 42de889494198864ba81e4d67c62b1ae, type: 3}
+  defaultCoinSprite: {fileID: 21300000, guid: 3696812e049d5804e941dfc4570410d0, type: 3}
+  aluminiumCoinSprite: {fileID: -7239295965278821679, guid: 369471b3417d79249af6206b86f73c5b, type: 3}
+  titaniumCoinSprite: {fileID: 4927585962089308817, guid: ccf5ea77a96186242a7f09e193659bf5, type: 3}
   moneyText: {fileID: 64690521}
   levelText: {fileID: 2087122903}
   levelImage: {fileID: 1994575581}
