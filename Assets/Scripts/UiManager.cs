@@ -1,4 +1,3 @@
-using System.Collections;
 using UnityEngine;
 using UnityEngine.Serialization;
 using TMPro;
@@ -25,11 +24,11 @@ public class UiManager : MonoBehaviour
 
     private const float ClickSpriteDuration = 0.12f;
 
-    public enum CursorMode { Default, Scrubber, Coin }
+    private enum CursorMode { Default, Scrubber, Coin }
 
     private CursorMode cursorMode;
     private float clickSpriteUntil;
-    private Coroutine clickResetRoutine;
+    private Vector3 cursorBaseScale;
     private GameManager gameManager;
     private RectMask2D levelMask;
     private float experienceRatio;
@@ -37,6 +36,9 @@ public class UiManager : MonoBehaviour
 
     private void Awake()
     {
+        if (cursorRenderer != null)
+            cursorBaseScale = cursorRenderer.transform.localScale;
+
         GameObject controllerObj = GameObject.FindWithTag("GameController");
         if (controllerObj != null)
         {
@@ -55,38 +57,16 @@ public class UiManager : MonoBehaviour
         }
     }
 
-    private void Start()
-    {
-        if (targetCamera == null)
-        {
-            targetCamera = Camera.main;
-        }
-
-        SetDefaultCursor();
-    }
-
     private void Update()
     {
-        if (cursorMode == CursorMode.Default && Input.GetMouseButtonDown(0))
-        {
-            clickSpriteUntil = Time.unscaledTime + ClickSpriteDuration;
-            RefreshCursorSprite();
-            RestartClickResetRoutine();
-        }
-        else if (cursorMode == CursorMode.Scrubber && (Input.GetMouseButtonDown(0) || Input.GetMouseButtonUp(0)))
-        {
-            RefreshCursorSprite();
-        }
-
         if (levelMask != null && levelMask.rectTransform.rect.width != lastMaskWidth)
-        {
             UpdateLevelMask();
-        }
     }
 
     private void LateUpdate()
     {
         if (cursorRenderer == null) return;
+        UpdateCursorAppearance();
         if (targetCamera == null) targetCamera = Camera.main;
         if (targetCamera == null) return;
 
@@ -97,37 +77,36 @@ public class UiManager : MonoBehaviour
         Transform cursorTransform = cursorRenderer.transform;
         Vector3 currentPosition = cursorTransform.position;
         Bounds spriteBounds = cursorRenderer.bounds;
-        Vector3 topLeft = new Vector3(spriteBounds.min.x, spriteBounds.max.y, currentPosition.z);
+        Vector3 cursorAnchor = cursorMode == CursorMode.Default
+            ? new Vector3(spriteBounds.min.x, spriteBounds.max.y, currentPosition.z)
+            : spriteBounds.center;
+        cursorAnchor.z = currentPosition.z;
         worldPos.z = currentPosition.z;
-        cursorTransform.position = worldPos + (currentPosition - topLeft);
+        cursorTransform.position = worldPos + (currentPosition - cursorAnchor);
     }
 
-    private void RestartClickResetRoutine()
+    private void UpdateCursorAppearance()
     {
-        if (clickResetRoutine != null)
+        IInspectableSource target = InspectViewManager.Instance?.ActiveScratchTarget;
+        CursorMode nextMode = target switch
         {
-            StopCoroutine(clickResetRoutine);
-        }
-        clickResetRoutine = StartCoroutine(ResetClickSpriteAfterDelay());
-    }
+            Lottery => CursorMode.Coin,
+            Trophy => CursorMode.Scrubber,
+            _ => CursorMode.Default
+        };
 
-    private IEnumerator ResetClickSpriteAfterDelay()
-    {
-        yield return new WaitForSecondsRealtime(ClickSpriteDuration);
-        clickResetRoutine = null;
-
-        if (cursorMode == CursorMode.Default)
+        if (nextMode != cursorMode)
         {
-            RefreshCursorSprite();
+            cursorMode = nextMode;
+            clickSpriteUntil = 0f;
         }
-    }
 
-    public void SetCursorSprite(Sprite newSprite)
-    {
-        if (cursorRenderer != null && newSprite != null && cursorRenderer.sprite != newSprite)
-        {
-            cursorRenderer.sprite = newSprite;
-        }
+        if (cursorMode == CursorMode.Default && Input.GetMouseButtonDown(0))
+            clickSpriteUntil = Time.unscaledTime + ClickSpriteDuration;
+
+        float scale = cursorMode == CursorMode.Coin ? gameManager?.CoinSizeMultiplier ?? 1f : 1f;
+        cursorRenderer.transform.localScale = cursorBaseScale * scale;
+        RefreshCursorSprite();
     }
 
     private void RefreshCursorSprite()
@@ -136,41 +115,26 @@ public class UiManager : MonoBehaviour
         {
             CursorMode.Scrubber => Input.GetMouseButton(0) && useScrubberSprite != null
                 ? useScrubberSprite : scrubberSprite,
-            CursorMode.Coin => defaultCoinSprite,
+            CursorMode.Coin => GetCoinSprite(),
             _ => Time.unscaledTime < clickSpriteUntil && useCursorSprite != null
                 ? useCursorSprite : defaultCursorSprite
         };
 
-        SetCursorSprite(sprite != null ? sprite : defaultCursorSprite);
+        if (sprite == null)
+            sprite = defaultCursorSprite;
+        if (sprite != null && cursorRenderer.sprite != sprite)
+            cursorRenderer.sprite = sprite;
     }
 
-    public void SetDefaultCursor()
+    private Sprite GetCoinSprite()
     {
-        SetCursorMode(CursorMode.Default);
-    }
-
-    public void SetScrubberCursor()
-    {
-        SetCursorMode(CursorMode.Scrubber);
-    }
-
-    public void SetScrubCoinCursor()
-    {
-        SetCursorMode(CursorMode.Coin);
-    }
-
-    private void SetCursorMode(CursorMode mode)
-    {
-        cursorMode = mode;
-        clickSpriteUntil = 0f;
-
-        if (clickResetRoutine != null)
+        int coinLevel = gameManager?.Upgrades?.GetLevel(UpgradeType.Kind) ?? 0;
+        return coinLevel switch
         {
-            StopCoroutine(clickResetRoutine);
-            clickResetRoutine = null;
-        }
-
-        RefreshCursorSprite();
+            2 => titaniumCoinSprite != null ? titaniumCoinSprite : defaultCoinSprite,
+            1 => aluminiumCoinSprite != null ? aluminiumCoinSprite : defaultCoinSprite,
+            _ => defaultCoinSprite
+        };
     }
 
     public void SetMoneyText(int amount)

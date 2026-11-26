@@ -1597,14 +1597,6 @@ PrefabInstance:
       propertyPath: unlockPrefab
       value: 
       objectReference: {fileID: 8254348196567405416, guid: 86d3bc7205427b74f949f5cd3be3afd3, type: 3}
-    - target: {fileID: 1699666331766876284, guid: 30e7eb5b629f65642a207e4b9a476236, type: 3}
-      propertyPath: catalogList.Array.data[1].unlockPrefab
-      value: 
-      objectReference: {fileID: 8254348196567405416, guid: 86d3bc7205427b74f949f5cd3be3afd3, type: 3}
-    - target: {fileID: 1699666331766876284, guid: 30e7eb5b629f65642a207e4b9a476236, type: 3}
-      propertyPath: catalogList.Array.data[1].unlockImagePrefab
-      value: 
-      objectReference: {fileID: 8254348196567405416, guid: 86d3bc7205427b74f949f5cd3be3afd3, type: 3}
     - target: {fileID: 2511911468251639929, guid: 30e7eb5b629f65642a207e4b9a476236, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
@@ -1885,46 +1877,6 @@ PrefabInstance:
       propertyPath: equipmentList.Array.data[4].slotPrefab
       value: 
       objectReference: {fileID: 686142727840833646, guid: ac2db4c71595f1f4691c6b783130f381, type: 3}
-    - target: {fileID: 7029072843607576578, guid: 30e7eb5b629f65642a207e4b9a476236, type: 3}
-      propertyPath: equipmentList.Array.data[0].unlockLevel
-      value: 2
-      objectReference: {fileID: 0}
-    - target: {fileID: 7029072843607576578, guid: 30e7eb5b629f65642a207e4b9a476236, type: 3}
-      propertyPath: equipmentList.Array.data[1].unlockLevel
-      value: 6
-      objectReference: {fileID: 0}
-    - target: {fileID: 7029072843607576578, guid: 30e7eb5b629f65642a207e4b9a476236, type: 3}
-      propertyPath: equipmentList.Array.data[2].unlockLevel
-      value: 6
-      objectReference: {fileID: 0}
-    - target: {fileID: 7029072843607576578, guid: 30e7eb5b629f65642a207e4b9a476236, type: 3}
-      propertyPath: equipmentList.Array.data[3].unlockLevel
-      value: 6
-      objectReference: {fileID: 0}
-    - target: {fileID: 7029072843607576578, guid: 30e7eb5b629f65642a207e4b9a476236, type: 3}
-      propertyPath: equipmentList.Array.data[4].unlockLevel
-      value: 6
-      objectReference: {fileID: 0}
-    - target: {fileID: 7029072843607576578, guid: 30e7eb5b629f65642a207e4b9a476236, type: 3}
-      propertyPath: equipmentList.Array.data[0].unlockPrefab
-      value: 
-      objectReference: {fileID: 5184423462049320239, guid: bd475adfdebc2de4e912b9822f49d351, type: 3}
-    - target: {fileID: 7029072843607576578, guid: 30e7eb5b629f65642a207e4b9a476236, type: 3}
-      propertyPath: equipmentList.Array.data[1].unlockPrefab
-      value: 
-      objectReference: {fileID: 8676338950238573772, guid: bb62ac5157cab9040abbce63732578e8, type: 3}
-    - target: {fileID: 7029072843607576578, guid: 30e7eb5b629f65642a207e4b9a476236, type: 3}
-      propertyPath: equipmentList.Array.data[2].unlockPrefab
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 7029072843607576578, guid: 30e7eb5b629f65642a207e4b9a476236, type: 3}
-      propertyPath: equipmentList.Array.data[3].unlockPrefab
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 7029072843607576578, guid: 30e7eb5b629f65642a207e4b9a476236, type: 3}
-      propertyPath: equipmentList.Array.data[4].unlockPrefab
-      value: 
-      objectReference: {fileID: 0}
     - target: {fileID: 7357533949355139809, guid: 30e7eb5b629f65642a207e4b9a476236, type: 3}
       propertyPath: m_Size
       value: 1
@@ -3270,8 +3222,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::UiManager
   targetCamera: {fileID: 519420031}
   cursorRenderer: {fileID: 804973837}
-  defaultCursorSprite: {fileID: -5499944366472649424, guid: eb87ab4ab4dd552488240cc7599cdf54, type: 3}
-  useCursorSprite: {fileID: -1735499739907267066, guid: 486019d55944c8f46a14dcb35afb4abe, type: 3}
+  defaultCursorSprite: {fileID: 21300000, guid: eb87ab4ab4dd552488240cc7599cdf54, type: 3}
+  useCursorSprite: {fileID: 21300000, guid: 486019d55944c8f46a14dcb35afb4abe, type: 3}
   scrubberSprite: {fileID: 8386587460383133869, guid: 4e03391a311f511458f2cae2855e5d96, type: 3}
   useScrubberSprite: {fileID: -2552883796082374611, guid: fb891450a3e1dde4d9874af1e461cf7b, type: 3}
   defaultCoinSprite: {fileID: -5802281701310479246, guid: 1ef9f52c2d528bb4889ac23a10bf71cf, type: 3}

@@ -123,16 +123,8 @@ public class LocalJsonSaveSystem : MonoBehaviour
             data.powerLevel = botUpgradeManager.powerLevel;
         }
 
-        UpgradeSlot[] slots = FindObjectsByType<UpgradeSlot>(FindObjectsSortMode.None);
-        foreach (UpgradeSlot slot in slots)
-        {
-            data.upgrades.Add(new UpgradeSaveEntry
-            {
-                upgradeType = slot.UpgradeTypeValue,
-                level = slot.UpgradeLevelValue,
-                cost = slot.UpgradeCostValue
-            });
-        }
+        if (gameManager != null)
+            data.upgrades = gameManager.Upgrades.Capture();
 
         if (machineShop != null)
         {
@@ -190,18 +182,8 @@ public class LocalJsonSaveSystem : MonoBehaviour
             }
         }
 
-        UpgradeSlot[] slots = FindObjectsByType<UpgradeSlot>(FindObjectsSortMode.None);
-        foreach (UpgradeSlot slot in slots)
-        {
-            foreach (UpgradeSaveEntry entry in data.upgrades)
-            {
-                if (entry.upgradeType == slot.UpgradeTypeValue)
-                {
-                    slot.ApplySaveData(entry.level, entry.cost);
-                    break;
-                }
-            }
-        }
+        if (gameManager != null)
+            gameManager.Upgrades.Restore(data.upgrades);
 
         if (machineShop != null)
         {

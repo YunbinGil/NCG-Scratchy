@@ -29,6 +29,7 @@ public class ItemSpawner : MonoBehaviour
 
     private GameObject spawnedScratchBot;
     public GameObject SpawnedScratchBot => spawnedScratchBot;
+    internal RectTransform TableEffectParent => lotteryLayer != null ? lotteryLayer : spawnTable;
 
     // 일반 아이템 랜덤 좌표 생성
     public bool TrySpawnItem(GameObject item)

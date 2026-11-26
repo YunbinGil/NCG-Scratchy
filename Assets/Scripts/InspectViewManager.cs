@@ -47,7 +47,12 @@ public class InspectViewManager : MonoBehaviour
     public ViewState CurrentState { get; private set; } = ViewState.Table;
     public bool IsInspecting => CurrentState == ViewState.Inspect;
 
-    private UiManager uiManager;
+    internal IInspectableSource ActiveScratchTarget =>
+        isActiveAndEnabled && IsInspecting && currentActiveOverlay != null && currentActiveOverlay.activeInHierarchy &&
+        currentTarget != null && !currentTarget.IsCleaned
+            ? currentTarget
+            : null;
+
     private GameManager gameManager;
     private IInspectableSource currentTarget;
     private GameObject currentActiveOverlay;
@@ -78,7 +83,6 @@ public class InspectViewManager : MonoBehaviour
         GameObject controllerObj = GameObject.FindWithTag("GameController");
         if (controllerObj != null)
         {
-            uiManager = controllerObj.GetComponent<UiManager>();
             gameManager = controllerObj.GetComponent<GameManager>();
         }
     }
@@ -199,13 +203,6 @@ public class InspectViewManager : MonoBehaviour
         }
 
         SetState(ViewState.Inspect);
-        if (!target.IsCleaned && uiManager != null)
-        {
-            if (target is Trophy)
-                uiManager.SetScrubberCursor();
-            else if (target is Lottery)
-                uiManager.SetScrubCoinCursor();
-        }
     }
 
     public void OpenTrophyView(Trophy trophy)
@@ -380,10 +377,6 @@ public class InspectViewManager : MonoBehaviour
         currentTarget = null;
 
         SetState(ViewState.Table);
-        if (uiManager != null)
-        {
-            uiManager.SetDefaultCursor();
-        }
     }
 
     public void SetState(ViewState nextState)
@@ -433,9 +426,6 @@ public class InspectViewManager : MonoBehaviour
         {
             OnLotteryCleaned(lottery);
         }
-
-        if (uiManager != null)
-            uiManager.SetDefaultCursor();
 
         ShowResultButton(target);
     }

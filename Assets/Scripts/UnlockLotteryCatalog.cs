@@ -36,18 +36,40 @@ public class UnlockLotteryCatalog : MonoBehaviour
     private void BeginReveal()
     {
         button.interactable = false;
-        StartCoroutine(Reveal());
+        StartCoroutine(Reveal(showLabel: true));
     }
 
-    private IEnumerator Reveal()
+    internal void PlayVisualOnly(Texture2D texture)
+    {
+        lightTexture = texture;
+        Button effectButton = GetComponent<Button>();
+        effectButton.transition = Selectable.Transition.None;
+        effectButton.enabled = false;
+
+        CanvasGroup input = GetComponent<CanvasGroup>();
+        if (input == null)
+            input = gameObject.AddComponent<CanvasGroup>();
+
+        input.blocksRaycasts = false;
+        input.interactable = false;
+
+        StartCoroutine(Reveal(showLabel: false));
+    }
+
+    private IEnumerator Reveal(bool showLabel)
     {
         RectTransform item = (RectTransform)transform;
         Vector3 originalScale = item.localScale;
         Vector3 smallScale = originalScale * 0.05f;
 
-        yield return ScaleItem(item, originalScale, smallScale, 0.15f);
+        if (showLabel)
+            yield return ScaleItem(item, originalScale, smallScale, 0.15f);
+        else
+            item.localScale = smallScale;
+
         CreateGlow(item);
-        CreateRevealLabel(item);
+        if (showLabel)
+            CreateRevealLabel(item);
         yield return ScaleItem(item, smallScale, originalScale, 0.35f);
         yield return new WaitForSecondsRealtime(0.75f);
 
