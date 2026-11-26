@@ -13,12 +13,14 @@ MonoBehaviour:
   m_Name: LotteryData_01
   m_EditorClassIdentifier: Assembly-CSharp::LotteryData
   id: 1
-  lotteryName: TREASURE CHEST
+  lotteryName: TWO WIN
+  price: 10
   description: '2 match, win '
   tableSprite: {fileID: 543601121251698270, guid: 864f73d075f40a240b3aa4babd66d0d7, type: 3}
   inspectSprite: {fileID: 543601121251698270, guid: 864f73d075f40a240b3aa4babd66d0d7, type: 3}
   scratchCoverSprite: {fileID: 7482667652216324306, guid: 313435d4bc91f3e418393d403e4ac919, type: 3}
-  lotteryPrefab: {fileID: 2621140978157270999, guid: 38d27eab8245e2745b85f2e510639a88, type: 3}
+  lotteryTablePrefab: {fileID: 4426920126657439695, guid: de4a2e4ecf11fd54ea6de1aaa3fa4625, type: 3}
+  requiredPlayerLevel: 0
   scratchCount: 3
   requiredMatchCount: 2
   hardness: 0

@@ -16,10 +16,11 @@ MonoBehaviour:
   dishName: DAY JOB
   description: "It may be a pittance, but it\u2019s the reward for my hard work."
   tableSprite: {fileID: 21300000, guid: 74742ca7dffb13d43aaedb67eb200a21, type: 3}
-  inspectSprite: {fileID: 21300000, guid: f4af5b98fe12815448369e3b5b98db24, type: 3}
-  cleanSprite: {fileID: 21300000, guid: f4af5b98fe12815448369e3b5b98db24, type: 3}
-  stainSprite: {fileID: 21300000, guid: 74742ca7dffb13d43aaedb67eb200a21, type: 3}
+  inspectSprite: {fileID: 21300000, guid: a6c8728f85e73fa4ba14a3193fc46e44, type: 3}
+  cleanSprite: {fileID: 21300000, guid: a6c8728f85e73fa4ba14a3193fc46e44, type: 3}
+  stainSprite: {fileID: 21300000, guid: 3876f573dbd61174fb219ff58007fb33, type: 3}
   brokenSprite: {fileID: 21300000, guid: 2296b2f63942ac24e81bb397520ec7a8, type: 3}
+  trophyViewPrefab: {fileID: 2353843395972573554, guid: e9d83c8a9af163846860ed1a4384f5ee, type: 3}
   buyPrice: 1
   sellPriceAfterClean: 1
   sellPriceProductId: 0
