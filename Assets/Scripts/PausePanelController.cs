@@ -40,6 +40,7 @@ public class PausePanelController : MonoBehaviour
     [SerializeField] private GameObject settingPanel;
     [SerializeField] private Button settingToggleButton;
     [SerializeField] private Button continueButton;
+    [SerializeField] private Button languageButton;
     [SerializeField] private Button mainMenuButton;
     [SerializeField] private Button quitGameButton;
 
@@ -88,11 +89,21 @@ public class PausePanelController : MonoBehaviour
         if (continueButton != null)
             continueButton.onClick.AddListener(ContinueGame);
 
+        if (languageButton != null)
+            languageButton.onClick.AddListener(ToggleLanguage);
+
         if (mainMenuButton != null)
             mainMenuButton.onClick.AddListener(GoToTitleScene);
 
         if (quitGameButton != null)
             quitGameButton.onClick.AddListener(QuitGame);
+
+        BindButtonLabel(continueButton, "menu.continue", "CONTINUE");
+        BindButtonLabel(languageButton, "menu.language", "LANGUAGE: ENGLISH");
+        BindButtonLabel(mainMenuButton, "menu.main_menu", "MAIN MENU");
+        BindButtonLabel(quitGameButton, "menu.exit", "EXIT");
+        BindButtonLabel(holdResetButton, "menu.reset_game", "RESET GAME");
+        BindButtonLabel(cancelConfirmButton, "menu.cancel", "CANCEL");
 
         if (finalConfirmResetButton != null)
             finalConfirmResetButton.onClick.AddListener(ConfirmResetAndRestart);
@@ -104,6 +115,17 @@ public class PausePanelController : MonoBehaviour
         SetPanelActive(false);
         if (PlayerPrefs.GetInt("ShouldLoadSavedData", 0) == 1)
             LoadUpgradeSnapshot();
+    }
+
+    private static void BindButtonLabel(Button button, string key, string fallback)
+    {
+        if (button != null)
+            Localization.Bind(button.GetComponentInChildren<TMP_Text>(true), key, fallback);
+    }
+
+    private static void ToggleLanguage()
+    {
+        Localization.SetLanguage(Localization.CurrentLanguage == "ko" ? "en" : "ko");
     }
 
     private void Update()
