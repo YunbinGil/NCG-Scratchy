@@ -16,7 +16,7 @@ public class UpgradeSlot : MonoBehaviour
     [SerializeField] private TMP_Text levelText;
     [SerializeField] private TMP_Text costText;
     [SerializeField] private Button upgradeButton;
-
+    [SerializeField] private float defaultCost = 100f;
     public UpgradeType UpgradeTypeValue => upgradeType;
     public int UpgradeLevelValue => upgradeLevel;
     public float UpgradeCostValue => upgradeCost;
@@ -27,6 +27,12 @@ public class UpgradeSlot : MonoBehaviour
         {
             upgradeButton = GetComponent<Button>();
         }
+    }
+    public void ResetToDefault()
+    {
+        upgradeLevel = 0;
+        upgradeCost = defaultCost;
+        UpdateUI();
     }
 
     private void Start()

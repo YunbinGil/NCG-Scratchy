@@ -21,6 +21,7 @@ public class StartSceneController : MonoBehaviour
     {
         PlayerPrefs.SetInt(LoadFlagKey, 0);
         PlayerPrefs.Save();
+        PausePanelController.ClearUpgradeSnapshotForNewGame();
 
         if (!string.IsNullOrEmpty(gameSceneName))
         {
