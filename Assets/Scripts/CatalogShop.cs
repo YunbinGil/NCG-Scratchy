@@ -7,9 +7,6 @@ public class CatalogShop : MonoBehaviour
     [Header("도감 목록")]
     [SerializeField] private List<CatalogData> catalogList = new List<CatalogData>();
 
-    [Header("해금 연출")]
-    [SerializeField] private Texture2D lightTexture;
-
     [Header("참조")]
     [SerializeField] private RectTransform ticketContent;
     [SerializeField] private GameManager gameManager;
@@ -19,7 +16,7 @@ public class CatalogShop : MonoBehaviour
     public int CurrentCatalogIndexForSave => currentCatalogIndex;
 
     private int currentCatalogIndex;
-    private bool isUnlocking;
+    private UnlockEffect.Registration nextCatalog;
 
     private void Start()
     {
@@ -31,21 +28,19 @@ public class CatalogShop : MonoBehaviour
             return;
         }
 
-        // 0레벨 도감은 시작과 동시에 상점에 등록
         while (currentCatalogIndex < catalogList.Count)
         {
             CatalogData catalog = catalogList[currentCatalogIndex];
 
-            if (catalog.unlockLevel != 0)
+            UnlockEffect unlock = GetUnlockEffect(catalog.catalogPrefab);
+            if (unlock != null && (!unlock.MeetsLevel(0) || unlock.RequiresConfirmation))
                 break;
 
             AddCatalog(catalog.catalogPrefab);
             currentCatalogIndex++;
         }
 
-        gameManager.OnLevelChanged += CheckUnlockCondition;
-
-        CheckUnlockCondition(gameManager.Level);
+        WatchNextCatalog();
     }
 
     public void ApplyCatalogIndex(int savedIndex)
@@ -62,54 +57,27 @@ public class CatalogShop : MonoBehaviour
             }
         }
 
-        isUnlocking = false;
-        CheckUnlockCondition(gameManager != null ? gameManager.Level : 0);
+        WatchNextCatalog();
     }
 
-    private void CheckUnlockCondition(int level)
+    private void WatchNextCatalog()
     {
-        if (isUnlocking || currentCatalogIndex >= catalogList.Count)
+        nextCatalog?.Cancel();
+        if (gameManager == null || ticketContent == null || currentCatalogIndex >= catalogList.Count)
             return;
 
-        CatalogData catalog = catalogList[currentCatalogIndex];
-
-        if (level < catalog.unlockLevel)
-            return;
-
-        SpawnUnlockItem(catalog.unlockImagePrefab);
-    }
-
-    private void SpawnUnlockItem(GameObject unlockPrefab)
-    {
-        if (unlockPrefab == null ||
-            !unlockPrefab.TryGetComponent<UnlockLotteryCatalog>(out _))
+        GameObject prefab = catalogList[currentCatalogIndex].catalogPrefab;
+        nextCatalog = gameManager.UnlockEffects.Watch(this, GetUnlockEffect(prefab), () =>
         {
-            Debug.LogWarning($"도감 목록 {currentCatalogIndex}번 항목의 해금 프리팹을 확인하세요.", this);
-            return;
-        }
-
-        isUnlocking = true;
-
-        if (!itemSpawner.TrySpawnItemAtTableCenter(unlockPrefab, out GameObject spawnedObject))
-        {
-            isUnlocking = false;
-            return;
-        }
-
-        UnlockLotteryCatalog unlock = spawnedObject.GetComponent<UnlockLotteryCatalog>();
-        unlock.Initialize(lightTexture, CompleteUnlock);
+            AddCatalog(prefab);
+            currentCatalogIndex++;
+            WatchNextCatalog();
+        });
     }
 
-    private void CompleteUnlock()
+    private static UnlockEffect GetUnlockEffect(GameObject prefab)
     {
-        CatalogData catalog = catalogList[currentCatalogIndex];
-
-        AddCatalog(catalog.catalogPrefab);
-
-        currentCatalogIndex++;
-        isUnlocking = false;
-
-        CheckUnlockCondition(gameManager.Level);
+        return prefab != null ? prefab.GetComponent<UnlockEffect>() : null;
     }
 
     private void AddCatalog(GameObject catalogPrefab)
@@ -162,7 +130,6 @@ public class CatalogShop : MonoBehaviour
 
     private void OnDestroy()
     {
-        if (gameManager != null)
-            gameManager.OnLevelChanged -= CheckUnlockCondition;
+        nextCatalog?.Cancel();
     }
 }

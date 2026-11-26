@@ -7,8 +7,6 @@ public class MachineShop : MonoBehaviour
     private class EquipmentEntry
     {
         public GameObject slotPrefab;
-        [Min(0)] public int unlockLevel;
-        public UnlockLotteryCatalog unlockPrefab;
     }
 
     [Header("장비 목록")]
@@ -21,17 +19,11 @@ public class MachineShop : MonoBehaviour
     [Header("초기 골드 (GameManager 없을 때 폴백)")]
     [SerializeField] private int fallbackGold = 1000;
 
-    [Header("해금 연출")]
-    [SerializeField] private Texture2D unlockLightTexture;
-
     [SerializeField] private GameManager gameManager;
 
     private readonly List<MachineSlot> equipmentSlots = new List<MachineSlot>();
     private readonly HashSet<string> revealedEquipmentNames = new HashSet<string>();
-    private ItemSpawner itemSpawner;
     private ScratchBotUpgradeManager botUpgradeManager;
-    private GameObject activeUnlockItem;
-    private bool unlockCheckRequested;
 
     public IReadOnlyCollection<string> RevealedEquipmentNames => revealedEquipmentNames;
 
@@ -57,7 +49,6 @@ public class MachineShop : MonoBehaviour
         if (gameManager == null)
             gameManager = FindFirstObjectByType<GameManager>();
 
-        itemSpawner = FindFirstObjectByType<ItemSpawner>();
         botUpgradeManager = ScratchBotUpgradeManager.Instance;
         CreateEquipmentUI();
 
@@ -82,10 +73,8 @@ public class MachineShop : MonoBehaviour
             MachineSlot slot = slotObj.GetComponent<MachineSlot>();
             if (slot != null)
             {
-                slot.equipmentShop = this;
-                slot.UnlockLevel = entry.unlockLevel;
-                slot.UnlockRevealPrefab = entry.unlockPrefab;
                 equipmentSlots.Add(slot);
+                slot.Initialize(this);
             }
         }
     }
@@ -104,28 +93,7 @@ public class MachineShop : MonoBehaviour
         RefreshEquipmentLocks();
     }
 
-    private void LateUpdate()
-    {
-        if (!unlockCheckRequested || activeUnlockItem != null || itemSpawner == null)
-            return;
-
-        unlockCheckRequested = false;
-        foreach (MachineSlot slot in equipmentSlots)
-        {
-            if (slot == null || !slot.IsReadyForUnlockReveal || HasRevealedEquipment(slot.equipmentName))
-                continue;
-
-            if (!itemSpawner.TrySpawnItemAtTableCenter(slot.UnlockRevealPrefab.gameObject, out activeUnlockItem))
-                continue;
-
-            string equipmentName = slot.equipmentName;
-            activeUnlockItem.GetComponent<UnlockLotteryCatalog>().Initialize(
-                unlockLightTexture, () => CompleteUnlock(equipmentName), "Equipment Unlocked!", "unlock.equipment.complete");
-            return;
-        }
-    }
-
-    private void CompleteUnlock(string equipmentName)
+    internal void RecordUnlock(string equipmentName)
     {
         revealedEquipmentNames.Add(equipmentName);
         RefreshEquipmentLocks();
@@ -143,8 +111,6 @@ public class MachineShop : MonoBehaviour
             if (slot != null)
                 slot.UpdateLock(playerLevel);
         }
-
-        unlockCheckRequested = true;
     }
 
     private void OnDestroy()
@@ -153,8 +119,6 @@ public class MachineShop : MonoBehaviour
             gameManager.OnLevelChanged -= RefreshEquipmentLocks;
         if (botUpgradeManager != null)
             botUpgradeManager.OnUpgraded -= RefreshEquipmentLocks;
-        if (activeUnlockItem != null)
-            Destroy(activeUnlockItem);
     }
 
     public bool PurchaseEquipment(int price)

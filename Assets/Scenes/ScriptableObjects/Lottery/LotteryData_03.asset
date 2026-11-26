@@ -12,10 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a6077189a2a5652468e1dc312c5ea426, type: 3}
   m_Name: LotteryData_03
   m_EditorClassIdentifier: Assembly-CSharp::LotteryData
-  id: 2
-  lotteryName: MINI SCRATCH
-  price: 100
-  description: '2 match, win '
+  id: 3
+  lotteryName: APPLE TREE
+  price: 2000
+  description: You can earn a reward for each jewel you find, but be careful not
+    to find the cat
+  nameKey: 
+  descriptionKey: 
   tableSprite: {fileID: -4285199274580427658, guid: 04e0ec9d36d580148bb947cf1095cd4f, type: 3}
   inspectSprite: {fileID: -4285199274580427658, guid: 41caa41cda7d9de449ed1d56adcf3ec4, type: 3}
   scratchCoverSprite: {fileID: 21300000, guid: 492ffb2a28b0f0a4fb9fe95566f69409, type: 3}
@@ -25,4 +28,11 @@ MonoBehaviour:
   scratchCount: 5
   requiredMatchCount: 1
   hardness: 0
-  availableIcons: []
+  availableIcons:
+  - {fileID: 11400000, guid: e7883bb35bbfd984cb70a23d068d7b8b, type: 2}
+  - {fileID: 11400000, guid: f0ad70ab491345f4d8015e9a6497b9ba, type: 2}
+  - {fileID: 11400000, guid: d4612f846f386b14c88fd5c7be5800cb, type: 2}
+  - {fileID: 11400000, guid: 9d673b973c05e494c84a3d920d074335, type: 2}
+  - {fileID: 11400000, guid: 73ac95592d8fda547a1fd3c43a1c1c4e, type: 2}
+  - {fileID: 11400000, guid: f2c2e5774d999d14b8ff4887e9305c0a, type: 2}
+  - {fileID: 11400000, guid: 9e1c51e4a7d35204e8778fec97e78b73, type: 2}

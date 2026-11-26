@@ -1,16 +1,16 @@
-using System.Data.Common;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class CatalogSlot : MonoBehaviour
 {
-
     [SerializeField] private LotteryData data;
-    [SerializeField] private string lotteryName; 
-    [SerializeField] private int price;
-    [SerializeField] private GameObject lotteryTablePrefab;
-
+    public LotteryData LotteryData => data; 
+    [SerializeField] private string ticketName;
+    [SerializeField, Min(0)] private int price;
+    [Header("테이블에 생성될 prefab")]
+    [SerializeField] private GameObject ticketPrefab;
+    [Header("Game Objects")]
     [SerializeField] private TMP_Text nameText;
     [SerializeField] private TMP_Text priceText;
     [SerializeField] private Button purchaseButton;
@@ -26,11 +26,10 @@ public class CatalogSlot : MonoBehaviour
     [SerializeField, Min(0)] private int maxLevel = 10;
 
     [Header("잠금 해제")]
-    [SerializeField] private int requiredPlayerLevel;
     [SerializeField] private GameObject lockOverlay;
 
     private CatalogShop shop;
-    private GameManager gameManager;
+    private UnlockEffect.Registration unlockRegistration;
     private bool isLocked;
     private ProductProgress productProgress;
     private string activeProductId;
@@ -38,21 +37,20 @@ public class CatalogSlot : MonoBehaviour
 
     public void Initialize(CatalogShop ticketShop)
     {
-        if (data != null)
+        if(data != null)
         {
-            lotteryName = data.lotteryName;
+            ticketName = data.lotteryName;
             price = data.price;
-            lotteryTablePrefab = data.lotteryTablePrefab;
-            requiredPlayerLevel = data.requiredPlayerLevel;
+            ticketPrefab = data.lotteryTablePrefab;
+            GetComponent<UnlockEffect>().unlockLevel = data.requiredPlayerLevel;
         }
-        if (gameManager != null)
-            gameManager.OnLevelChanged -= UpdateLock;
+        unlockRegistration?.Cancel();
 
         shop = ticketShop;
-        gameManager = shop != null ? shop.PlayerProgress : null;
+        GameManager playerProgress = shop != null ? shop.PlayerProgress : null;
 
-        if (nameText != null)
-            Localization.Bind(nameText, $"shop.item.{(lotteryName ?? string.Empty).ToLowerInvariant()}", lotteryName);
+        if (nameText != null && !LocalizedLabel.HasKey(nameText))
+            Localization.Bind(nameText, $"shop.item.{(ticketName ?? string.Empty).ToLowerInvariant()}", ticketName);
 
         if (priceText != null)
             priceText.text = price.ToString();
@@ -66,10 +64,11 @@ public class CatalogSlot : MonoBehaviour
             purchaseButton.onClick.AddListener(Purchase);
         }
 
-        if (gameManager != null)
-            gameManager.OnLevelChanged += UpdateLock;
+        UnlockEffect unlock = GetComponent<UnlockEffect>();
+        SetLocked(unlock != null && !unlock.MeetsLevel(playerProgress != null ? playerProgress.Level : 0));
+        if (isLocked && playerProgress != null)
+            unlockRegistration = playerProgress.UnlockEffects.Watch(this, unlock, () => SetLocked(false));
 
-        UpdateLock(gameManager != null ? gameManager.Level : 0);
         ConnectProgress();
     }
 
@@ -79,22 +78,30 @@ public class CatalogSlot : MonoBehaviour
             productProgress.ProgressChanged -= UpdateProgress;
 
         productProgress = null;
-        if (experienceMask == null || shop == null || lotteryTablePrefab == null)
+        if (experienceMask == null || shop == null || ticketPrefab == null)
             return;
 
-        activeProductId = string.IsNullOrWhiteSpace(productId) ? $"lottery:{lotteryTablePrefab.name}" : productId;
+        activeProductId = string.IsNullOrWhiteSpace(productId)
+            ? $"lottery:{ticketPrefab.name}"
+            : productId;
+
         productProgress = FindFirstObjectByType<ProductProgress>();
         if (productProgress == null)
             productProgress = shop.gameObject.AddComponent<ProductProgress>();
 
+        productProgress.ProgressChanged -= UpdateProgress;
         productProgress.ProgressChanged += UpdateProgress;
-        UpdateProgress(activeProductId, productProgress.GetLevel(activeProductId),
-            productProgress.GetExperience(activeProductId));
+
+        UpdateProgress(
+            activeProductId,
+            productProgress.GetLevel(activeProductId),
+            productProgress.GetExperience(activeProductId)
+        );
     }
 
-    private void UpdateLock(int playerLevel)
+    private void SetLocked(bool locked)
     {
-        isLocked = playerLevel < requiredPlayerLevel;
+        isLocked = locked;
 
         if (lockOverlay != null)
             lockOverlay.SetActive(isLocked);
@@ -105,7 +112,7 @@ public class CatalogSlot : MonoBehaviour
 
     private void Purchase()
     {
-        if (isLocked || shop == null || !shop.TryPurchase(lotteryTablePrefab, price))
+        if (isLocked || shop == null || !shop.TryPurchase(ticketPrefab, price))
             return;
 
         if (productProgress != null)
@@ -141,19 +148,24 @@ public class CatalogSlot : MonoBehaviour
 
     private void UpdateMask()
     {
-        if (experienceFill != null)
-            experienceFill.enabled = experienceRatio > 0f;
+        if (experienceMask == null)
+            return;
 
-        float width = experienceMask.rectTransform.rect.width;
+        Canvas.ForceUpdateCanvases();
+        LayoutRebuilder.ForceRebuildLayoutImmediate(experienceMask.rectTransform);
+
+        float width = Mathf.Max(0f, experienceMask.rectTransform.rect.width);
         Vector4 padding = experienceMask.padding;
-        padding.z = width * (1f - experienceRatio);
+        padding.z = width * (1f - Mathf.Clamp01(experienceRatio));
         experienceMask.padding = padding;
+
+        if (experienceFill != null)
+            experienceFill.enabled = experienceRatio > 0f && width > 0f;
     }
 
     private void OnDestroy()
     {
-        if (gameManager != null)
-            gameManager.OnLevelChanged -= UpdateLock;
+        unlockRegistration?.Cancel();
 
         if (purchaseButton != null)
             purchaseButton.onClick.RemoveListener(Purchase);

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: LotteryIcon0305
   m_EditorClassIdentifier: Assembly-CSharp::LotteryIconData
   id: 0
-  iconName: Symbol3-6
-  iconSprite: {fileID: 21300000, guid: 661bfa8317923d14ca0b211dfa1e76c5, type: 3}
-  spawnWeight: 19
-  matchPayouts: 280a0000
+  iconName: Symbol3-5
+  iconSprite: {fileID: 21300000, guid: 24b2993360db547408e154d8a473b4e9, type: 3}
+  spawnWeight: 0.16
+  matchPayouts: e8030000

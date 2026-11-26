@@ -4,6 +4,14 @@ using UnityEngine;
 
 public class ProductProgress : MonoBehaviour
 {
+    [Serializable]
+    public struct SaveEntry
+    {
+        public string productId;
+        public int level;
+        public int experience;
+    }
+
     private class ProductState
     {
         public int Level;
@@ -68,6 +76,50 @@ public class ProductProgress : MonoBehaviour
             LevelChanged?.Invoke(productId, product.Level);
 
         ProgressChanged?.Invoke(productId, product.Level, product.Exp);
+    }
+
+    public List<SaveEntry> GetSaveEntries()
+    {
+        List<SaveEntry> entries = new List<SaveEntry>(products.Count);
+        foreach (KeyValuePair<string, ProductState> pair in products)
+        {
+            if (string.IsNullOrWhiteSpace(pair.Key) || pair.Value == null)
+                continue;
+
+            entries.Add(new SaveEntry
+            {
+                productId = pair.Key,
+                level = Mathf.Max(0, pair.Value.Level),
+                experience = Mathf.Max(0, pair.Value.Exp)
+            });
+        }
+        return entries;
+    }
+
+    public void RestoreSaveEntries(IEnumerable<SaveEntry> entries)
+    {
+        if (entries == null)
+            return;
+
+        foreach (SaveEntry entry in entries)
+        {
+            if (string.IsNullOrWhiteSpace(entry.productId))
+                continue;
+
+            int safeLevel = Mathf.Max(0, entry.level);
+            int safeExp = Mathf.Max(0, entry.experience);
+
+            if (!products.TryGetValue(entry.productId, out ProductState state) || state == null)
+            {
+                state = new ProductState();
+                products[entry.productId] = state;
+            }
+
+            state.Level = safeLevel;
+            state.Exp = safeExp;
+
+            ProgressChanged?.Invoke(entry.productId, state.Level, state.Exp);
+        }
     }
 
     private ProductState FindProduct(string productId)

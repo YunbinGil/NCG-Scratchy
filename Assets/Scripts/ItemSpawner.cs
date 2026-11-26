@@ -1,10 +1,25 @@
-using UnityEngine;
+using System;
 using System.Collections.Generic;
+using UnityEngine;
+
+[Serializable]
+public class SpawnedTableItemSaveData
+{
+    public string itemKey; // 프리팹 이름 또는 식별 키 (예: "Lottery01", "Trophy_Gold")
+    public string itemKind; // "Lottery" 또는 "Trophy"
+    public float posX;
+    public float posY;
+    public bool isCleaned;
+    public int reward;
+}
 
 public class ItemSpawner : MonoBehaviour
 {
     [Header("일반 아이템")]
     [SerializeField] private List<GameObject> items;
+
+    [Header("세이브 복원용 프리팹 목록 (복권/트로피 프리팹 등록)")]
+    [SerializeField] private List<GameObject> savableItemPrefabs = new List<GameObject>();
 
     [Header("생성 및 드래그 영역")]
     [SerializeField] private RectTransform spawnTable;
@@ -22,15 +37,16 @@ public class ItemSpawner : MonoBehaviour
     [SerializeField] private GameObject scratchBotPrefab;
     [SerializeField] private Vector2 bottomRightPadding = new Vector2(120f, 120f);
 
-    private List<RectTransform> spawnItems = new List<RectTransform>();
-    private List<Vector2> targetpoints = new List<Vector2>();
+    private readonly List<RectTransform> spawnItems = new List<RectTransform>();
+    private readonly List<Vector2> targetpoints = new List<Vector2>();
+    private readonly List<GameObject> activeTableItems = new List<GameObject>();
 
     private float objectSpeed = 600f;
 
     private GameObject spawnedScratchBot;
     public GameObject SpawnedScratchBot => spawnedScratchBot;
+    internal RectTransform TableEffectParent => lotteryLayer != null ? lotteryLayer : spawnTable;
 
-    // 일반 아이템 랜덤 좌표 생성
     public bool TrySpawnItem(GameObject item)
     {
         if (spawnTable == null)
@@ -42,14 +58,13 @@ public class ItemSpawner : MonoBehaviour
         float maxY = spawnTable.rect.height / 2f;
 
         Vector2 targetpoint = new Vector2(
-            Random.Range(minX, maxX),
-            Random.Range(minY, maxY)
+            UnityEngine.Random.Range(minX, maxX),
+            UnityEngine.Random.Range(minY, maxY)
         );
 
         return TrySpawnItem(item, targetpoint, out _);
     }
 
-    // 공통 아이템 생성 메서드
     public bool TrySpawnItem(
         GameObject item,
         Vector2 targetpoint,
@@ -119,14 +134,157 @@ public class ItemSpawner : MonoBehaviour
             draggable.SetTableRect(dragArea);
         }
 
-        // 생성된 아이템과 목표 좌표 저장
+        RegisterSpawnedTableItem(spawnedObject);
+
         spawnItems.Add(spawnItem);
         targetpoints.Add(targetpoint);
 
         return true;
     }
 
-    // 도감 해금 아이템 생성
+    private void RegisterSpawnedTableItem(GameObject spawnedObject)
+    {
+        if (spawnedObject == null) return;
+        if (spawnedObject.GetComponent<Lottery>() != null || spawnedObject.GetComponent<Trophy>() != null)
+        {
+            if (!activeTableItems.Contains(spawnedObject))
+                activeTableItems.Add(spawnedObject);
+        }
+    }
+
+    public List<SpawnedTableItemSaveData> ExportSpawnedTableItems()
+    {
+        List<SpawnedTableItemSaveData> result = new List<SpawnedTableItemSaveData>();
+
+        for (int i = activeTableItems.Count - 1; i >= 0; i--)
+        {
+            GameObject go = activeTableItems[i];
+            if (go == null || !go)
+            {
+                activeTableItems.RemoveAt(i);
+                continue;
+            }
+
+            RectTransform rt = go.GetComponent<RectTransform>();
+            Vector2 pos = rt != null ? rt.anchoredPosition : Vector2.zero;
+
+            Lottery lottery = go.GetComponent<Lottery>();
+            if (lottery != null)
+            {
+                string key = lottery.Data != null && lottery.Data.lotteryTablePrefab != null
+                    ? lottery.Data.lotteryTablePrefab.name
+                    : go.name.Replace("(Clone)", "").Trim();
+
+                result.Add(new SpawnedTableItemSaveData
+                {
+                    itemKey = key,
+                    itemKind = "Lottery",
+                    posX = pos.x,
+                    posY = pos.y,
+                    isCleaned = lottery.IsCleaned,
+                    reward = lottery.Reward
+                });
+                continue;
+            }
+
+            Trophy trophy = go.GetComponent<Trophy>();
+            if (trophy != null)
+            {
+                string key = trophy.Data != null
+                    ? trophy.Data.name
+                    : go.name.Replace("(Clone)", "").Trim();
+
+                result.Add(new SpawnedTableItemSaveData
+                {
+                    itemKey = key,
+                    itemKind = "Trophy",
+                    posX = pos.x,
+                    posY = pos.y,
+                    isCleaned = trophy.IsCleaned,
+                    reward = trophy.Reward
+                });
+            }
+        }
+
+        return result;
+    }
+
+    public void RestoreSpawnedTableItems(List<SpawnedTableItemSaveData> savedItems)
+    {
+        for (int i = activeTableItems.Count - 1; i >= 0; i--)
+        {
+            if (activeTableItems[i] != null && activeTableItems[i])
+                Destroy(activeTableItems[i]);
+        }
+        activeTableItems.Clear();
+        spawnItems.Clear();
+        targetpoints.Clear();
+
+        if (savedItems == null || savedItems.Count == 0)
+            return;
+
+        foreach (SpawnedTableItemSaveData entry in savedItems)
+        {
+            if (entry == null || string.IsNullOrWhiteSpace(entry.itemKey))
+                continue;
+
+            GameObject prefab = FindSavablePrefab(entry.itemKey);
+            if (prefab == null)
+            {
+                Debug.LogWarning($"[ItemSpawner] 복원할 프리팹을 찾지 못했습니다: {entry.itemKey}", this);
+                continue;
+            }
+
+            Vector2 savedPos = new Vector2(entry.posX, entry.posY);
+            if (TrySpawnItem(prefab, savedPos, out GameObject spawned))
+            {
+                RectTransform rt = spawned.GetComponent<RectTransform>();
+                if (rt != null)
+                {
+                    rt.anchoredPosition = savedPos;
+                    int idx = spawnItems.IndexOf(rt);
+                    if (idx >= 0 && idx < targetpoints.Count)
+                        targetpoints[idx] = savedPos;
+                }
+            }
+        }
+    }
+
+    private GameObject FindSavablePrefab(string itemKey)
+    {
+        if (savableItemPrefabs != null)
+        {
+            foreach (GameObject prefab in savableItemPrefabs)
+            {
+                if (prefab == null) continue;
+                if (prefab.name == itemKey)
+                    return prefab;
+
+                Lottery lottery = prefab.GetComponent<Lottery>();
+                if (lottery != null && lottery.Data != null &&
+                    lottery.Data.lotteryTablePrefab != null &&
+                    lottery.Data.lotteryTablePrefab.name == itemKey)
+                    return prefab;
+
+                Trophy trophy = prefab.GetComponent<Trophy>();
+                if (trophy != null && trophy.Data != null &&
+                    trophy.Data.name == itemKey)
+                    return prefab;
+            }
+        }
+
+        if (items != null)
+        {
+            foreach (GameObject prefab in items)
+            {
+                if (prefab != null && prefab.name == itemKey)
+                    return prefab;
+            }
+        }
+
+        return null;
+    }
+
     public bool TrySpawnUnlockItem(System.Action onComplete)
     {
         if (unlockPrefab == null ||
@@ -146,13 +304,12 @@ public class ItemSpawner : MonoBehaviour
         UnlockLotteryCatalog unlock =
             spawnedObject.GetComponent<UnlockLotteryCatalog>();
 
-        // 해금 이펙트 및 완료 콜백 전달
         unlock.Initialize(lightTexture, onComplete);
 
         return true;
     }
 
-    // 스크래치 봇 테이블 우측 하단 스폰 (LotteryLayer 위 레이어에 생성)
+    // 스크래치 봇 테이블 우측 하단 스폰 (프리팹 앵커/피벗/오프셋 유지, 중복 생성 방지)
     public bool TrySpawnScratchBot()
     {
         if (spawnedScratchBot != null)
@@ -163,25 +320,27 @@ public class ItemSpawner : MonoBehaviour
             return false;
 
         RectTransform baseRect = scratchBotLayer != null ? scratchBotLayer : spawnTable;
-        Debug.Log($"baseRect {baseRect.gameObject.name}");
         if (baseRect == null || scratchBotPrefab == null ||
-            !scratchBotPrefab.TryGetComponent<RectTransform>(out _))
+            !scratchBotPrefab.TryGetComponent<RectTransform>(out RectTransform prefabRect))
         {
             Debug.LogWarning("ScratchBot 프리팹 또는 레이어를 확인하세요.", this);
             return false;
         }
 
-        float targetX = (baseRect.rect.width * 0.5f) - bottomRightPadding.x;
-        float targetY = -(baseRect.rect.height * 0.5f) + bottomRightPadding.y;
-        Vector2 bottomRightTarget = new Vector2(targetX, targetY);
-
-        if (!TrySpawnItemInternal(
-            scratchBotPrefab,
-            bottomRightTarget,
-            false,
-            baseRect,
-            out GameObject botObj))
+        if (baseRect.GetComponentInChildren<ScratchBot>(true) != null)
             return false;
+
+        GameObject botObj = Instantiate(scratchBotPrefab, baseRect);
+        RectTransform botRect = botObj.GetComponent<RectTransform>();
+        if (botRect != null)
+        {
+            botRect.anchorMin = prefabRect.anchorMin;
+            botRect.anchorMax = prefabRect.anchorMax;
+            botRect.pivot = prefabRect.pivot;
+            botRect.anchoredPosition = prefabRect.anchoredPosition;
+            botRect.localScale = prefabRect.localScale;
+            botRect.SetAsLastSibling();
+        }
 
         spawnedScratchBot = botObj;
         return true;
@@ -189,17 +348,15 @@ public class ItemSpawner : MonoBehaviour
 
     private void Update()
     {
-        // 테스트용 일반 아이템 생성
         if (Input.GetKeyDown(KeyCode.Alpha1))
         {
             if (items != null && items.Count > 0)
             {
-                int randomIndex = Random.Range(0, items.Count);
+                int randomIndex = UnityEngine.Random.Range(0, items.Count);
                 TrySpawnItem(items[randomIndex]);
             }
         }
 
-        // 모든 아이템 이동 처리
         for (int i = spawnItems.Count - 1; i >= 0; i--)
         {
             if (spawnItems[i] == null)
@@ -215,7 +372,6 @@ public class ItemSpawner : MonoBehaviour
                 objectSpeed * Time.deltaTime
             );
 
-            // 목표 지점에 도착하면 목록에서 제거
             if (Vector2.Distance(
                 spawnItems[i].anchoredPosition,
                 targetpoints[i]) < 0.01f)

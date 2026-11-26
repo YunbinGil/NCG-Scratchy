@@ -1,15 +1,12 @@
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro;
 
 public class UpgradeSlot : MonoBehaviour
 {
     [Header("Upgrade Info")]
     [SerializeField] private UpgradeType upgradeType;
     [SerializeField] private string upgradeName;
-    private int upgradeLevel = 0;
-    private float upgradeCost = 100f;
-    private float costMultiplier = 1.5f;
 
     [Header("UI")]
     [SerializeField] private TMP_Text nameText;
@@ -17,65 +14,90 @@ public class UpgradeSlot : MonoBehaviour
     [SerializeField] private TMP_Text costText;
     [SerializeField] private Button upgradeButton;
 
+    private PlayerUpgradeManager upgrades;
+    private PlayerUpgradeManager Upgrades => upgrades ??= FindFirstObjectByType<GameManager>()?.Upgrades;
+
     public UpgradeType UpgradeTypeValue => upgradeType;
-    public int UpgradeLevelValue => upgradeLevel;
-    public float UpgradeCostValue => upgradeCost;
+    public int UpgradeLevelValue => Upgrades?.GetLevel(upgradeType) ?? 0;
+    public float UpgradeCostValue => Upgrades?.GetCost(upgradeType) ?? 0;
 
     private void Awake()
     {
         if (upgradeButton == null)
-        {
             upgradeButton = GetComponent<Button>();
-        }
     }
 
     private void Start()
     {
-        upgradeButton.onClick.AddListener(UpgradeLevelUp);
+        PlayerUpgradeManager manager = Upgrades;
+        if (manager != null)
+            manager.Changed += UpdateUI;
+        if (upgradeButton != null)
+            upgradeButton.onClick.AddListener(Purchase);
+
+        if (!LocalizedLabel.HasKey(nameText))
+        {
+            string key = upgradeType switch
+            {
+                UpgradeType.Siez => "upgrade.size",
+                UpgradeType.Kind => "upgrade.coin_type",
+                _ => "upgrade.lucky"
+            };
+            Localization.Bind(nameText, key, upgradeName);
+        }
+
         UpdateUI();
     }
 
-    private void UpgradeLevelUp()
+    private void OnDestroy()
     {
-        // TODO: 재화 확인 및 차감
-
-        upgradeLevel++;
-        upgradeCost += upgradeCost * costMultiplier;
-
-        ApplyUpgrade();
-        UpdateUI();
+        if (upgrades != null)
+            upgrades.Changed -= UpdateUI;
+        if (upgradeButton != null)
+            upgradeButton.onClick.RemoveListener(Purchase);
     }
 
     public void ApplySaveData(int savedLevel, float savedCost)
     {
-        upgradeLevel = Mathf.Max(0, savedLevel);
-        upgradeCost = Mathf.Max(0f, savedCost);
-        ApplyUpgrade();
-        UpdateUI();
+        PlayerUpgradeManager manager = Upgrades;
+        if (manager == null)
+            return;
+
+        var entries = manager.Capture();
+        entries.RemoveAll(entry => entry.upgradeType == upgradeType);
+        entries.Add(new UpgradeSaveEntry
+        {
+            upgradeType = upgradeType,
+            level = Mathf.Max(0, savedLevel),
+            cost = Mathf.Max(0f, savedCost)
+        });
+        manager.Restore(entries);
     }
 
-    private void ApplyUpgrade()
+    public void ResetToDefault()
     {
-        switch (upgradeType) // TODO: 안에 업그레이드 내용들 구현
-        {
-            case UpgradeType.Luk:
-                Debug.Log("행운 업그레이드");
-                break;
+        ApplySaveData(0, 100f);
+    }
 
-            case UpgradeType.Siez:
-                Debug.Log("사이즈 업그레이드");
-                break;
-
-            case UpgradeType.Kind:
-                Debug.Log("종류 업그레이드");
-                break;
-        }
+    private void Purchase()
+    {
+        upgrades?.TryUpgrade(upgradeType);
     }
 
     private void UpdateUI()
     {
-        nameText.text = upgradeName;
-        Localization.Bind(levelText, "status.level", "Lv. {0}", upgradeLevel);
-        costText.text = $"{upgradeCost:N0}";
+        int level = upgrades?.GetLevel(upgradeType) ?? 0;
+        Localization.Bind(levelText, "status.level", "Lv. {0}", level);
+
+        bool canUpgrade = upgrades != null && upgrades.CanUpgrade(upgradeType);
+        if (upgradeButton != null)
+            upgradeButton.interactable = canUpgrade;
+
+        if (upgrades == null)
+            Localization.Clear(costText, "—");
+        else if (canUpgrade)
+            Localization.Clear(costText, upgrades.GetCost(upgradeType).ToString("N0"));
+        else
+            Localization.Bind(costText, "status.max_level", "Max Level");
     }
 }

@@ -1,4 +1,3 @@
-using System.Collections;
 using UnityEngine;
 using UnityEngine.Serialization;
 using TMPro;
@@ -9,6 +8,7 @@ public class UiManager : MonoBehaviour
     [Header("Cursor Settings")]
     [SerializeField] private Camera targetCamera;
     [SerializeField] private SpriteRenderer cursorRenderer;
+    [SerializeField] private Image cursorImage;
     [SerializeField] private Sprite defaultCursorSprite;
     [SerializeField] private Sprite useCursorSprite;
     [SerializeField] private Sprite scrubberSprite;
@@ -25,18 +25,24 @@ public class UiManager : MonoBehaviour
 
     private const float ClickSpriteDuration = 0.12f;
 
-    public enum CursorMode { Default, Scrubber, Coin }
+    private enum CursorMode { Default, Scrubber, Coin }
 
     private CursorMode cursorMode;
     private float clickSpriteUntil;
-    private Coroutine clickResetRoutine;
+    private Vector3 cursorBaseScale;
     private GameManager gameManager;
+    private PausePanelController pausePanel;
     private RectMask2D levelMask;
     private float experienceRatio;
     private float lastMaskWidth = -1f;
 
     private void Awake()
     {
+        pausePanel = GetComponent<PausePanelController>();
+
+        if (cursorRenderer != null)
+            cursorBaseScale = cursorRenderer.transform.localScale;
+
         GameObject controllerObj = GameObject.FindWithTag("GameController");
         if (controllerObj != null)
         {
@@ -55,38 +61,64 @@ public class UiManager : MonoBehaviour
         }
     }
 
-    private void Start()
+    private void OnEnable()
     {
-        if (targetCamera == null)
-        {
-            targetCamera = Camera.main;
-        }
-
-        SetDefaultCursor();
+        Cursor.visible = false;
+#if UNITY_EDITOR
+        if (Application.isPlaying && !Application.isBatchMode)
+            UnityEditor.EditorApplication.delayCall += FocusGameView;
+#endif
     }
+
+    private void OnDisable()
+    {
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.delayCall -= FocusGameView;
+#endif
+        Cursor.visible = true;
+    }
+
+#if UNITY_EDITOR
+    private void FocusGameView()
+    {
+        if (!isActiveAndEnabled || !Application.isPlaying)
+            return;
+
+        var gameViewType = typeof(UnityEditor.EditorWindow).Assembly.GetType("UnityEditor.GameView");
+        if (gameViewType != null)
+            UnityEditor.EditorWindow.GetWindow(gameViewType).Focus();
+
+        Cursor.visible = false;
+    }
+#endif
+
+    private void OnApplicationFocus(bool hasFocus)
+    {
+        if (hasFocus && isActiveAndEnabled)
+            Cursor.visible = false;
+    }
+
 
     private void Update()
     {
-        if (cursorMode == CursorMode.Default && Input.GetMouseButtonDown(0))
-        {
-            clickSpriteUntil = Time.unscaledTime + ClickSpriteDuration;
-            RefreshCursorSprite();
-            RestartClickResetRoutine();
-        }
-        else if (cursorMode == CursorMode.Scrubber && (Input.GetMouseButtonDown(0) || Input.GetMouseButtonUp(0)))
-        {
-            RefreshCursorSprite();
-        }
-
         if (levelMask != null && levelMask.rectTransform.rect.width != lastMaskWidth)
-        {
             UpdateLevelMask();
-        }
     }
 
     private void LateUpdate()
     {
-        if (cursorRenderer == null) return;
+        if (Application.isFocused && Cursor.visible)
+            Cursor.visible = false;
+
+        if (cursorRenderer == null && cursorImage == null) return;
+        UpdateCursorAppearance();
+
+        if (cursorImage != null)
+        {
+            cursorImage.rectTransform.position = Input.mousePosition;
+            return;
+        }
+
         if (targetCamera == null) targetCamera = Camera.main;
         if (targetCamera == null) return;
 
@@ -97,80 +129,73 @@ public class UiManager : MonoBehaviour
         Transform cursorTransform = cursorRenderer.transform;
         Vector3 currentPosition = cursorTransform.position;
         Bounds spriteBounds = cursorRenderer.bounds;
-        Vector3 topLeft = new Vector3(spriteBounds.min.x, spriteBounds.max.y, currentPosition.z);
+        Vector3 cursorAnchor = cursorMode == CursorMode.Default
+            ? new Vector3(spriteBounds.min.x, spriteBounds.max.y, currentPosition.z)
+            : spriteBounds.center;
+        cursorAnchor.z = currentPosition.z;
         worldPos.z = currentPosition.z;
-        cursorTransform.position = worldPos + (currentPosition - topLeft);
+        cursorTransform.position = worldPos + (currentPosition - cursorAnchor);
     }
 
-    private void RestartClickResetRoutine()
+    private void UpdateCursorAppearance()
     {
-        if (clickResetRoutine != null)
+        IInspectableSource target = cursorRenderer != null && (pausePanel == null || !pausePanel.IsOpen)
+            ? InspectViewManager.Instance?.ActiveScratchTarget
+            : null;
+        CursorMode nextMode = target switch
         {
-            StopCoroutine(clickResetRoutine);
+            Lottery => CursorMode.Coin,
+            Trophy => CursorMode.Scrubber,
+            _ => CursorMode.Default
+        };
+
+        if (nextMode != cursorMode)
+        {
+            cursorMode = nextMode;
+            clickSpriteUntil = 0f;
         }
-        clickResetRoutine = StartCoroutine(ResetClickSpriteAfterDelay());
+
+        if (cursorMode == CursorMode.Default && Input.GetMouseButtonDown(0))
+            clickSpriteUntil = Time.unscaledTime + ClickSpriteDuration;
+
+        int coinLevel = gameManager?.Upgrades?.GetLevel(UpgradeType.Kind) ?? 0;
+        float scale = cursorMode == CursorMode.Coin ? gameManager?.CoinSizeMultiplier ?? 0.5f : 1f;
+
+        if (cursorRenderer != null)
+            cursorRenderer.transform.localScale = cursorBaseScale * scale;
+        RefreshCursorSprite(coinLevel);
     }
 
-    private IEnumerator ResetClickSpriteAfterDelay()
-    {
-        yield return new WaitForSecondsRealtime(ClickSpriteDuration);
-        clickResetRoutine = null;
-
-        if (cursorMode == CursorMode.Default)
-        {
-            RefreshCursorSprite();
-        }
-    }
-
-    public void SetCursorSprite(Sprite newSprite)
-    {
-        if (cursorRenderer != null && newSprite != null && cursorRenderer.sprite != newSprite)
-        {
-            cursorRenderer.sprite = newSprite;
-        }
-    }
-
-    private void RefreshCursorSprite()
+    private void RefreshCursorSprite(int coinLevel)
     {
         Sprite sprite = cursorMode switch
         {
             CursorMode.Scrubber => Input.GetMouseButton(0) && useScrubberSprite != null
                 ? useScrubberSprite : scrubberSprite,
-            CursorMode.Coin => defaultCoinSprite,
+            CursorMode.Coin => GetCoinSprite(coinLevel),
             _ => Time.unscaledTime < clickSpriteUntil && useCursorSprite != null
                 ? useCursorSprite : defaultCursorSprite
         };
 
-        SetCursorSprite(sprite != null ? sprite : defaultCursorSprite);
+        if (sprite == null)
+            sprite = defaultCursorSprite;
+        if (sprite == null)
+            return;
+
+        if (cursorRenderer != null && cursorRenderer.sprite != sprite)
+            cursorRenderer.sprite = sprite;
+        if (cursorImage != null && cursorImage.sprite != sprite)
+            cursorImage.sprite = sprite;
     }
 
-    public void SetDefaultCursor()
+    private Sprite GetCoinSprite(int coinLevel)
     {
-        SetCursorMode(CursorMode.Default);
-    }
-
-    public void SetScrubberCursor()
-    {
-        SetCursorMode(CursorMode.Scrubber);
-    }
-
-    public void SetScrubCoinCursor()
-    {
-        SetCursorMode(CursorMode.Coin);
-    }
-
-    private void SetCursorMode(CursorMode mode)
-    {
-        cursorMode = mode;
-        clickSpriteUntil = 0f;
-
-        if (clickResetRoutine != null)
+        return coinLevel switch
         {
-            StopCoroutine(clickResetRoutine);
-            clickResetRoutine = null;
-        }
-
-        RefreshCursorSprite();
+            2 => titaniumCoinSprite != null ? titaniumCoinSprite : defaultCoinSprite,
+            1 => aluminiumCoinSprite != null ? aluminiumCoinSprite : defaultCoinSprite,
+            _ => defaultCoinSprite
+        };
     }
 
     public void SetMoneyText(int amount)

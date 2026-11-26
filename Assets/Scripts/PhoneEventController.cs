@@ -19,8 +19,16 @@ public class PhoneCallScriptEntry
     public PhoneCallEventType eventType;
     public bool triggerOnlyOnce = true;
 
-    [TextArea(2, 4)]
-    public string[] lines;
+    public string[] lineKeys;
+}
+
+[Serializable]
+public class PhoneEventSaveData
+{
+    public List<PhoneCallEventType> triggeredEvents = new List<PhoneCallEventType>();
+    public bool hasPendingCall;
+    public PhoneCallEventType pendingEventType;
+    public string[] pendingLines;
 }
 
 public class PhoneEventController : MonoBehaviour
@@ -37,95 +45,49 @@ public class PhoneEventController : MonoBehaviour
         {            
             eventType = PhoneCallEventType.FirstLossOrBreak,
             triggerOnlyOnce = true,
-            lines = new[]
-            {
-                // "매번 딸 수는 없는 법이죠. 가끔은 손해를 볼 수도 있을 거예요.",
-                // "그래도 걱정 마세요. 그냥 쓰레기통에 버리면 되니까."
-
-                "You can't win every time. You might occasionally incur a loss",
-                "But don't worry. Just throw it in the trash."
-            }
+            lineKeys = new[] { "phone.string.01", "phone.string.02" }
         },
         new PhoneCallScriptEntry
         {
             entryName = "LEVEL 3",
             eventType = PhoneCallEventType.Level3Reached,
             triggerOnlyOnce = true,
-            lines = new[]
-            {
-                // "본업이 지겹다고 느껴지시나요?"
-                // "그렇다면 딱 맞는 게 있는데.."
-                // "바로 스크래치 복권이랍니다!"
-
-                "Do you feel like your main job is boring?",
-                "Then there's one that fits perfectly...",
-                "It's the scratch ticket!"
-            }
+            lineKeys = new[] { "phone.string.03", "phone.string.04", "phone.string.05" }
         },
         new PhoneCallScriptEntry
         {
             entryName = "LEVEL 4",
             eventType = PhoneCallEventType.Level4Reached,
             triggerOnlyOnce = true,
-            lines = new[]
-            {
-                // "그거 일일이 긁으려니 시간이 꽤 걸리죠?"
-                // "걱정 마세요, 당신에게 필요한 걸 준비했으니까요. 바로 업그레이드죠!"
-                // "스크래치 도구를 업그레이드하면 훨씬 편하게 긁을 수 있어요!"
-                // "나중에 더 단단한 코팅을 긁으려면 더 강한 힘이 필요할 거예요.."
-                // "심지어 운도 업그레이드할 수 있답니다. 정말 굉장하죠!"
-                "It would take quite a while to scratch each one, right?",
-                "Don't worry, I've prepared what you need. It's an upgrade!",
-                "Upgrading the scratch tool makes it much easier to draw!",
-                "You'll need more force to scratch a harder coating later..",
-                "You can even upgrade your luck. It's amazing, isn't it!"
-            }
+            lineKeys = new[] { "phone.string.06", "phone.string.07", "phone.string.08", "phone.string.09", "phone.string.10" }
         },
         new PhoneCallScriptEntry
         {
             entryName = "LEVEL 5",
             eventType = PhoneCallEventType.Level5Reached,
             triggerOnlyOnce = true,
-            lines = new[]
-            {
-                // "와 새로운 티켓이 준비되었습니다!",
-                // "이 티켓은 보상이 훨씬 더 짭짤하지만..",
-                // "당첨되려면 운이 좀 더 따라줘야 할 겁니다."
-                "Wow, the new tickets are ready!",
-                "This ticket's reward is much better, but..",
-                "To win, you'll need a bit more luck, though"
-
-            }
+            lineKeys = new[] { "phone.string.11", "phone.string.12", "phone.string.13" }
         },
         new PhoneCallScriptEntry
         {
             entryName = "LEVEL 6",
             eventType = PhoneCallEventType.Level6Reached,
             triggerOnlyOnce = true,
-            lines = new[]
-            {
-                // "이 많은 티켓을 직접 긁느라 지치셨나요?"
-                "Wow, you've accumulated a lot of tickets! Don't you feel a bit tired from scratching them all by hand?"
-            }
+            lineKeys = new[] { "phone.string.14" }
         },
         new PhoneCallScriptEntry
         {
             entryName = "LEVEL 7",
             eventType = PhoneCallEventType.Level7Reached,
             triggerOnlyOnce = true,
-            lines = new[]
-            {
-                // "사과나무를 긁을 땐 벌레를 조심하세요!",
-                // "벌레가 보이면 절대 긁지 마세요!",
-                // "벌레가 나와도 완전히 다 긁었을 때만 손해가 발생해요."
-                "Be careful of bugs when scraping an apple tree!",
-                "If you see a bug, never scratch it!",
-                "Even if a bug appears, a loss only occurs once it has completely scratched the item."
-            }
+            lineKeys = new[] { "phone.string.15", "phone.string.16", "phone.string.17" }
         }
     };
 
     private readonly HashSet<PhoneCallEventType> _triggeredEvents = new HashSet<PhoneCallEventType>();
+    private bool _hasPendingCall;
+    private PhoneCallEventType _pendingEventType;
+    private string[] _pendingLegacyLines;
 
     private void Awake()
     {
@@ -135,14 +97,20 @@ public class PhoneEventController : MonoBehaviour
             return;
         }
         Instance = this;
+
+        if (phoneCallTrigger == null)
+            phoneCallTrigger = FindFirstObjectByType<PhoneCallTrigger>();
     }
 
     public void TriggerEvent(PhoneCallEventType eventType)
     {
+        if (phoneCallTrigger == null)
+            phoneCallTrigger = FindFirstObjectByType<PhoneCallTrigger>();
+
         if (phoneCallTrigger == null) return;
 
         PhoneCallScriptEntry entry = callEntries.Find(e => e.eventType == eventType);
-        if (entry == null || entry.lines == null || entry.lines.Length == 0) return;
+        if (entry?.lineKeys == null || entry.lineKeys.Length == 0) return;
 
         if (entry.triggerOnlyOnce && _triggeredEvents.Contains(eventType))
             return;
@@ -150,14 +118,19 @@ public class PhoneEventController : MonoBehaviour
         if (entry.triggerOnlyOnce)
             _triggeredEvents.Add(eventType);
 
-        phoneCallTrigger.RingPhone(entry.lines);
+        _hasPendingCall = true;
+        _pendingEventType = eventType;
+        _pendingLegacyLines = null;
+
+        phoneCallTrigger.RingPhone(entry.lineKeys);
     }
 
-    // 레벨이 오를 때마다 호출 (예: OnLevelChanged(currentLevel))
-    
-    // 레벨업 함수에 추가하면 됩니다.
-    // PhoneEventController.Instance?.CheckLevelEvents(newLevel);
-    // .
+    public void NotifyCallAnswered()
+    {
+        _hasPendingCall = false;
+        _pendingLegacyLines = null;
+    }
+
     public void CheckLevelEvents(int currentLevel)
     {
         if (currentLevel >= 3) TriggerEvent(PhoneCallEventType.Level3Reached);
@@ -167,9 +140,56 @@ public class PhoneEventController : MonoBehaviour
         if (currentLevel >= 7) TriggerEvent(PhoneCallEventType.Level7Reached);
     }
 
-    // 깨짐/손해 발생 시 호출
     public void TriggerBrokenOrLossCall()
     {
         TriggerEvent(PhoneCallEventType.FirstLossOrBreak);
+    }
+
+    public PhoneEventSaveData ExportSaveData()
+    {
+        if (phoneCallTrigger == null)
+            phoneCallTrigger = FindFirstObjectByType<PhoneCallTrigger>();
+
+        bool isRingingNow = phoneCallTrigger != null && phoneCallTrigger.IsCurrentlyRinging;
+        return new PhoneEventSaveData
+        {
+            triggeredEvents = new List<PhoneCallEventType>(_triggeredEvents),
+            hasPendingCall = isRingingNow || _hasPendingCall,
+            pendingEventType = _pendingEventType,
+            pendingLines = _hasPendingCall ? _pendingLegacyLines : null
+        };
+    }
+
+    public void RestoreSaveData(PhoneEventSaveData saveData)
+    {
+        if (phoneCallTrigger == null)
+            phoneCallTrigger = FindFirstObjectByType<PhoneCallTrigger>();
+
+        _triggeredEvents.Clear();
+        if (saveData != null && saveData.triggeredEvents != null)
+        {
+            foreach (PhoneCallEventType ev in saveData.triggeredEvents)
+                _triggeredEvents.Add(ev);
+        }
+
+        if (saveData != null && saveData.hasPendingCall)
+        {
+            PhoneCallScriptEntry entry = callEntries.Find(e => e.eventType == saveData.pendingEventType);
+            string[] lineKeys = entry?.lineKeys;
+            _pendingLegacyLines = lineKeys == null || lineKeys.Length == 0 ? saveData.pendingLines : null;
+            _hasPendingCall = true;
+            _pendingEventType = saveData.pendingEventType;
+
+            if (phoneCallTrigger != null)
+                phoneCallTrigger.RingPhone(lineKeys, _pendingLegacyLines);
+        }
+        else
+        {
+            _hasPendingCall = false;
+            _pendingLegacyLines = null;
+
+            if (phoneCallTrigger != null)
+                phoneCallTrigger.StopRinging();
+        }
     }
 }
