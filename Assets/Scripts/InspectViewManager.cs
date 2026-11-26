@@ -26,7 +26,7 @@ public class InspectViewManager : MonoBehaviour
     public static InspectViewManager Instance { get; private set; }
 
     [Header("Inspect 상태에서만 켜지는 루트")]
-    [SerializeField] private GameObject inspectOverlayRoot;
+    [SerializeField] private GameObject inspectOverlayRoot; 
 
     [Header("배경 및 중앙 확대 이미지")]
     [SerializeField] private Button closeDimmedBackgroundButton;
@@ -41,17 +41,22 @@ public class InspectViewManager : MonoBehaviour
     [SerializeField] private Button resultButton;
 
     [Header("얼룩 오브젝트 생성 설정")]
-    [SerializeField] private GameObject stainOverlayPrefab; // SpriteRenderer + Scratchable이 붙은 프리팹
-    [SerializeField] private Transform stainOverlayParent; // 생성할 부모(없으면 null)
+    [SerializeField] private GameObject stainOverlayPrefab;     // SpriteRenderer + Scratchable이 붙은 프리팹
+    [SerializeField] private Transform stainOverlayParent;      // 생성할 부모(없으면 null)
 
     public ViewState CurrentState { get; private set; } = ViewState.Table;
     public bool IsInspecting => CurrentState == ViewState.Inspect;
 
-    private UiManager uiManager;
+    internal IInspectableSource ActiveScratchTarget =>
+        isActiveAndEnabled && IsInspecting && currentActiveOverlay != null && currentActiveOverlay.activeInHierarchy &&
+        currentTarget != null && !currentTarget.IsCleaned
+            ? currentTarget
+            : null;
+
     private GameManager gameManager;
     private IInspectableSource currentTarget;
     private GameObject currentActiveOverlay;
-    private List<GameObject> LotteryPreviews = new List<GameObject>(); // 실제 생성된 GO들 넣고 icons랑 stainoverlay만 바꿀
+    private readonly List<GameObject> LotteryPreviews = new List<GameObject>();     // 실제 생성된 GO들 넣고 icons랑 stainoverlay만 바꿀
     private LotteryPreviewItem currentLotteryPreview;
 
     private void Awake()
@@ -78,7 +83,6 @@ public class InspectViewManager : MonoBehaviour
         GameObject controllerObj = GameObject.FindWithTag("GameController");
         if (controllerObj != null)
         {
-            uiManager = controllerObj.GetComponent<UiManager>();
             gameManager = controllerObj.GetComponent<GameManager>();
         }
     }
@@ -112,7 +116,6 @@ public class InspectViewManager : MonoBehaviour
         {
             Vector2 screenPos = Input.mousePosition;
             Camera eventCam = GetEventCamera(previewArea);
-
             // CenterPreviewImage 영역 안을 클릭한 경우 닫지 않음
             if (RectTransformUtility.RectangleContainsScreenPoint(previewArea, screenPos, eventCam))
             {
@@ -176,8 +179,8 @@ public class InspectViewManager : MonoBehaviour
 
         if (currentActiveOverlay != null)
         {
-            // Debug.Log($"{currentActiveOverlay.name}: {currentActiveOverlay.activeSelf}");
             currentActiveOverlay.SetActive(true);
+            // Debug.Log($"{currentActiveOverlay.name}: {currentActiveOverlay.activeSelf}");
         }
 
         if (detailPanel != null)
@@ -199,13 +202,6 @@ public class InspectViewManager : MonoBehaviour
         }
 
         SetState(ViewState.Inspect);
-        if (!target.IsCleaned && uiManager != null)
-        {
-            if (target is Trophy)
-                uiManager.SetScrubberCursor();
-            else if (target is Lottery)
-                uiManager.SetScrubCoinCursor();
-        }
     }
 
     public void OpenTrophyView(Trophy trophy)
@@ -270,7 +266,7 @@ public class InspectViewManager : MonoBehaviour
         }
 
         float itemScale = Mathf.Max(0.1f, lottery.GetInspectScale());
-        Vector3 finalScale = lotteryPrefab.transform.localScale * (itemScale);
+        Vector3 finalScale = lotteryPrefab.transform.localScale * itemScale;
 
         if (currentLotteryPreview != null)
         {
@@ -287,6 +283,7 @@ public class InspectViewManager : MonoBehaviour
             currentActiveOverlay.SetActive(true);
         }
     }
+
     private GameObject GetOrCreateOverlayForLottery(Lottery lottery)
     {
         if (lottery == null || currentLotteryPreview == null) return null;
@@ -380,10 +377,6 @@ public class InspectViewManager : MonoBehaviour
         currentTarget = null;
 
         SetState(ViewState.Table);
-        if (uiManager != null)
-        {
-            uiManager.SetDefaultCursor();
-        }
     }
 
     public void SetState(ViewState nextState)
@@ -434,9 +427,6 @@ public class InspectViewManager : MonoBehaviour
             OnLotteryCleaned(lottery);
         }
 
-        if (uiManager != null)
-            uiManager.SetDefaultCursor();
-
         ShowResultButton(target);
     }
 
@@ -459,20 +449,28 @@ public class InspectViewManager : MonoBehaviour
 
     public void OnLotteryCleaned(Lottery lottery)
     {
-
     }
 
     private void ShowResultButton(IInspectableSource target)
     {
+        if (resultButton == null) return;
+
         resultButton.onClick.RemoveAllListeners();
         resultButton.onClick.AddListener(() =>
         {
-            gameManager.AddMoney(target.Reward);
-            gameManager.AddExp(target.Reward);
+            if (gameManager != null)
+            {
+                gameManager.AddMoney(target.Reward);
+                gameManager.AddExp(target.Reward);
+            }
             CloseInspect();
             target.DestoryItem();
         });
-        resultButton.GetComponentInChildren<TMP_Text>().text = $"${target.Reward}";
+
+        TMP_Text label = resultButton.GetComponentInChildren<TMP_Text>();
+        if (label != null)
+            label.text = $"${target.Reward}";
+
         resultButton.gameObject.SetActive(true);
     }
 }

@@ -194,6 +194,11 @@ public class ScratchBot : MonoBehaviour
                 ? entry.inspectable
                 : lotteryObj.GetComponent<IInspectableSource>();
 
+            if (target != null && !target.IsCleaned)
+            {
+                target.CompleteScratch();
+            }
+
             ReleaseLotterySlot(lotteryObj);
 
             if (InspectViewManager.Instance != null && target != null)
@@ -308,6 +313,7 @@ public class ScratchBot : MonoBehaviour
                 entry.rectTransform.position = new Vector3(fixedX, entry.targetY, fixedZ);
                 entry.progress = 1f;
                 entry.isScratchedComplete = true;
+                entry.inspectable?.CompleteScratch();
                 Debug.Log("봇이 복권을 다 긁었습니다. 복권을 눌러 당첨 결과를 확인하세요.");
             }
         }

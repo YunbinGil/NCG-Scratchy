@@ -97,7 +97,7 @@ public class ScratchBotUpgradeSlot : MonoBehaviour
     {
         ScratchBotUpgradeManager manager = ScratchBotUpgradeManager.Instance;
 
-        if (nameText != null)
+        if (nameText != null && !LocalizedLabel.HasKey(nameText))
         {
             nameText.text = string.IsNullOrEmpty(upgradeName) ? upgradeType.ToString() : upgradeName;
         }

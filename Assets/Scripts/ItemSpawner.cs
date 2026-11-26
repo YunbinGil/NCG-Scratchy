@@ -45,6 +45,7 @@ public class ItemSpawner : MonoBehaviour
 
     private GameObject spawnedScratchBot;
     public GameObject SpawnedScratchBot => spawnedScratchBot;
+    internal RectTransform TableEffectParent => lotteryLayer != null ? lotteryLayer : spawnTable;
 
     public bool TrySpawnItem(GameObject item)
     {

@@ -8,6 +8,12 @@ public sealed class LocalizedLabel : MonoBehaviour
     private string fallback;
     private object[] arguments = System.Array.Empty<object>();
 
+    internal static bool HasKey(TMP_Text text)
+    {
+        return text != null && text.TryGetComponent(out LocalizedLabel localizedLabel) &&
+               !string.IsNullOrWhiteSpace(localizedLabel.key);
+    }
+
     internal void Set(TMP_Text target, string textKey, string fallbackText, object[] formatArguments)
     {
         label = target;
