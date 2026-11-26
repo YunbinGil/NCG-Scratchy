@@ -13,13 +13,13 @@ public class PhoneCallTrigger : MonoBehaviour
     [SerializeField] private float ringShakeSpeed = 28f;
 
     private Button Button;
-    private string[] QueuedLines;
+    private string[] queuedLineKeys;
+    private string[] queuedLegacyLines;
     private bool IsRinging;
     private bool isPaused;
     private Quaternion BaseRotation;
 
     public bool IsCurrentlyRinging => IsRinging;
-    public string[] CurrentQueuedLines => QueuedLines;
 
     private void Awake()
     {
@@ -51,9 +51,10 @@ public class PhoneCallTrigger : MonoBehaviour
     }
 
     // 새 컨텐츠가 추가될 때마다 호출
-    public void RingPhone(string[] lines = null)
+    public void RingPhone(string[] lineKeys, string[] legacyLines = null)
     {
-        QueuedLines = (lines != null && lines.Length > 0) ? lines : null;
+        queuedLineKeys = lineKeys;
+        queuedLegacyLines = legacyLines;
         IsRinging = true;
         SetRingingVisual(true);
         // 오디오
@@ -65,22 +66,11 @@ public class PhoneCallTrigger : MonoBehaviour
         // }
     }
 
-    public void RestoreRingingState(bool ringing, string[] lines)
-    {
-        if (ringing)
-        {
-            RingPhone(lines);
-        }
-        else
-        {
-            StopRinging();
-        }
-    }
-
     public void StopRinging()
     {
         IsRinging = false;
-        QueuedLines = null;
+        queuedLineKeys = null;
+        queuedLegacyLines = null;
         transform.localRotation = BaseRotation;
         SetRingingVisual(false);
         // 오디오
@@ -94,7 +84,9 @@ public class PhoneCallTrigger : MonoBehaviour
     {
         if (!IsRinging || isPaused) return;
 
-        string[] linesToPlay = (QueuedLines != null && QueuedLines.Length > 0) ? QueuedLines : null;
+        string[] linesToPlay = queuedLineKeys != null && queuedLineKeys.Length > 0
+            ? System.Array.ConvertAll(queuedLineKeys, key => Localization.Get(key, key))
+            : queuedLegacyLines;
 
         StopRinging();
         PhoneEventController.Instance?.NotifyCallAnswered();

@@ -36,9 +36,11 @@ public class GameManager : MonoBehaviour
     public event Action<int> OnLevelChanged;
     internal UnlockEffect.Scheduler UnlockEffects { get; private set; }
     public PlayerUpgradeManager Upgrades { get; private set; }
-    public float CoinSizeMultiplier { get; private set; } = 1f;
+    private float coinSizeUpgradeMultiplier = 1f;
+    public float CoinSizeMultiplier => coinSizeUpgradeMultiplier *
+        ((Upgrades?.GetLevel(UpgradeType.Kind) ?? 0) <= 1 ? 0.5f : 1f);
     public float CoinAlphaMultiplier { get; private set; } = 1f;
-    public float LuckMultiplier { get; private set; } = 1f; //Lottery.RollWeightedIcons또는 Lottery.RollWeightedIcons에서 참조
+    public float LuckMultiplier { get; private set; } = 1f;
 
 
     private void Awake()
@@ -233,7 +235,7 @@ public class GameManager : MonoBehaviour
     }
     public void UpgradeCursorSize(int level)
     {
-        CoinSizeMultiplier = 1f + 0.2f * level;
+        coinSizeUpgradeMultiplier = 1f + 0.2f * level;
     }
 
     public void UpgradeLeadCoinAlpha(int level)
@@ -241,8 +243,8 @@ public class GameManager : MonoBehaviour
         CoinAlphaMultiplier = 1f + 0.25f * level;
     }
 
-    public void UpgradeLuck()
+    public void UpgradeLuck(int level)
     {
-        LuckMultiplier += 0.1f;
+        LuckMultiplier = 1f + 0.1f * level;
     }
 }

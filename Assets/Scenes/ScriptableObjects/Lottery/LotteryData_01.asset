@@ -14,7 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::LotteryData
   id: 1
   lotteryName: TREASURE CHEST
-  description: '2 match, win '
+  description: Scratch the ticket to reveal the hidden symbols.
+  nameKey: lottery.treasure_chest.name
+  descriptionKey: lottery.treasure_chest.description
   tableSprite: {fileID: 543601121251698270, guid: 864f73d075f40a240b3aa4babd66d0d7, type: 3}
   inspectSprite: {fileID: 543601121251698270, guid: 864f73d075f40a240b3aa4babd66d0d7, type: 3}
   scratchCoverSprite: {fileID: 7482667652216324306, guid: 313435d4bc91f3e418393d403e4ac919, type: 3}

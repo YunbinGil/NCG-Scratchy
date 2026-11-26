@@ -20,8 +20,7 @@ public class PhoneCallScriptEntry
     public PhoneCallEventType eventType;
     public bool triggerOnlyOnce = true;
 
-    [TextArea(2, 4)]
-    public string[] lines;
+    public string[] lineKeys;
 }
 
 [Serializable]
@@ -47,78 +46,49 @@ public class PhoneEventController : MonoBehaviour
         {            
             eventType = PhoneCallEventType.FirstLossOrBreak,
             triggerOnlyOnce = true,
-            lines = new[]
-            {
-                "You can't win every time. You might occasionally incur a loss",
-                "But don't worry. Just throw it in the trash."
-            }
+            lineKeys = new[] { "phone.string.01", "phone.string.02" }
         },
         new PhoneCallScriptEntry
         {
             entryName = "LEVEL 3",
             eventType = PhoneCallEventType.Level3Reached,
             triggerOnlyOnce = true,
-            lines = new[]
-            {
-                "Do you feel like your main job is boring?",
-                "Then there's one that fits perfectly...",
-                "It's the scratch ticket!"
-            }
+            lineKeys = new[] { "phone.string.03", "phone.string.04", "phone.string.05" }
         },
         new PhoneCallScriptEntry
         {
             entryName = "LEVEL 4",
             eventType = PhoneCallEventType.Level4Reached,
             triggerOnlyOnce = true,
-            lines = new[]
-            {
-                "It would take quite a while to scratch each one, right?",
-                "Don't worry, I've prepared what you need. It's an upgrade!",
-                "Upgrading the scratch tool makes it much easier to draw!",
-                "You'll need more force to scratch a harder coating later..",
-                "You can even upgrade your luck. It's amazing, isn't it!"
-            }
+            lineKeys = new[] { "phone.string.06", "phone.string.07", "phone.string.08", "phone.string.09", "phone.string.10" }
         },
         new PhoneCallScriptEntry
         {
             entryName = "LEVEL 5",
             eventType = PhoneCallEventType.Level5Reached,
             triggerOnlyOnce = true,
-            lines = new[]
-            {
-                "Wow, the new tickets are ready!",
-                "This ticket's reward is much better, but..",
-                "To win, you'll need a bit more luck, though"
-            }
+            lineKeys = new[] { "phone.string.11", "phone.string.12", "phone.string.13" }
         },
         new PhoneCallScriptEntry
         {
             entryName = "LEVEL 6",
             eventType = PhoneCallEventType.Level6Reached,
             triggerOnlyOnce = true,
-            lines = new[]
-            {
-                "Wow, you've accumulated a lot of tickets! Don't you feel a bit tired from scratching them all by hand?"
-            }
+            lineKeys = new[] { "phone.string.14" }
         },
         new PhoneCallScriptEntry
         {
             entryName = "LEVEL 7",
             eventType = PhoneCallEventType.Level7Reached,
             triggerOnlyOnce = true,
-            lines = new[]
-            {
-                "Be careful of bugs when scraping an apple tree!",
-                "If you see a bug, never scratch it!",
-                "Even if a bug appears, a loss only occurs once it has completely scratched the item."
-            }
+            lineKeys = new[] { "phone.string.15", "phone.string.16", "phone.string.17" }
         }
     };
 
     private readonly HashSet<PhoneCallEventType> _triggeredEvents = new HashSet<PhoneCallEventType>();
     private bool _hasPendingCall;
     private PhoneCallEventType _pendingEventType;
-    private string[] _pendingLines;
+    private string[] _pendingLegacyLines;
 
     private void Awake()
     {
@@ -160,7 +130,7 @@ public class PhoneEventController : MonoBehaviour
         if (phoneCallTrigger == null) return;
 
         PhoneCallScriptEntry entry = callEntries.Find(e => e.eventType == eventType);
-        if (entry == null || entry.lines == null || entry.lines.Length == 0) return;
+        if (entry?.lineKeys == null || entry.lineKeys.Length == 0) return;
 
         if (entry.triggerOnlyOnce && _triggeredEvents.Contains(eventType))
             return;
@@ -170,15 +140,15 @@ public class PhoneEventController : MonoBehaviour
 
         _hasPendingCall = true;
         _pendingEventType = eventType;
-        _pendingLines = entry.lines;
+        _pendingLegacyLines = null;
 
-        phoneCallTrigger.RingPhone(entry.lines);
+        phoneCallTrigger.RingPhone(entry.lineKeys);
     }
 
     public void NotifyCallAnswered()
     {
         _hasPendingCall = false;
-        _pendingLines = null;
+        _pendingLegacyLines = null;
     }
 
     public void CheckLevelEvents(int currentLevel)
@@ -201,16 +171,12 @@ public class PhoneEventController : MonoBehaviour
             phoneCallTrigger = FindFirstObjectByType<PhoneCallTrigger>();
 
         bool isRingingNow = phoneCallTrigger != null && phoneCallTrigger.IsCurrentlyRinging;
-        string[] linesNow = isRingingNow && phoneCallTrigger.CurrentQueuedLines != null
-            ? (string[])phoneCallTrigger.CurrentQueuedLines.Clone()
-            : (_hasPendingCall ? _pendingLines : null);
-
         return new PhoneEventSaveData
         {
             triggeredEvents = new List<PhoneCallEventType>(_triggeredEvents),
             hasPendingCall = isRingingNow || _hasPendingCall,
             pendingEventType = _pendingEventType,
-            pendingLines = linesNow
+            pendingLines = _hasPendingCall ? _pendingLegacyLines : null
         };
     }
 
@@ -228,28 +194,22 @@ public class PhoneEventController : MonoBehaviour
 
         if (saveData != null && saveData.hasPendingCall)
         {
-            string[] linesToRing = saveData.pendingLines;
-            if (linesToRing == null || linesToRing.Length == 0)
-            {
-                PhoneCallScriptEntry entry = callEntries.Find(e => e.eventType == saveData.pendingEventType);
-                if (entry != null)
-                    linesToRing = entry.lines;
-            }
-
+            PhoneCallScriptEntry entry = callEntries.Find(e => e.eventType == saveData.pendingEventType);
+            string[] lineKeys = entry?.lineKeys;
+            _pendingLegacyLines = lineKeys == null || lineKeys.Length == 0 ? saveData.pendingLines : null;
             _hasPendingCall = true;
             _pendingEventType = saveData.pendingEventType;
-            _pendingLines = linesToRing;
 
             if (phoneCallTrigger != null)
-                phoneCallTrigger.RestoreRingingState(true, linesToRing);
+                phoneCallTrigger.RingPhone(lineKeys, _pendingLegacyLines);
         }
         else
         {
             _hasPendingCall = false;
-            _pendingLines = null;
+            _pendingLegacyLines = null;
 
             if (phoneCallTrigger != null)
-                phoneCallTrigger.RestoreRingingState(false, null);
+                phoneCallTrigger.StopRinging();
         }
     }
 }
