@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 using TMPro;
 using UnityEngine.UI;
 
@@ -8,13 +9,24 @@ public class UiManager : MonoBehaviour
     [SerializeField] private Camera targetCamera;
     [SerializeField] private SpriteRenderer cursorRenderer;
     [SerializeField] private Sprite defaultCursorSprite;
+    [SerializeField] private Sprite useCursorSprite;
     [SerializeField] private Sprite scrubberSprite;
-    [SerializeField] private Sprite scrubCoinSprite;
+    [SerializeField] private Sprite useScrubberSprite;
+    [FormerlySerializedAs("scrubCoinSprite")]
+    [SerializeField] private Sprite defaultCoinSprite;
+    [SerializeField] private Sprite aluminiumCoinSprite;
+    [SerializeField] private Sprite titaniumCoinSprite;
     [SerializeField] private TMP_Text moneyText;
     [SerializeField] private TMP_Text levelText;
     [SerializeField] private Image levelImage;
     // [SerializeField] private Ticket[] tickets;
     // [SerializeField] private Equipment[] equips;
+    private const float ClickSpriteDuration = 0.12f;
+
+    private enum CursorMode { Default, Scrubber, Coin }
+
+    private CursorMode cursorMode;
+    private float clickSpriteUntil;
     private GameManager gameManager;
     private RectMask2D levelMask;
     private float experienceRatio;
@@ -35,13 +47,13 @@ public class UiManager : MonoBehaviour
 
     private void Update()
     {
-        FollowMouse();
+        UpdateCursorSprite();
 
         if (levelMask != null && levelMask.rectTransform.rect.width != lastMaskWidth)
             UpdateLevelMask();
     }
 
-    private void FollowMouse()
+    private void LateUpdate()
     {
         if (cursorRenderer == null) return;
         if (targetCamera == null) targetCamera = Camera.main;
@@ -51,31 +63,65 @@ public class UiManager : MonoBehaviour
         screenPos.z = Mathf.Abs(targetCamera.transform.position.z);
 
         Vector3 worldPos = targetCamera.ScreenToWorldPoint(screenPos);
-        worldPos.z = cursorRenderer.transform.position.z;
-        cursorRenderer.transform.position = worldPos;
+        Transform cursorTransform = cursorRenderer.transform;
+        Vector3 currentPosition = cursorTransform.position;
+        Bounds spriteBounds = cursorRenderer.bounds;
+        Vector3 topLeft = new Vector3(spriteBounds.min.x, spriteBounds.max.y, currentPosition.z);
+        worldPos.z = currentPosition.z;
+        cursorTransform.position = worldPos + (currentPosition - topLeft);
     }
 
     public void SetCursorSprite(Sprite newSprite)
     {
-        if (cursorRenderer != null && newSprite != null)
+        if (cursorRenderer != null && newSprite != null && cursorRenderer.sprite != newSprite)
         {
             cursorRenderer.sprite = newSprite;
         }
     }
 
+    private void UpdateCursorSprite()
+    {
+        if (cursorMode == CursorMode.Default && Input.GetMouseButtonDown(0))
+            clickSpriteUntil = Time.unscaledTime + ClickSpriteDuration;
+
+        RefreshCursorSprite();
+    }
+
+    private void RefreshCursorSprite()
+    {
+        Sprite sprite = cursorMode switch
+        {
+            CursorMode.Scrubber => Input.GetMouseButton(0) && useScrubberSprite != null
+                ? useScrubberSprite : scrubberSprite,
+            CursorMode.Coin => defaultCoinSprite,
+            _ => Time.unscaledTime < clickSpriteUntil && useCursorSprite != null
+                ? useCursorSprite : defaultCursorSprite
+        };
+        SetCursorSprite(sprite != null ? sprite : defaultCursorSprite);
+    }
+
     public void SetDefaultCursor()
     {
-        SetCursorSprite(defaultCursorSprite);
+        SetCursorMode(CursorMode.Default);
     }
 
     public void SetScrubberCursor()
     {
-        SetCursorSprite(scrubberSprite);
+        SetCursorMode(CursorMode.Scrubber);
     }
+
     public void SetScrubCoinCursor()
     {
-        SetCursorSprite(scrubCoinSprite);
+        SetCursorMode(CursorMode.Coin);
     }
+
+    private void SetCursorMode(CursorMode mode)
+    {
+        cursorMode = mode;
+        clickSpriteUntil = 0f;
+        RefreshCursorSprite();
+    }
+
     public void SetMoneyText(int amount)
     {
         if (moneyText != null)

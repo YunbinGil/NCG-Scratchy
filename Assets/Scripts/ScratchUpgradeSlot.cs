@@ -16,8 +16,11 @@ public class ScratchBotUpgradeSlot : MonoBehaviour
     [SerializeField] private TMP_Text costText;
     [SerializeField] private Button upgradeButton;
 
+    private MachineSlot machineSlot;
+
     private void Awake()
     {
+        machineSlot = GetComponent<MachineSlot>();
         if (upgradeButton == null)
         {
             upgradeButton = GetComponent<Button>();
@@ -49,6 +52,9 @@ public class ScratchBotUpgradeSlot : MonoBehaviour
 
     private void UpgradeLevelUp()
     {
+        if (machineSlot != null && machineSlot.IsLocked)
+            return;
+
         ScratchBotUpgradeManager manager = ScratchBotUpgradeManager.Instance;
         if (manager == null)
             return;
@@ -80,6 +86,11 @@ public class ScratchBotUpgradeSlot : MonoBehaviour
                 Debug.Log($"스크래치 봇 파워 업그레이드! 긁기 강도: {manager.CurrentScratchPower:F2}");
                 break;
         }
+    }
+
+    internal void RefreshLock()
+    {
+        UpdateUI();
     }
 
     private void UpdateUI()
@@ -122,7 +133,7 @@ public class ScratchBotUpgradeSlot : MonoBehaviour
 
         if (upgradeButton != null)
         {
-            upgradeButton.interactable = isBotUnlocked && !isMax;
+            upgradeButton.interactable = isBotUnlocked && !isMax && (machineSlot == null || !machineSlot.IsLocked);
         }
     }
 }

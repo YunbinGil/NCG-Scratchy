@@ -17,13 +17,15 @@ public class MachineSlot : MonoBehaviour
     public Image equipmentImage;
 
     [Header("잠금 해제")]
-    [SerializeField, Min(0)] private int requiredPlayerLevel;
     [SerializeField] private GameObject lockOverlay;
+
+    internal int UnlockLevel { get; set; }
+    internal UnlockLotteryCatalog UnlockRevealPrefab { get; set; }
+    internal bool IsReadyForUnlockReveal { get; private set; }
 
     [Header("스크래치 봇 해금 설정 (추가)")]
     [SerializeField] private bool isScratchBotSlot = false;
     [SerializeField] private bool requiresScratchBotUnlocked = false;
-    // [SerializeField] private int unlockLevel = 6;
     [SerializeField] private GameObject lockObject;
 
     [HideInInspector]
@@ -31,14 +33,14 @@ public class MachineSlot : MonoBehaviour
 
     private GameManager playerProgress;
     private GameManager gameManager;
+    private ScratchBotUpgradeSlot upgradeSlot;
     private bool isLocked;
+    internal bool IsLocked => isLocked;
     private bool isPurchased;
-
-    // private int EffectiveRequiredLevel =>
-    //     isScratchBotSlot ? Mathf.Max(requiredPlayerLevel, requiredPlayerLevel) : requiredPlayerLevel;
 
     private void Start()
     {
+        upgradeSlot = GetComponent<ScratchBotUpgradeSlot>();
         if (nameText != null) nameText.text = equipmentName;
         if (priceText != null) priceText.text = equipmentPrice.ToString();
         if (purchaseText != null) purchaseText.text = string.Empty;
@@ -66,7 +68,7 @@ public class MachineSlot : MonoBehaviour
             ScratchBotUpgradeManager.Instance.OnUpgraded += RefreshScratchBotLock;
         }
 
-        if (purchaseButton != null)
+        if (purchaseButton != null && upgradeSlot == null)
         {
             purchaseButton.onClick.RemoveListener(Purchase);
             purchaseButton.onClick.AddListener(Purchase);
@@ -90,21 +92,20 @@ public class MachineSlot : MonoBehaviour
 
     public void UpdateLock(int currentLevel)
     {
-        if (isPurchased)
-        {
-            isLocked = false;
-        }
-        else
-        {
-            bool levelLocked = currentLevel < requiredPlayerLevel;
-            bool botDependencyLocked = requiresScratchBotUnlocked && !IsBotActuallyUnlocked();
-            isLocked = levelLocked || botDependencyLocked;
-        }
+        bool levelLocked = currentLevel < UnlockLevel;
+        bool botUnlocked = IsBotActuallyUnlocked();
+        bool botDependencyLocked = requiresScratchBotUnlocked && !botUnlocked;
+        bool needsReveal = UnlockRevealPrefab != null && equipmentShop != null &&
+                           !(isScratchBotSlot && botUnlocked) && !equipmentShop.HasRevealedEquipment(equipmentName);
+        IsReadyForUnlockReveal = !isPurchased && !levelLocked && !botDependencyLocked && needsReveal;
+        isLocked = !isPurchased && (levelLocked || botDependencyLocked || needsReveal);
 
         if (lockOverlay != null)
             lockOverlay.SetActive(isLocked);
 
-        if (purchaseButton != null)
+        if (upgradeSlot != null)
+            upgradeSlot.RefreshLock();
+        else if (purchaseButton != null)
             purchaseButton.interactable = !isLocked && !isPurchased;
     }
 
@@ -158,7 +159,7 @@ public class MachineSlot : MonoBehaviour
 
     public void Purchase()
     {
-        if (isPurchased || isLocked || equipmentShop == null)
+        if (isPurchased || isLocked || equipmentShop == null || upgradeSlot != null)
             return;
 
         if (equipmentShop == null)

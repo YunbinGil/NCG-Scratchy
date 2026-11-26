@@ -6,6 +6,7 @@
 "unlock.interact","Unlock"
 "unlock.catalog.complete","Catalog Unlocked!"
 "unlock.upgrades.complete","Upgrades Unlocked!"
+"unlock.equipment.complete","Equipment Unlocked!"
 "status.level","Lv. {0}"
 "status.experience","{0} / {1}"
 "status.max_level","Max Level"

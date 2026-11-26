@@ -2619,21 +2619,37 @@ PrefabInstance:
       value: 100000
       objectReference: {fileID: 0}
     - target: {fileID: 7029072843607576578, guid: 30e7eb5b629f65642a207e4b9a476236, type: 3}
-      propertyPath: 'equipmentPrefabs.Array.data[1]'
+      propertyPath: equipmentList.Array.data[1].slotPrefab
       value: 
       objectReference: {fileID: 686142727840833646, guid: d3bf5a3acf13dc6499d91f4cbfab9b25, type: 3}
     - target: {fileID: 7029072843607576578, guid: 30e7eb5b629f65642a207e4b9a476236, type: 3}
-      propertyPath: 'equipmentPrefabs.Array.data[2]'
+      propertyPath: equipmentList.Array.data[1].unlockLevel
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 7029072843607576578, guid: 30e7eb5b629f65642a207e4b9a476236, type: 3}
+      propertyPath: equipmentList.Array.data[2].slotPrefab
       value: 
       objectReference: {fileID: 686142727840833646, guid: 93004022085c1334e83f2c17b280e156, type: 3}
     - target: {fileID: 7029072843607576578, guid: 30e7eb5b629f65642a207e4b9a476236, type: 3}
-      propertyPath: 'equipmentPrefabs.Array.data[3]'
+      propertyPath: equipmentList.Array.data[2].unlockLevel
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 7029072843607576578, guid: 30e7eb5b629f65642a207e4b9a476236, type: 3}
+      propertyPath: equipmentList.Array.data[3].slotPrefab
       value: 
       objectReference: {fileID: 686142727840833646, guid: 4ca8f1b26896f334292b9cc56d2d98a6, type: 3}
     - target: {fileID: 7029072843607576578, guid: 30e7eb5b629f65642a207e4b9a476236, type: 3}
-      propertyPath: 'equipmentPrefabs.Array.data[4]'
+      propertyPath: equipmentList.Array.data[3].unlockLevel
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7029072843607576578, guid: 30e7eb5b629f65642a207e4b9a476236, type: 3}
+      propertyPath: equipmentList.Array.data[4].slotPrefab
       value: 
       objectReference: {fileID: 686142727840833646, guid: ac2db4c71595f1f4691c6b783130f381, type: 3}
+    - target: {fileID: 7029072843607576578, guid: 30e7eb5b629f65642a207e4b9a476236, type: 3}
+      propertyPath: equipmentList.Array.data[4].unlockLevel
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7357533949355139809, guid: 30e7eb5b629f65642a207e4b9a476236, type: 3}
       propertyPath: m_Size
       value: 0.9999762

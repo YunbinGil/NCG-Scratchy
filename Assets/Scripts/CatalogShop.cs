@@ -5,13 +5,10 @@ using UnityEngine.UI;
 public class CatalogShop : MonoBehaviour
 {
     [Header("도감 목록")]
-    [SerializeField]
-    private List<CatalogData> catalogList = new List<CatalogData>();
+    [SerializeField] private List<CatalogData> catalogList = new List<CatalogData>();
 
     [Header("해금 연출")]
-    [SerializeField] private GameObject unlockPrefab;
     [SerializeField] private Texture2D lightTexture;
-    [SerializeField] private Vector2 unlockPoint;
 
     [Header("참조")]
     [SerializeField] private RectTransform ticketContent;
@@ -21,8 +18,8 @@ public class CatalogShop : MonoBehaviour
     internal GameManager PlayerProgress => gameManager;
     public int CurrentCatalogIndexForSave => currentCatalogIndex;
 
-    private int currentCatalogIndex = 0;
-    private bool isUnlocking = false;
+    private int currentCatalogIndex;
+    private bool isUnlocking;
 
     private void Start()
     {
@@ -30,14 +27,13 @@ public class CatalogShop : MonoBehaviour
             gameManager == null ||
             itemSpawner == null)
         {
-            Debug.LogWarning("LotteryShop 참조를 확인하세요.", this);
+            Debug.LogWarning("CatalogShop 참조를 확인하세요.", this);
             return;
         }
 
         // 0레벨 도감은 시작과 동시에 상점에 등록
         while (currentCatalogIndex < catalogList.Count)
         {
-            Debug.Log($"{currentCatalogIndex}레벨 도감 등록");
             CatalogData catalog = catalogList[currentCatalogIndex];
 
             if (catalog.unlockLevel != 0)
@@ -47,10 +43,8 @@ public class CatalogShop : MonoBehaviour
             currentCatalogIndex++;
         }
 
-        // 레벨 상승 이벤트 구독
         gameManager.OnLevelChanged += CheckUnlockCondition;
 
-        // 다음 도감의 해금 조건 확인
         CheckUnlockCondition(gameManager.Level);
     }
 
@@ -72,13 +66,9 @@ public class CatalogShop : MonoBehaviour
         CheckUnlockCondition(gameManager != null ? gameManager.Level : 0);
     }
 
-    // 해금 조건 확인
     private void CheckUnlockCondition(int level)
     {
-        if (isUnlocking)
-            return;
-
-        if (currentCatalogIndex >= catalogList.Count)
+        if (isUnlocking || currentCatalogIndex >= catalogList.Count)
             return;
 
         CatalogData catalog = catalogList[currentCatalogIndex];
@@ -86,37 +76,30 @@ public class CatalogShop : MonoBehaviour
         if (level < catalog.unlockLevel)
             return;
 
-        SpawnUnlockItem();
+        SpawnUnlockItem(catalog.unlockImagePrefab);
     }
 
-    // 해금용 아이템 생성
-    private void SpawnUnlockItem()
+    private void SpawnUnlockItem(GameObject unlockPrefab)
     {
         if (unlockPrefab == null ||
             !unlockPrefab.TryGetComponent<UnlockLotteryCatalog>(out _))
         {
-            Debug.LogWarning("해금 프리팹을 확인하세요.", this);
+            Debug.LogWarning($"도감 목록 {currentCatalogIndex}번 항목의 해금 프리팹을 확인하세요.", this);
             return;
         }
 
         isUnlocking = true;
 
-        // 테이블 중앙으로 이동하도록 좌표 고정
-        if (!itemSpawner.TrySpawnItemAtTableCenter(
-            unlockPrefab,
-            out GameObject spawnedObject))
+        if (!itemSpawner.TrySpawnItemAtTableCenter(unlockPrefab, out GameObject spawnedObject))
         {
             isUnlocking = false;
             return;
         }
 
-        UnlockLotteryCatalog unlock =
-            spawnedObject.GetComponent<UnlockLotteryCatalog>();
-
+        UnlockLotteryCatalog unlock = spawnedObject.GetComponent<UnlockLotteryCatalog>();
         unlock.Initialize(lightTexture, CompleteUnlock);
     }
 
-    // 해금 연출 완료
     private void CompleteUnlock()
     {
         CatalogData catalog = catalogList[currentCatalogIndex];
@@ -126,23 +109,17 @@ public class CatalogShop : MonoBehaviour
         currentCatalogIndex++;
         isUnlocking = false;
 
-        // 다음 도감의 해금 조건 확인
         CheckUnlockCondition(gameManager.Level);
     }
 
-    // 상점에 도감 추가
     private void AddCatalog(GameObject catalogPrefab)
     {
         if (catalogPrefab == null)
             return;
 
-        GameObject catalog = Instantiate(
-            catalogPrefab,
-            ticketContent
-        );
+        GameObject catalog = Instantiate(catalogPrefab, ticketContent);
 
-        foreach (CatalogSlot item in
-            catalog.GetComponentsInChildren<CatalogSlot>(true))
+        foreach (CatalogSlot item in catalog.GetComponentsInChildren<CatalogSlot>(true))
         {
             item.Initialize(this);
 
@@ -172,7 +149,6 @@ public class CatalogShop : MonoBehaviour
             RectTransform.Axis.Vertical, LayoutUtility.GetPreferredHeight(ticketContent));
     }
 
-    // 티켓 구매
     public bool TryPurchase(GameObject ticketPrefab, int price)
     {
         if (price < 0 || gameManager.Money < price)
@@ -187,8 +163,6 @@ public class CatalogShop : MonoBehaviour
     private void OnDestroy()
     {
         if (gameManager != null)
-        {
             gameManager.OnLevelChanged -= CheckUnlockCondition;
-        }
     }
 }

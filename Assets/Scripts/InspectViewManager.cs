@@ -182,6 +182,13 @@ public class InspectViewManager : MonoBehaviour
         }
 
         SetState(ViewState.Inspect);
+        if (!target.IsCleaned && uiManager != null)
+        {
+            if (target is Trophy)
+                uiManager.SetScrubberCursor();
+            else if (target is Lottery)
+                uiManager.SetScrubCoinCursor();
+        }
     }
 
     public void OpenTrophyView(Trophy trophy)
@@ -400,6 +407,9 @@ public class InspectViewManager : MonoBehaviour
         {
             OnLotteryCleaned(lottery);
         }
+
+        if (uiManager != null)
+            uiManager.SetDefaultCursor();
 
         ShowResultButton(target);
     }
