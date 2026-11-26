@@ -13,6 +13,8 @@ public class Scratchable : MonoBehaviour
     [Range(0.5f, 1f)]
     [SerializeField] private float cleanThreshold = 0.85f;   // 85% 지우면 자동 완료
     [SerializeField] private float checkInterval = 0.1f;
+    public SpriteRenderer BackgroundSprite {get; set;} // CheckCompletion()에서 발광효과 줄 base background Sprite
+    public IconArea OwnerIconArea { get; set; }
 
     private Texture2D runtimeTex;
     private Color32[] pixels;
@@ -42,10 +44,6 @@ public class Scratchable : MonoBehaviour
 
         BuildBrushMask();
         InitRuntimeTexture();
-    }
-    void OnEnable()
-    {
-        // Debug.Log($"{gameObject.name} active: {gameObject.activeSelf}");
     }
 
     void BuildBrushMask()
@@ -245,6 +243,16 @@ public class Scratchable : MonoBehaviour
             IsCompleted = true;
             dirtyRenderer.enabled = false;
             Debug.Log($"{this.gameObject.name} 세척 완료! ({ratio * 100f:F1}%)");
+
+            if (OwnerIconArea != null)
+            {
+                OwnerIconArea.PlayCompleteGlow();
+            }
+            else if (BackgroundSprite != null)
+            {
+                BackgroundSprite.color = Color.white;
+            }
+
             if (CurrentItem is Lottery currentLottery)
             {
                 currentLottery.HandleSlotCompleted(this);

@@ -44,6 +44,9 @@ TagManager:
   - name: inpectView
     uniqueID: 2221983345
     locked: 0
+  - name: ScreenEffect
+    uniqueID: 2635656025
+    locked: 0
   - name: Cursor
     uniqueID: 3632713861
     locked: 0

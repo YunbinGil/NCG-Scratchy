@@ -38,7 +38,10 @@ public class UIJackpotEffectController : MonoBehaviour
     private IEnumerator PlayJackpotRoutine(int earnedReward)
     {
         if (effectRoot != null)
+        {
             effectRoot.SetActive(true);
+            Debug.Log($"effectRoot activeSelf={effectRoot.activeSelf}, activeInHierarchy={effectRoot.activeInHierarchy}, pos={effectRoot.transform.position}", effectRoot);
+        }
 
         if (jackpotLabel != null)
             jackpotLabel.text = "잭팟";
@@ -77,6 +80,6 @@ public class UIJackpotEffectController : MonoBehaviour
             effectRoot.SetActive(false);
     }
     // ticketMaxReward: 현재 복권(Lottery)의 최고 당첨금액
-// earnedReward: 이번 복권에서 나온 당첨금액
-// uiJackpotEffectController.TryPlayJackpot(earnedReward, ticketMaxReward);
+    // earnedReward: 이번 복권에서 나온 당첨금액
+    // uiJackpotEffectController.TryPlayJackpot(earnedReward, ticketMaxReward);
 }
