@@ -263,7 +263,7 @@ public class InspectViewManager : MonoBehaviour
         }
 
         float itemScale = Mathf.Max(0.1f, lottery.GetInspectScale());
-        Vector3 finalScale = lotteryPrefab.transform.localScale * itemScale;
+        Vector3 finalScale = lotteryPrefab.transform.localScale * (basePreviewScale * itemScale);
 
         if (currentLotteryPreview != null)
         {
