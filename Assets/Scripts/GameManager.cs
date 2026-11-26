@@ -34,12 +34,14 @@ public class GameManager : MonoBehaviour
     [Header("Lottery Base Feel (Upgrade Multiplier Applied On Top)")]
     [SerializeField][Range(0.1f, 1f)] private float lotteryBaseSizeScale = 0.45f;
     [SerializeField][Range(0.05f, 1f)] private float lotteryBaseAlphaScale = 0.25f;
+    [SerializeField] [Range(0.1f, 1f)] private float cleanThreshold = 0.7f; 
     public float LotteryBaseSizeScale => lotteryBaseSizeScale;
     public float LotteryBaseAlphaScale => lotteryBaseAlphaScale;
     public float CoinSizeMultiplier => coinSizeUpgradeMultiplier *
         ((Upgrades?.GetLevel(UpgradeType.Kind) ?? 0) <= 1 ? 0.5f : 1f);
     public float CoinAlphaMultiplier { get; private set; } = 1f;
     public float LuckMultiplier { get; private set; } = 1f;
+    public float CleanThreshold => cleanThreshold;
 
 
     private void Awake()

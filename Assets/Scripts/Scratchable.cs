@@ -11,7 +11,6 @@ public class Scratchable : MonoBehaviour
     [Header("Brush & Clean Settings")]
     [SerializeField] private float brushWorldRadius = 0.45f; // 월드 기준 지우개 반지름
     [Range(0.5f, 1f)]
-    [SerializeField] private float cleanThreshold = 0.85f;   // 85% 지우면 자동 완료
     [SerializeField] private float checkInterval = 0.1f;
 
     public SpriteRenderer BackgroundSprite { get; set; }     // 발광 효과를 줄 base background Sprite
@@ -248,8 +247,9 @@ public class Scratchable : MonoBehaviour
     {
         if (totalInitialOpaquePixels <= 0) return;
 
+        float threshold = gameManager != null ? gameManager.CleanThreshold : 0.85f;
         float ratio = (float)erasedPixels / totalInitialOpaquePixels;
-        if (ratio >= cleanThreshold)
+        if (ratio >= threshold)
         {
             IsCompleted = true;
             dirtyRenderer.enabled = false;
