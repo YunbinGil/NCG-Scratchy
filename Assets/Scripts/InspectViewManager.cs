@@ -195,7 +195,11 @@ public class InspectViewManager : MonoBehaviour
 
         if (resultButton != null)
         {
-            if (target.IsCleaned)
+            bool shouldShowResult = target is Lottery lottery
+                ? (lottery.HasMatched || lottery.IsCleaned)
+                : target.IsCleaned;
+
+            if (shouldShowResult)
             {
                 ShowResultButton(target);
             }
@@ -483,13 +487,16 @@ public class InspectViewManager : MonoBehaviour
         if (target is Trophy trophy)
         {
             OnTrophyCleaned(trophy);
+            ShowResultButton(target);
         }
         else if (target is Lottery lottery)
         {
             OnLotteryCleaned(lottery);
+            if (lottery.HasMatched || lottery.IsCleaned)
+            {
+                ShowResultButton(lottery);
+            }
         }
-
-        ShowResultButton(target);
     }
 
     public void OnTrophyCleaned(Trophy trophy)
@@ -526,5 +533,16 @@ public class InspectViewManager : MonoBehaviour
             label.text = $"${target.Reward}";
 
         resultButton.gameObject.SetActive(true);
+    }
+    public void OnLotteryMatched(Lottery lottery)
+    {
+        if (lottery == null) return;
+
+        currentTarget = lottery;
+
+        if (IsInspecting)
+        {
+            ShowResultButton(lottery);
+        }
     }
 }
