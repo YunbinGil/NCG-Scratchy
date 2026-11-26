@@ -33,7 +33,7 @@
 "upgrade.coin_type","코인 종류"
 "upgrade.aluminium","알류미늄 코인"
 "upgrade.titanium","티타늄 코인"
-"event.jeckpot"."잭팟!!!"
+"event.jeckpot","잭팟!!!"
 "menu.continue","계속하기"
 "menu.main_menu","메인 메뉴"
 "menu.exit","종료"
@@ -79,3 +79,4 @@
 "phone.ending.03","당신은 이제 부자예요!"
 "menu.language","언어: 한국어"
 "menu.reset_game","게임 초기화"
+"machine.scrateachmachine","스크래치봇"
