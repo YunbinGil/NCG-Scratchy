@@ -19,6 +19,7 @@ MonoBehaviour:
   tableSprite: {fileID: -3483040353493384013, guid: 971c5b1623375eb48917461dab203244, type: 3}
   inspectSprite: {fileID: -3483040353493384013, guid: 271558ccfde942d4dadb55de80e7a736, type: 3}
   scratchCoverSprite: {fileID: 21300000, guid: af7ef299beb06ad4bb13d3d4ff733f66, type: 3}
+  lotteryViewPrefab: {fileID: 2055527528962465716, guid: af3a00d18092e4c4482ddab9dca8c88b, type: 3}
   lotteryTablePrefab: {fileID: 5491830050816562597, guid: 870c90297ef473a46b75f381e3ac2460, type: 3}
   requiredPlayerLevel: 5
   scratchCount: 5

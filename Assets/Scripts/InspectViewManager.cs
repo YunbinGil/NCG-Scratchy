@@ -235,13 +235,13 @@ public class InspectViewManager : MonoBehaviour
 
     public void OpenLotteryView(Lottery lottery)
     {
-        if (lottery == null || lottery.Data == null || lottery.Data.lotteryTablePrefab == null)
+        if (lottery == null || lottery.Data == null || lottery.Data.lotteryViewPrefab == null)
         {
             Debug.LogWarning("OpenLotteryView: lottery 또는 lotteryPrefab이 null입니다.");
             return;
         }
 
-        GameObject lotteryPrefab = lottery.Data.lotteryTablePrefab;
+        GameObject lotteryPrefab = lottery.Data.lotteryViewPrefab;
         GameObject targetInstance = null;
 
         foreach (var previewObj in LotteryPreviews)

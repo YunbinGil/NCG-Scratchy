@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2e3ade06158a55d459aa8e1ef0d86099, type: 3}
+  m_Name: LotteryIcon0305
+  m_EditorClassIdentifier: Assembly-CSharp::LotteryIconData
+  id: 0
+  iconName: Symbol3-6
+  iconSprite: {fileID: 21300000, guid: 661bfa8317923d14ca0b211dfa1e76c5, type: 3}
+  spawnWeight: 19
+  matchPayouts: 280a0000

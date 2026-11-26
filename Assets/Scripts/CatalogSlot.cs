@@ -9,7 +9,7 @@ public class CatalogSlot : MonoBehaviour
     [SerializeField] private LotteryData data;
     [SerializeField] private string lotteryName; 
     [SerializeField] private int price;
-    [SerializeField] private GameObject lotteryPrefab;
+    [SerializeField] private GameObject lotteryTablePrefab;
 
     [SerializeField] private TMP_Text nameText;
     [SerializeField] private TMP_Text priceText;
@@ -42,7 +42,7 @@ public class CatalogSlot : MonoBehaviour
         {
             lotteryName = data.lotteryName;
             price = data.price;
-            lotteryPrefab = data.lotteryTablePrefab;
+            lotteryTablePrefab = data.lotteryTablePrefab;
             requiredPlayerLevel = data.requiredPlayerLevel;
         }
         if (gameManager != null)
@@ -79,10 +79,10 @@ public class CatalogSlot : MonoBehaviour
             productProgress.ProgressChanged -= UpdateProgress;
 
         productProgress = null;
-        if (experienceMask == null || shop == null || lotteryPrefab == null)
+        if (experienceMask == null || shop == null || lotteryTablePrefab == null)
             return;
 
-        activeProductId = string.IsNullOrWhiteSpace(productId) ? $"lottery:{lotteryPrefab.name}" : productId;
+        activeProductId = string.IsNullOrWhiteSpace(productId) ? $"lottery:{lotteryTablePrefab.name}" : productId;
         productProgress = FindFirstObjectByType<ProductProgress>();
         if (productProgress == null)
             productProgress = shop.gameObject.AddComponent<ProductProgress>();
@@ -105,7 +105,7 @@ public class CatalogSlot : MonoBehaviour
 
     private void Purchase()
     {
-        if (isLocked || shop == null || !shop.TryPurchase(lotteryPrefab, price))
+        if (isLocked || shop == null || !shop.TryPurchase(lotteryTablePrefab, price))
             return;
 
         if (productProgress != null)

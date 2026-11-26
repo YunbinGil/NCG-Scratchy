@@ -15,6 +15,7 @@ public class LotteryData : ScriptableObject
     public Sprite tableSprite;
     public Sprite inspectSprite;
     public Sprite scratchCoverSprite;
+    public GameObject lotteryViewPrefab;
     public GameObject lotteryTablePrefab;
 
     [Header("복권 규칙")]
