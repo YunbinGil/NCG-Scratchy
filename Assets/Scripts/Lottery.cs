@@ -19,23 +19,24 @@ public class Lottery : MonoBehaviour, IInspectableSource
     [SerializeField] private float glowDuration = 0.6f;
 
     private GameObject stainOverlay;
-    private GameObject scratchOverlayRoot;
     private Scratchable[] ownedScratchables;
 
     public LotteryData Data => lotteryData;
 
     public int Reward { get; private set; }
-    //TODO: rotteryData, rotteryIconData 확률에 따라 결과계산 후 Reward반영
-
+    public bool IsJackpot { get; private set; }
+    public int JackpotReward {get; set;}
     public bool IsCleaned { get; private set; } = false;
-    //TODO: 다 긁어서 결과 나오면 true로 변경
     public List<LotteryIconData> currentLotteryIcons;
     private readonly List<int> currentOpened = new List<int>();
     private readonly HashSet<int> highlightedSlots = new HashSet<int>();
     private Coroutine glowRoutine;
+    private UIJackpotEffectController jackpotEffectController;
+    private readonly Dictionary<int, IconArea> slotAreasByIndex = new Dictionary<int, IconArea>();
 
     public void Awake()
     {
+        jackpotEffectController = GameObject.FindWithTag("GameController").GetComponent<UIJackpotEffectController>();
         if (lotteryData != null)
         {
             Initialize(lotteryData);
@@ -63,6 +64,7 @@ public class Lottery : MonoBehaviour, IInspectableSource
         {
             Debug.Log($"{icon.iconName}");
         }
+        JackpotReward = FindJackpotReward(lotteryData.availableIcons);
     }
 
     private static List<LotteryIconData> RollWeightedIcons(List<LotteryIconData> candidates, int count)
@@ -124,6 +126,16 @@ public class Lottery : MonoBehaviour, IInspectableSource
 
         return result;
     }
+    private int FindJackpotReward(List<LotteryIconData> candidates) //lotteryData.availableIcons 넣을때 확률내림차순으로 넣어야 정상작동
+    {
+        if (candidates == null || candidates.Count == 0) return 0;
+        LotteryIconData lastIcon = candidates[candidates.Count - 1];
+
+        if (lastIcon == null || lastIcon.matchPayouts == null || lastIcon.matchPayouts.Length == 0)
+            return 0;
+
+        return lastIcon.matchPayouts[lastIcon.matchPayouts.Length - 1];
+    }
 
     public void HandleClick()
     {
@@ -169,14 +181,24 @@ public class Lottery : MonoBehaviour, IInspectableSource
     {
         stainOverlay = overlay;
         ownedScratchables = scratchables;
+        slotAreasByIndex.Clear();
 
         if (scratchables == null) return;
 
         foreach (var scratchable in scratchables)
         {
-            if (scratchable != null)
+            if (scratchable == null) continue;
+            scratchable.CurrentItem = this;
+
+            IconArea area = scratchable.OwnerIconArea != null
+                ? scratchable.OwnerIconArea
+                : scratchable.GetComponentInParent<IconArea>();
+
+            if (area != null)
             {
-                scratchable.CurrentItem = this;
+                scratchable.OwnerIconArea = area;
+                scratchable.SlotIndex = area.SlotIndex;
+                slotAreasByIndex[scratchable.SlotIndex] = area;
             }
         }
     }
@@ -235,7 +257,7 @@ public class Lottery : MonoBehaviour, IInspectableSource
         var slotsByIcon = new Dictionary<LotteryIconData, List<int>>();
 
         foreach (int slotIdx in currentOpened)
-        {   
+        {
             Debug.Log($"slotindex {slotIdx}");
             if (slotIdx < 0 || slotIdx >= currentLotteryIcons.Count) continue;
             LotteryIconData icon = currentLotteryIcons[slotIdx];
@@ -276,53 +298,33 @@ public class Lottery : MonoBehaviour, IInspectableSource
         Reward = totalReward;
         Debug.Log($"Reward: {Reward}");
 
-        // if (newlyMatchedSlots.Count > 0 && matchedGlowSprite != null)
-        // {
-        //     if (glowRoutine != null) StopCoroutine(glowRoutine);
-        //     glowRoutine = StartCoroutine(FlashMatchedSlotsRoutine(newlyMatchedSlots));
-        // }
+        if (newlyMatchedSlots.Count > 0)
+        {
+            string keys = slotAreasByIndex.Count == 0
+    ? "EMPTY"
+    : string.Join(", ", slotAreasByIndex.Keys);
+            PlayMatchGlowForSlots(newlyMatchedSlots);
+        }
+        ;
+        if (IsJackpot = Reward == JackpotReward)
+        {
+            if (jackpotEffectController == null)
+    {
+        Debug.LogWarning("jackpotEffectController가 할당되지 않았습니다.", this);
+        return;
+    }
+            jackpotEffectController.TryPlayJackpot(Reward, JackpotReward);
+        }
     }
 
-    // private IEnumerator FlashMatchedSlotsRoutine(List<int> slotIndices)
-    // {
-    //     var preview = InspectViewManager.Instance != null
-    //         ? InspectViewManager.Instance.GetComponentInChildren<LotteryPreviewItem>()
-    //         : null;
-    //     if (preview == null) yield break;
-
-    //     var originalSprites = new Dictionary<int, Sprite>();
-    //     foreach (int idx in slotIndices)
-    //     {
-    //         if (idx < 0 || idx >= preview.IconCount) continue;
-
-    //         LotteryPreviewItem.IconSlot slot = preview.GetSlot(idx);
-    //         SpriteRenderer sr = slot.sprite != null
-    //             ? slot.sprite
-    //             : (slot.area != null ? slot.area.GetComponent<SpriteRenderer>() : null);
-
-    //         if (sr != null)
-    //         {
-    //             originalSprites[idx] = sr.sprite;
-    //             sr.sprite = matchedGlowSprite;
-    //         }
-    //     }
-
-    //     yield return new WaitForSeconds(glowDuration);
-
-    //     foreach (var kv in originalSprites)
-    //     {
-    //         if (kv.Key < 0 || kv.Key >= preview.IconCount) continue;
-
-    //         LotteryPreviewItem.IconSlot slot = preview.GetSlot(kv.Key);
-    //         SpriteRenderer sr = slot.sprite != null
-    //             ? slot.sprite
-    //             : (slot.area != null ? slot.area.GetComponent<SpriteRenderer>() : null);
-
-    //         if (sr != null)
-    //         {
-    //             sr.sprite = kv.Value;
-    //         }
-    //     }
-    //     glowRoutine = null;
-    // }
+    private void PlayMatchGlowForSlots(List<int> slotIndices)
+    {
+        foreach (int slotIdx in slotIndices)
+        {
+            if (slotAreasByIndex.TryGetValue(slotIdx, out IconArea area) && area != null)
+            {
+                area.PlayMatchGlow();
+            }
+        }
+    }
 }
