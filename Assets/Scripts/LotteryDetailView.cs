@@ -1,16 +1,7 @@
-using System;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-
-[Serializable]
-public class LotterySymbolRow
-{
-    public GameObject rowRoot;
-    public Image iconImage;
-    public TMP_Text probText;
-}
 
 public class LotteryDetailView : MonoBehaviour
 {
@@ -20,7 +11,9 @@ public class LotteryDetailView : MonoBehaviour
     [SerializeField] private TMP_Text matchRuleText;
     [SerializeField] private TMP_Text hardnessText;
 
-    [Header("심볼 확률 및 매칭 보상금 행 리스트")]
+    [Header("심볼 행 풀링")]
+    [SerializeField] private Transform rowContainer;
+    [SerializeField] private GameObject rowPrefab;
     [SerializeField] private List<LotterySymbolRow> symbolRows = new List<LotterySymbolRow>();
 
     public void Bind(LotteryData data, float luckMultiplier = 1f)
@@ -39,6 +32,8 @@ public class LotteryDetailView : MonoBehaviour
 
     private static void BindText(TMP_Text label, string key, string fallback)
     {
+        if (label == null) return;
+
         if (string.IsNullOrWhiteSpace(key))
             Localization.Clear(label, fallback);
         else
@@ -54,14 +49,43 @@ public class LotteryDetailView : MonoBehaviour
 
         for (int i = 0; i < symbolRows.Count; i++)
         {
-            if (symbolRows[i] == null) continue;
-            if (symbolRows[i].probText != null) symbolRows[i].probText.text = string.Empty;
-            if (symbolRows[i].iconImage != null)
+            LotterySymbolRow row = symbolRows[i];
+            if (row == null) continue;
+
+            if (row.probText != null) row.probText.text = string.Empty;
+            if (row.iconImage != null)
             {
-                symbolRows[i].iconImage.sprite = null;
-                symbolRows[i].iconImage.enabled = false;
+                row.iconImage.sprite = null;
+                row.iconImage.enabled = false;
             }
-            if (symbolRows[i].rowRoot != null) symbolRows[i].rowRoot.SetActive(false);
+            if (row.rowRoot != null) row.rowRoot.SetActive(false);
+        }
+    }
+
+    private void EnsureRowCapacity(int requiredCount)
+    {
+        if (requiredCount <= symbolRows.Count) return;
+        if (rowPrefab == null || rowContainer == null)
+        {
+            Debug.LogWarning($"{name}: rowPrefab 또는 rowContainer가 비어 있습니다.", this);
+            return;
+        }
+
+        while (symbolRows.Count < requiredCount)
+        {
+            GameObject instance = Instantiate(rowPrefab, rowContainer, false);
+            LotterySymbolRow row = instance.GetComponent<LotterySymbolRow>();
+            if (row == null)
+            {
+                Debug.LogWarning($"{instance.name}에 LotterySymbolRow 컴포넌트가 없습니다.", instance);
+                instance.SetActive(false);
+                break;
+            }
+
+            if (row.rowRoot == null)
+                row.rowRoot = instance;
+
+            symbolRows.Add(row);
         }
     }
 
@@ -69,6 +93,8 @@ public class LotteryDetailView : MonoBehaviour
     {
         var icons = data.availableIcons;
         int iconCount = icons != null ? icons.Count : 0;
+
+        EnsureRowCapacity(iconCount);
 
         for (int i = 0; i < symbolRows.Count; i++)
         {
@@ -95,6 +121,11 @@ public class LotteryDetailView : MonoBehaviour
             {
                 row.probText.text = $"{probPercent:0.##} %        $ {payout}";
             }
+        }
+
+        if (rowContainer is RectTransform containerRect)
+        {
+            LayoutRebuilder.ForceRebuildLayoutImmediate(containerRect);
         }
     }
 }

@@ -4,10 +4,13 @@ using UnityEngine.UI;
 
 public class CatalogSlot : MonoBehaviour
 {
+    [SerializeField] private LotteryData data;
+    public LotteryData LotteryData => data; 
     [SerializeField] private string ticketName;
     [SerializeField, Min(0)] private int price;
+    [Header("테이블에 생성될 prefab")]
     [SerializeField] private GameObject ticketPrefab;
-
+    [Header("Game Objects")]
     [SerializeField] private TMP_Text nameText;
     [SerializeField] private TMP_Text priceText;
     [SerializeField] private Button purchaseButton;
@@ -34,6 +37,13 @@ public class CatalogSlot : MonoBehaviour
 
     public void Initialize(CatalogShop ticketShop)
     {
+        if(data != null)
+        {
+            ticketName = data.lotteryName;
+            price = data.price;
+            ticketPrefab = data.lotteryTablePrefab;
+            GetComponent<UnlockEffect>().unlockLevel = data.requiredPlayerLevel;
+        }
         unlockRegistration?.Cancel();
 
         shop = ticketShop;

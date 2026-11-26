@@ -7,6 +7,7 @@ public class LotteryData : ScriptableObject
     [Header("기본 정보")]
     public int id = 1;
     public string lotteryName = "Scratchy Scratchy";
+    public int price = 10;
     [TextArea(2, 3)]
     public string description = "A scratch-off lottery ticket with a chance to win big! Scratch the surface to reveal symbols and see if you match enough to claim your prize.";
 
@@ -18,9 +19,11 @@ public class LotteryData : ScriptableObject
     public Sprite tableSprite;
     public Sprite inspectSprite;
     public Sprite scratchCoverSprite;
-    public GameObject lotteryPrefab;
+    public GameObject lotteryViewPrefab;
+    public GameObject lotteryTablePrefab;
 
     [Header("복권 규칙")]
+    public int requiredPlayerLevel;
     [Range(1, 10)] public int scratchCount = 3;
     [Range(1, 10)] public int requiredMatchCount = 2;
     [Min(0)] public int hardness = 0;

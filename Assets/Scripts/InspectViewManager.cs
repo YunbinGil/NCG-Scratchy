@@ -195,7 +195,11 @@ public class InspectViewManager : MonoBehaviour
 
         if (resultButton != null)
         {
-            if (target.IsCleaned)
+            bool shouldShowResult = target is Lottery lottery
+                ? (lottery.HasMatched || lottery.IsCleaned)
+                : target.IsCleaned;
+
+            if (shouldShowResult)
             {
                 ShowResultButton(target);
             }
@@ -294,7 +298,7 @@ public class InspectViewManager : MonoBehaviour
 
     public void OpenLotteryView(Lottery lottery)
     {
-        if (lottery == null || lottery.Data == null || lottery.Data.lotteryPrefab == null)
+        if (lottery == null || lottery.Data == null || lottery.Data.lotteryViewPrefab == null)
         {
             Debug.LogWarning("OpenLotteryView: lottery 또는 lotteryPrefab이 null입니다.");
             return;
@@ -303,7 +307,7 @@ public class InspectViewManager : MonoBehaviour
         HidePreview();
         HideCenterPreviewVisuals();
 
-        GameObject lotteryPrefab = lottery.Data.lotteryPrefab;
+        GameObject lotteryPrefab = lottery.Data.lotteryViewPrefab;
         GameObject targetInstance = null;
 
         foreach (var previewObj in LotteryPreviews)
@@ -483,13 +487,16 @@ public class InspectViewManager : MonoBehaviour
         if (target is Trophy trophy)
         {
             OnTrophyCleaned(trophy);
+            ShowResultButton(target);
         }
         else if (target is Lottery lottery)
         {
             OnLotteryCleaned(lottery);
+            if (lottery.HasMatched || lottery.IsCleaned)
+            {
+                ShowResultButton(lottery);
+            }
         }
-
-        ShowResultButton(target);
     }
 
     public void OnTrophyCleaned(Trophy trophy)
@@ -526,5 +533,16 @@ public class InspectViewManager : MonoBehaviour
             label.text = $"${target.Reward}";
 
         resultButton.gameObject.SetActive(true);
+    }
+    public void OnLotteryMatched(Lottery lottery)
+    {
+        if (lottery == null) return;
+
+        currentTarget = lottery;
+
+        if (IsInspecting)
+        {
+            ShowResultButton(lottery);
+        }
     }
 }

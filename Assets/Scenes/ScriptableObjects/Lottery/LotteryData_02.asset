@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a6077189a2a5652468e1dc312c5ea426, type: 3}
+  m_Name: LotteryData_02
+  m_EditorClassIdentifier: Assembly-CSharp::LotteryData
+  id: 2
+  lotteryName: MINI SCRATCH
+  price: 100
+  description: '2 match, win '
+  tableSprite: {fileID: -3483040353493384013, guid: 971c5b1623375eb48917461dab203244, type: 3}
+  inspectSprite: {fileID: -3483040353493384013, guid: 271558ccfde942d4dadb55de80e7a736, type: 3}
+  scratchCoverSprite: {fileID: 21300000, guid: af7ef299beb06ad4bb13d3d4ff733f66, type: 3}
+  lotteryViewPrefab: {fileID: 2055527528962465716, guid: af3a00d18092e4c4482ddab9dca8c88b, type: 3}
+  lotteryTablePrefab: {fileID: 5491830050816562597, guid: 870c90297ef473a46b75f381e3ac2460, type: 3}
+  requiredPlayerLevel: 5
+  scratchCount: 5
+  requiredMatchCount: 3
+  hardness: 0
+  availableIcons:
+  - {fileID: 11400000, guid: da789ac213655774488b5c1cc7e68681, type: 2}
+  - {fileID: 11400000, guid: 7af25a0afbe9d2443925b8beda9d10a8, type: 2}
+  - {fileID: 11400000, guid: eddf94e28ecea554196731fab33ec035, type: 2}
+  - {fileID: 11400000, guid: e1f2651d75810c74aa460f4468433043, type: 2}

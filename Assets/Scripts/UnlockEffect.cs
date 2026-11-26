@@ -8,7 +8,7 @@ public sealed class UnlockEffect : MonoBehaviour
 {
     private enum Playback { None, Automatic, Confirm }
 
-    [SerializeField, Min(0)] private int unlockLevel;
+    public int unlockLevel;
     [SerializeField] private Playback playback;
     [SerializeField] private UnlockLotteryCatalog effectPrefab;
     [SerializeField] private Texture2D lightTexture;

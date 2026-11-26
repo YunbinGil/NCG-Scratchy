@@ -1,13 +1,10 @@
 fileFormatVersion: 2
-guid: 864f73d075f40a240b3aa4babd66d0d7
+guid: 0e41cf6a88e0d6049a70d30f01de3e82
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 1357699939980202337
-    second: Lottery01table_0
-  - first:
-      213: 543601121251698270
-    second: Lottery01table_1
+      213: -4285199274580427658
+    second: LAll03_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -103,34 +100,12 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Lottery01table_0
+      name: LAll03_0
       rect:
         serializedVersion: 2
-        x: 1017
-        y: 934
-        width: 7
-        height: 90
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 161d61ae6e487d210800000000000000
-      internalID: 1357699939980202337
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: Lottery01table_1
-      rect:
-        serializedVersion: 2
-        x: 203
+        x: 132
         y: 132
-        width: 618
+        width: 760
         height: 760
       alignment: 0
       pivot: {x: 0, y: 0}
@@ -140,8 +115,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: e5626b3f6524b8700800000000000000
-      internalID: 543601121251698270
+      spriteID: 67c3fd6b6f9e784c0800000000000000
+      internalID: -4285199274580427658
       vertices: []
       indices: 
       edges: []
@@ -150,7 +125,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 5e97eb03825dee720800000000000000
+    spriteID: 
     internalID: 0
     vertices: []
     indices: 
@@ -160,8 +135,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      Lottery01table_0: 1357699939980202337
-      Lottery01table_1: 543601121251698270
+      LAll03_0: -4285199274580427658
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

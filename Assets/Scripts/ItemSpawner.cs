@@ -171,8 +171,8 @@ public class ItemSpawner : MonoBehaviour
             Lottery lottery = go.GetComponent<Lottery>();
             if (lottery != null)
             {
-                string key = lottery.Data != null && lottery.Data.lotteryPrefab != null
-                    ? lottery.Data.lotteryPrefab.name
+                string key = lottery.Data != null && lottery.Data.lotteryTablePrefab != null
+                    ? lottery.Data.lotteryTablePrefab.name
                     : go.name.Replace("(Clone)", "").Trim();
 
                 result.Add(new SpawnedTableItemSaveData
@@ -262,8 +262,8 @@ public class ItemSpawner : MonoBehaviour
 
                 Lottery lottery = prefab.GetComponent<Lottery>();
                 if (lottery != null && lottery.Data != null &&
-                    lottery.Data.lotteryPrefab != null &&
-                    lottery.Data.lotteryPrefab.name == itemKey)
+                    lottery.Data.lotteryTablePrefab != null &&
+                    lottery.Data.lotteryTablePrefab.name == itemKey)
                     return prefab;
 
                 Trophy trophy = prefab.GetComponent<Trophy>();

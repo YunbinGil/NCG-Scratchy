@@ -38,6 +38,7 @@ public class Lottery : MonoBehaviour, IInspectableSource
     public bool IsJackpot { get; private set; }
     public int JackpotReward { get; set; }
     public bool IsCleaned { get; private set; } = false;
+    public bool HasMatched { get; private set; }
     public List<LotteryIconData> currentLotteryIcons;
     private readonly List<int> currentOpened = new List<int>();
     private readonly HashSet<int> highlightedSlots = new HashSet<int>();
@@ -70,6 +71,7 @@ public class Lottery : MonoBehaviour, IInspectableSource
         Reward = 0;
         IsJackpot = false;
         IsCleaned = false;
+        HasMatched = false;
 
         if (lotteryData == null) return;
 
@@ -461,10 +463,12 @@ public class Lottery : MonoBehaviour, IInspectableSource
 
         if (newlyMatchedSlots.Count > 0)
         {
+            HasMatched = true;
             string keys = slotAreasByIndex.Count == 0
                 ? "EMPTY"
                 : string.Join(", ", slotAreasByIndex.Keys);
             PlayMatchGlowForSlots(newlyMatchedSlots);
+            InspectViewManager.Instance?.OnLotteryMatched(this);
         }
 
         IsJackpot = Reward > 0 && Reward == JackpotReward;

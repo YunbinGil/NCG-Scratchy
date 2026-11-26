@@ -10,10 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2e3ade06158a55d459aa8e1ef0d86099, type: 3}
-  m_Name: LotteryIcon_New3
+  m_Name: LotteryIcon0306
   m_EditorClassIdentifier: Assembly-CSharp::LotteryIconData
-  id: 1
-  iconName: Symbol1-3
-  iconSprite: {fileID: 21300000, guid: a5b7810e7afd4db46912ec519febe069, type: 3}
-  spawnWeight: 30
-  matchPayouts: 000000003c0000003c000000
+  id: 0
+  iconName: Symbol3-6
+  iconSprite: {fileID: 21300000, guid: 661bfa8317923d14ca0b211dfa1e76c5, type: 3}
+  spawnWeight: 0.11
+  matchPayouts: 280a0000

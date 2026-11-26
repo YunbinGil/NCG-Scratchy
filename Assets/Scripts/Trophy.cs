@@ -6,13 +6,13 @@ using UnityEngine.UI;
 public class Trophy : MonoBehaviour, IInspectableSource
 {
     [Header("데이터 (ScriptableObject)")]
-    [SerializeField] private TrophyData dishData;
+    [SerializeField] private TrophyData trophyData;
 
     [Header("UI 버튼")]
-    [SerializeField] private Button DishButton;
+    [SerializeField] private Button TrophyButton;
     private GameObject stainOverlay;
 
-    public TrophyData Data => dishData;
+    public TrophyData Data => trophyData;
     private int sellPriceAtSpawn;
     private float breakChanceAtSpawn;
     public bool IsCleaned { get; private set; }
@@ -22,8 +22,8 @@ public class Trophy : MonoBehaviour, IInspectableSource
 
     private void Awake()
     {
-        sellPriceAtSpawn = dishData != null ? dishData.GetSellPriceAfterClean() : 0;
-        breakChanceAtSpawn = dishData != null ? dishData.GetBreakChance() : 0f;
+        sellPriceAtSpawn = trophyData != null ? trophyData.GetSellPriceAfterClean() : 0;
+        breakChanceAtSpawn = trophyData != null ? trophyData.GetBreakChance() : 0f;
     }
 
     private void OnDestroy()
@@ -52,18 +52,18 @@ public class Trophy : MonoBehaviour, IInspectableSource
 
     public Sprite GetInspectSprite()
     {
-        if (dishData == null) return null;
-        return dishData.inspectSprite != null ? dishData.inspectSprite : dishData.tableSprite;
+        if (trophyData == null) return null;
+        return trophyData.inspectSprite != null ? trophyData.inspectSprite : trophyData.tableSprite;
     }
     public Sprite GetRustedSprite()
     {
-        if (dishData == null) return null;
-        return dishData.stainSprite != null ? dishData.stainSprite : dishData.tableSprite;
+        if (trophyData == null) return null;
+        return trophyData.stainSprite != null ? trophyData.stainSprite : trophyData.tableSprite;
     }
     public Sprite GetBrokenSprite()
     {
-        if (dishData == null) return null;
-        return dishData.brokenSprite != null ? dishData.brokenSprite : dishData.tableSprite;
+        if (trophyData == null) return null;
+        return trophyData.brokenSprite != null ? trophyData.brokenSprite : trophyData.tableSprite;
     }
     public float GetInspectScale()
     {
@@ -72,8 +72,8 @@ public class Trophy : MonoBehaviour, IInspectableSource
 
     public void OpenInDetailPanel(InspectDetailPanel detailPanel)
     {
-        if (detailPanel == null || dishData == null) return;
-        detailPanel.ShowDish(dishData, sellPriceAtSpawn, breakChanceAtSpawn);
+        if (detailPanel == null || trophyData == null) return;
+        detailPanel.ShowDish(trophyData, sellPriceAtSpawn, breakChanceAtSpawn);
     }
     public GameObject GetStainOverlay()
     {
@@ -88,10 +88,10 @@ public class Trophy : MonoBehaviour, IInspectableSource
 
     public void CompleteScratch()
     {
-        if (dishData == null) return;
+        if (trophyData == null) return;
         IsCleaned = true;
         Reward = Random.value < breakChanceAtSpawn
-            ? -Mathf.Abs(dishData.breakPenalty)
+            ? -Mathf.Abs(trophyData.breakPenalty)
             : sellPriceAtSpawn;
     }
 
