@@ -37,10 +37,10 @@ public class InspectDetailPanel : MonoBehaviour
         if (dishDetailView != null) dishDetailView.Bind(dishData, sellPrice, breakChance);
     }
 
-    public void ShowLottery(LotteryData lotteryData)
+    public void ShowLottery(LotteryData lotteryData, float luckMultiplier = 1f)
     {
         ClearAll();
         if (lotteryDetailPanel != null) lotteryDetailPanel.SetActive(true);
-        if (lotteryDetailView != null) lotteryDetailView.Bind(lotteryData);
+        if (lotteryDetailView != null) lotteryDetailView.Bind(lotteryData, luckMultiplier);
     }
 }
