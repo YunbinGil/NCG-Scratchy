@@ -28,6 +28,7 @@ public class Scratchable : MonoBehaviour
     private Vector2 prevWorldPos;
     private float nextCheckTime;
     public bool IsCompleted { get; private set; }
+    internal bool HasScratchMarks { get; private set; }
 
     // 브러시 알파 마스크 캐시 (0 ~ 1)
     private float[] brushMask;
@@ -231,6 +232,8 @@ public class Scratchable : MonoBehaviour
                 if (oldAlpha == 0) continue;
 
                 byte newAlpha = (byte)Mathf.Max(0, oldAlpha - Mathf.RoundToInt(eraseStrength * 255f));
+                if (newAlpha != oldAlpha)
+                    HasScratchMarks = true;
                 pixels[idx].a = newAlpha;
 
                 if (oldAlpha > 20 && newAlpha <= 20)

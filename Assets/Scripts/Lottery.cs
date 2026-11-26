@@ -43,6 +43,8 @@ public class Lottery : MonoBehaviour, IInspectableSource
     private readonly HashSet<int> highlightedSlots = new HashSet<int>();
     private readonly List<OpenedSymbolChance> lastEvaluatedChances = new List<OpenedSymbolChance>();
     private Coroutine glowRoutine;
+    private float rollLuckMultiplier = 1f;
+    private GameManager gameManager;
     private UIJackpotEffectController jackpotEffectController;
     private readonly Dictionary<int, IconArea> slotAreasByIndex = new Dictionary<int, IconArea>();
 
@@ -50,7 +52,9 @@ public class Lottery : MonoBehaviour, IInspectableSource
 
     public void Awake()
     {
-        jackpotEffectController = GameObject.FindWithTag("GameController").GetComponent<UIJackpotEffectController>();
+        var controller = GameObject.FindWithTag("GameController");
+        gameManager = controller != null ? controller.GetComponent<GameManager>() : null;
+        jackpotEffectController = controller != null ? controller.GetComponent<UIJackpotEffectController>() : null;
         if (lotteryData != null)
         {
             Initialize(lotteryData);
@@ -74,7 +78,9 @@ public class Lottery : MonoBehaviour, IInspectableSource
             image.sprite = lotteryData.tableSprite;
         }
 
-        currentLotteryIcons = RollWeightedIcons(lotteryData.availableIcons, lotteryData.scratchCount);
+        gameManager ??= FindFirstObjectByType<GameManager>();
+        rollLuckMultiplier = gameManager != null ? gameManager.LuckMultiplier : 1f;
+        currentLotteryIcons = RollWeightedIcons(lotteryData, rollLuckMultiplier);
         Debug.Log("복권 아이콘 랜덤으로 정하기 완료");
         foreach (var icon in currentLotteryIcons)
         {
@@ -83,23 +89,44 @@ public class Lottery : MonoBehaviour, IInspectableSource
         JackpotReward = FindJackpotReward(lotteryData.availableIcons);
     }
 
-    private static List<LotteryIconData> RollWeightedIcons(List<LotteryIconData> candidates, int count)
+    internal void ApplyLuckBeforeInspect()
     {
-        var result = new List<LotteryIconData>(count);
+        if (lotteryData == null || IsCleaned || currentOpened.Count > 0 || gameManager == null)
+            return;
+
+        float currentLuck = gameManager.LuckMultiplier;
+        if (Mathf.Approximately(currentLuck, rollLuckMultiplier))
+            return;
+
+        if (ownedScratchables != null && Array.Exists(ownedScratchables,
+                scratchable => scratchable != null && (scratchable.HasScratchMarks || scratchable.IsCompleted)))
+            return;
+
+        rollLuckMultiplier = currentLuck;
+        currentLotteryIcons = RollWeightedIcons(lotteryData, rollLuckMultiplier);
+    }
+
+    private static List<LotteryIconData> RollWeightedIcons(LotteryData data, float luckMultiplier)
+    {
+        List<LotteryIconData> candidates = data.availableIcons;
+        int count = data.scratchCount;
+        var result = new List<LotteryIconData>(Mathf.Max(0, count));
         if (candidates == null || candidates.Count == 0 || count <= 0)
         {
             return result;
         }
 
+        // 추첨과 상세 화면에 같은 심볼 가중치를 사용한다.
         float totalWeight = 0f;
-        var validIcons = new List<LotteryIconData>(candidates.Count);
+        var validIcons = new List<(LotteryIconData Icon, float Weight)>(candidates.Count);
 
         foreach (var icon in candidates)
         {
-            if (icon != null && icon.spawnWeight > 0f)
+            float weight = data.GetSpawnWeight(icon, luckMultiplier);
+            if (weight > 0f)
             {
-                validIcons.Add(icon);
-                totalWeight += icon.spawnWeight;
+                validIcons.Add((icon, weight));
+                totalWeight += weight;
             }
         }
 
@@ -124,11 +151,11 @@ public class Lottery : MonoBehaviour, IInspectableSource
         {
             float roll = UnityEngine.Random.Range(0f, totalWeight);
             float cumulative = 0f;
-            LotteryIconData picked = validIcons[validIcons.Count - 1];
+            LotteryIconData picked = validIcons[validIcons.Count - 1].Icon;
 
-            foreach (var icon in validIcons)
+            foreach (var (icon, weight) in validIcons)
             {
-                cumulative += icon.spawnWeight;
+                cumulative += weight;
                 if (roll < cumulative)
                 {
                     picked = icon;
@@ -152,35 +179,12 @@ public class Lottery : MonoBehaviour, IInspectableSource
         return lastIcon.matchPayouts[lastIcon.matchPayouts.Length - 1];
     }
 
-    private float GetTotalSpawnWeight()
-    {
-        if (lotteryData == null || lotteryData.availableIcons == null)
-            return 0f;
-
-        float total = 0f;
-        foreach (var icon in lotteryData.availableIcons)
-        {
-            if (icon != null && icon.spawnWeight > 0f)
-                total += icon.spawnWeight;
-        }
-        return total;
-    }
-
-    private float CalculateSymbolProbabilityPercent(LotteryIconData symbol, float totalWeight)
-    {
-        if (symbol == null || totalWeight <= 0f || symbol.spawnWeight <= 0f)
-            return 0f;
-
-        return (symbol.spawnWeight / totalWeight) * 100f;
-    }
-
     public List<OpenedSymbolChance> GetCurrentOpenedSymbolsWithProbability()
     {
         var list = new List<OpenedSymbolChance>();
         if (lotteryData == null || currentLotteryIcons == null)
             return list;
 
-        float totalWeight = GetTotalSpawnWeight();
         var counts = new Dictionary<LotteryIconData, int>();
 
         foreach (int slotIdx in currentOpened)
@@ -210,7 +214,7 @@ public class Lottery : MonoBehaviour, IInspectableSource
                 slotIndex = slotIdx,
                 symbol = icon,
                 symbolName = string.IsNullOrWhiteSpace(icon.iconName) ? icon.name : icon.iconName,
-                spawnProbabilityPercent = CalculateSymbolProbabilityPercent(icon, totalWeight),
+                spawnProbabilityPercent = lotteryData.GetSymbolProbabilityPercent(icon, rollLuckMultiplier),
                 openedCount = openedCount,
                 payout = payout
             });
@@ -246,7 +250,7 @@ public class Lottery : MonoBehaviour, IInspectableSource
     public void OpenInDetailPanel(InspectDetailPanel detailPanel)
     {
         if (detailPanel == null || lotteryData == null) return;
-        detailPanel.ShowLottery(lotteryData);
+        detailPanel.ShowLottery(lotteryData, rollLuckMultiplier);
     }
 
     public void DestoryItem()
@@ -427,7 +431,6 @@ public class Lottery : MonoBehaviour, IInspectableSource
         Debug.Log($"Reward: {Reward}");
 
         lastEvaluatedChances.Clear();
-        float totalWeight = GetTotalSpawnWeight();
         for (int i = 0; i < currentOpened.Count && i < openedSymbols.Count; i++)
         {
             int slotIdx = currentOpened[i];
@@ -442,7 +445,7 @@ public class Lottery : MonoBehaviour, IInspectableSource
                 slotIndex = slotIdx,
                 symbol = icon,
                 symbolName = string.IsNullOrWhiteSpace(icon.iconName) ? icon.name : icon.iconName,
-                spawnProbabilityPercent = CalculateSymbolProbabilityPercent(icon, totalWeight),
+                spawnProbabilityPercent = lotteryData.GetSymbolProbabilityPercent(icon, rollLuckMultiplier),
                 openedCount = openedCount,
                 payout = payout
             });

@@ -43,6 +43,8 @@ public class PausePanelController : MonoBehaviour
     [SerializeField] private Button mainMenuButton;
     [SerializeField] private Button quitGameButton;
 
+    internal bool IsOpen => settingPanel != null && settingPanel.activeInHierarchy;
+
     [Header("진행도 초기화 (3초 홀드 -> 최종 확인 팝업)")]
     [SerializeField] private Button holdResetButton;
     [SerializeField] private Image holdFillImage;
@@ -54,8 +56,8 @@ public class PausePanelController : MonoBehaviour
     [SerializeField] private Button cancelConfirmButton;
 
     [Header("문구 설정")]
-    [SerializeField] private string tapHintMessage = "버튼을 길게 누르세요";
-    [SerializeField] private string confirmPromptMessage = "저장 파일이 삭제됩니다. 계속하시겠습니까?";
+    [SerializeField] private string tapHintKey = "pause.reset.hold_hint";
+    [SerializeField] private string confirmPromptKey = "pause.reset.confirm_prompt";
 
     [Header("씬 이름 설정")]
     [SerializeField] private string titleSceneName = "StartScenes";
@@ -126,11 +128,9 @@ public class PausePanelController : MonoBehaviour
             hasCompletedHold = true;
             isHoldingReset = false;
 
-            if (tapHintText != null)
-                tapHintText.text = string.Empty;
+            Localization.Clear(tapHintText, string.Empty);
 
-            if (confirmPromptText != null)
-                confirmPromptText.text = confirmPromptMessage;
+            Localization.Bind(confirmPromptText, confirmPromptKey, string.Empty);
 
             if (finalConfirmGroup != null)
                 finalConfirmGroup.SetActive(true);
@@ -152,11 +152,9 @@ public class PausePanelController : MonoBehaviour
         if (finalConfirmGroup != null)
             finalConfirmGroup.SetActive(false);
 
-        if (tapHintText != null)
-            tapHintText.text = string.Empty;
+        Localization.Clear(tapHintText, string.Empty);
 
-        if (confirmPromptText != null)
-            confirmPromptText.text = string.Empty;
+        Localization.Clear(confirmPromptText, string.Empty);
     }
 
     public void ReleaseResetHold()
@@ -172,8 +170,7 @@ public class PausePanelController : MonoBehaviour
             if (holdFillImage != null)
                 holdFillImage.fillAmount = 0f;
 
-            if (tapHintText != null)
-                tapHintText.text = tapHintMessage;
+            Localization.Bind(tapHintText, tapHintKey, string.Empty);
         }
     }
 
@@ -215,11 +212,9 @@ public class PausePanelController : MonoBehaviour
 
         if (clearMessage)
         {
-            if (tapHintText != null)
-                tapHintText.text = string.Empty;
+            Localization.Clear(tapHintText, string.Empty);
 
-            if (confirmPromptText != null)
-                confirmPromptText.text = string.Empty;
+            Localization.Clear(confirmPromptText, string.Empty);
         }
     }
 

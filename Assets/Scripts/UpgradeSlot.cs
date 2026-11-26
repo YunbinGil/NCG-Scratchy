@@ -93,7 +93,7 @@ public class UpgradeSlot : MonoBehaviour
         if (upgradeButton != null)
             upgradeButton.interactable = canUpgrade;
 
-        if (upgradeType == UpgradeType.Luk || upgrades == null)
+        if (upgrades == null)
             Localization.Clear(costText, "—");
         else if (canUpgrade)
             Localization.Clear(costText, upgrades.GetCost(upgradeType).ToString("N0"));

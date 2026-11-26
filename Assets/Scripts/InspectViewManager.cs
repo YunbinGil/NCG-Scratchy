@@ -178,6 +178,7 @@ public class InspectViewManager : MonoBehaviour
         }
         else if (target is Lottery lottery)
         {
+            lottery.ApplyLuckBeforeInspect();
             OpenLotteryView(lottery);
         }
 
