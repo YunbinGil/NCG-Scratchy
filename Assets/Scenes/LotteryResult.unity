@@ -140,24 +140,6 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 5971948403558623003, guid: 15d42b2a717cf4fd4bed700ae5c86c78, type: 3}
   m_PrefabInstance: {fileID: 925915004}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &160187946
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 160187942}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2de3d8032c65841e09dee5f5fa2036b3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::UIJackpotEffectController
-  effectRoot: {fileID: 160187942}
-  jackpotLabel: {fileID: 883379566}
-  showDuration: 2
-  jackpotParticles:
-  - {fileID: 544018098}
-  burstCount: 50
 --- !u!224 &186351576 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 8010300137357312992, guid: a928b4a5233e43f439033dc021dd2846, type: 3}
@@ -381,7 +363,7 @@ MonoBehaviour:
   m_Intensity: 1
   m_LightVolumeIntensity: 1
   m_LightVolumeEnabled: 0
-  m_ApplyToSortingLayers: 0000000085d086d871c67084
+  m_ApplyToSortingLayers: 0000000085d086d871c6708459eb189d
   m_LightCookieSprite: {fileID: 0}
   m_DeprecatedPointLightCookieSprite: {fileID: 0}
   m_LightOrder: 0
@@ -559,10 +541,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: UIJackpotEffect
       objectReference: {fileID: 0}
-    - target: {fileID: 5471940200374128361, guid: 15d42b2a717cf4fd4bed700ae5c86c78, type: 3}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 5971948403558623003, guid: 15d42b2a717cf4fd4bed700ae5c86c78, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
@@ -573,39 +551,27 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5971948403558623003, guid: 15d42b2a717cf4fd4bed700ae5c86c78, type: 3}
       propertyPath: m_AnchorMax.x
-      value: 1
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: 5971948403558623003, guid: 15d42b2a717cf4fd4bed700ae5c86c78, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 1
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: 5971948403558623003, guid: 15d42b2a717cf4fd4bed700ae5c86c78, type: 3}
       propertyPath: m_AnchorMin.x
-      value: 0
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: 5971948403558623003, guid: 15d42b2a717cf4fd4bed700ae5c86c78, type: 3}
       propertyPath: m_AnchorMin.y
-      value: 0
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: 5971948403558623003, guid: 15d42b2a717cf4fd4bed700ae5c86c78, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 0
+      value: 1920
       objectReference: {fileID: 0}
     - target: {fileID: 5971948403558623003, guid: 15d42b2a717cf4fd4bed700ae5c86c78, type: 3}
       propertyPath: m_SizeDelta.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5971948403558623003, guid: 15d42b2a717cf4fd4bed700ae5c86c78, type: 3}
-      propertyPath: m_LocalScale.x
-      value: 1.00008
-      objectReference: {fileID: 0}
-    - target: {fileID: 5971948403558623003, guid: 15d42b2a717cf4fd4bed700ae5c86c78, type: 3}
-      propertyPath: m_LocalScale.y
-      value: 1.00008
-      objectReference: {fileID: 0}
-    - target: {fileID: 5971948403558623003, guid: 15d42b2a717cf4fd4bed700ae5c86c78, type: 3}
-      propertyPath: m_LocalScale.z
-      value: 1.00008
+      value: 1080
       objectReference: {fileID: 0}
     - target: {fileID: 5971948403558623003, guid: 15d42b2a717cf4fd4bed700ae5c86c78, type: 3}
       propertyPath: m_LocalPosition.x
@@ -658,10 +624,7 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 5471940200374128361, guid: 15d42b2a717cf4fd4bed700ae5c86c78, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 160187946}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 15d42b2a717cf4fd4bed700ae5c86c78, type: 3}
 --- !u!1 &969263737
 GameObject:
@@ -1864,7 +1827,7 @@ PrefabInstance:
       objectReference: {fileID: 686142727840833646, guid: ac2db4c71595f1f4691c6b783130f381, type: 3}
     - target: {fileID: 7357533949355139809, guid: 30e7eb5b629f65642a207e4b9a476236, type: 3}
       propertyPath: m_Size
-      value: 1
+      value: 0.99971676
       objectReference: {fileID: 0}
     - target: {fileID: 7571291557748851499, guid: 30e7eb5b629f65642a207e4b9a476236, type: 3}
       propertyPath: m_AnchorMax.y
@@ -1892,7 +1855,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7994922925460622214, guid: 30e7eb5b629f65642a207e4b9a476236, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 0.00076293945
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8026055554778373793, guid: 30e7eb5b629f65642a207e4b9a476236, type: 3}
       propertyPath: m_AnchorMax.y

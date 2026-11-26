@@ -25,7 +25,7 @@ public class Lottery : MonoBehaviour, IInspectableSource
 
     public int Reward { get; private set; }
     public bool IsJackpot { get; private set; }
-    public int JackpotReward => FindJackpotReward(lotteryData.availableIcons);
+    public int JackpotReward {get; set;}
     public bool IsCleaned { get; private set; } = false;
     public List<LotteryIconData> currentLotteryIcons;
     private readonly List<int> currentOpened = new List<int>();
@@ -64,6 +64,7 @@ public class Lottery : MonoBehaviour, IInspectableSource
         {
             Debug.Log($"{icon.iconName}");
         }
+        JackpotReward = FindJackpotReward(lotteryData.availableIcons);
     }
 
     private static List<LotteryIconData> RollWeightedIcons(List<LotteryIconData> candidates, int count)
@@ -304,9 +305,14 @@ public class Lottery : MonoBehaviour, IInspectableSource
     : string.Join(", ", slotAreasByIndex.Keys);
             PlayMatchGlowForSlots(newlyMatchedSlots);
         }
-
+        ;
         if (IsJackpot = Reward == JackpotReward)
         {
+            if (jackpotEffectController == null)
+    {
+        Debug.LogWarning("jackpotEffectController가 할당되지 않았습니다.", this);
+        return;
+    }
             jackpotEffectController.TryPlayJackpot(Reward, JackpotReward);
         }
     }
