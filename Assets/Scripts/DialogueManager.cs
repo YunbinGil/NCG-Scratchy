@@ -118,6 +118,21 @@ public class DialogueManager : MonoBehaviour, IPointerClickHandler
         }
     }
 
+    public void DismissForEndingCall()
+    {
+        if (!isActive)
+            return;
+
+        if (typingCoroutine != null)
+        {
+            StopCoroutine(typingCoroutine);
+            typingCoroutine = null;
+        }
+
+        onDialogComplete = null;
+        EndDialog();
+    }
+
     private void EndDialog()
     {
         isActive = false;

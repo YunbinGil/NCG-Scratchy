@@ -39,3 +39,5 @@
 "unlock","Unlock"
 "detail.match_rule","Match {0} to win"
 "detail.hardness","Hard: {0}"
+"ending.new_game","NEW GAME"
+"ending.quit_game","QUIT GAME"

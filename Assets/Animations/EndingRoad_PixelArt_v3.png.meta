@@ -1,0 +1,291 @@
+fileFormatVersion: 2
+guid: 68d27e7b5de58d84696871ef659351ff
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 5159182832550017794
+    second: EndingRoad_PixelArt_v3_0
+  - first:
+      213: -8398795296929490435
+    second: EndingRoad_PixelArt_v3_1
+  - first:
+      213: 246779307668468548
+    second: EndingRoad_PixelArt_v3_2
+  - first:
+      213: -377462921702518575
+    second: EndingRoad_PixelArt_v3_3
+  - first:
+      213: 1374696240240273894
+    second: EndingRoad_PixelArt_v3_4
+  - first:
+      213: 9189446180369195614
+    second: EndingRoad_PixelArt_v3_5
+  - first:
+      213: -2643775675303200396
+    second: EndingRoad_PixelArt_v3_6
+  - first:
+      213: -3595783657650856118
+    second: EndingRoad_PixelArt_v3_7
+  - first:
+      213: 7227267679914895097
+    second: EndingRoad_PixelArt_v3_8
+  - first:
+      213: -171986972628850027
+    second: EndingRoad_PixelArt_v3_9
+  - first:
+      213: -4713542541114221862
+    second: EndingRoad_PixelArt_v3_10
+  - first:
+      213: -3915299488354843849
+    second: EndingRoad_PixelArt_v3_11
+  - first:
+      213: 8963580778789497873
+    second: EndingRoad_PixelArt_v3_12
+  - first:
+      213: -7417766286648224210
+    second: EndingRoad_PixelArt_v3_13
+  - first:
+      213: -1197940545638402312
+    second: EndingRoad_PixelArt_v3_14
+  - first:
+      213: 8450518014156120783
+    second: EndingRoad_PixelArt_v3_15
+  - first:
+      213: -4617142958297873167
+    second: EndingRoad_PixelArt_v3_16
+  - first:
+      213: -4993186975168767459
+    second: EndingRoad_PixelArt_v3_17
+  - first:
+      213: 3840592960098878483
+    second: EndingRoad_PixelArt_v3_18
+  - first:
+      213: -8901265256040184448
+    second: EndingRoad_PixelArt_v3_19
+  - first:
+      213: -7637552527946300853
+    second: EndingRoad_PixelArt_v3_20
+  - first:
+      213: 7469870300949566233
+    second: EndingRoad_PixelArt_v3_21
+  - first:
+      213: 2133142445183783480
+    second: EndingRoad_PixelArt_v3_22
+  - first:
+      213: 2597606852313191460
+    second: EndingRoad_PixelArt_v3_23
+  - first:
+      213: 5506381289098642882
+    second: EndingRoad_PixelArt_v3_24
+  - first:
+      213: -4136540757711967437
+    second: EndingRoad_PixelArt_v3_25
+  - first:
+      213: -6715610747073675557
+    second: EndingRoad_PixelArt_v3_26
+  - first:
+      213: -2154374336135426974
+    second: EndingRoad_PixelArt_v3_27
+  - first:
+      213: -2538469314322353718
+    second: EndingRoad_PixelArt_v3_28
+  - first:
+      213: 4025454461198010880
+    second: EndingRoad_PixelArt_v3_29
+  - first:
+      213: -8282246671074025031
+    second: EndingRoad_PixelArt_v3_30
+  - first:
+      213: -5665633489768924176
+    second: EndingRoad_PixelArt_v3_31
+  - first:
+      213: 4850478680505099647
+    second: EndingRoad_PixelArt_v3_32
+  - first:
+      213: -733870896873098245
+    second: EndingRoad_PixelArt_v3_33
+  - first:
+      213: -8740240001491328771
+    second: EndingRoad_PixelArt_v3_34
+  - first:
+      213: -5868369789058236951
+    second: EndingRoad_PixelArt_v3_35
+  - first:
+      213: -8168356019706495915
+    second: EndingRoad_PixelArt_v3_36
+  - first:
+      213: 3377604939523529831
+    second: EndingRoad_PixelArt_v3_37
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 1
+  spriteExtrude: 1
+  spriteMeshType: 0
+  alignment: 7
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 0
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 4096
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 4096
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: EndingRoad_PixelArt_v3_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 2172
+        height: 724
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 20bff61a379199740800000000000000
+      internalID: 5159182832550017794
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      EndingRoad_PixelArt_v3_0: 5159182832550017794
+      EndingRoad_PixelArt_v3_1: -8398795296929490435
+      EndingRoad_PixelArt_v3_10: -4713542541114221862
+      EndingRoad_PixelArt_v3_11: -3915299488354843849
+      EndingRoad_PixelArt_v3_12: 8963580778789497873
+      EndingRoad_PixelArt_v3_13: -7417766286648224210
+      EndingRoad_PixelArt_v3_14: -1197940545638402312
+      EndingRoad_PixelArt_v3_15: 8450518014156120783
+      EndingRoad_PixelArt_v3_16: -4617142958297873167
+      EndingRoad_PixelArt_v3_17: -4993186975168767459
+      EndingRoad_PixelArt_v3_18: 3840592960098878483
+      EndingRoad_PixelArt_v3_19: -8901265256040184448
+      EndingRoad_PixelArt_v3_2: 246779307668468548
+      EndingRoad_PixelArt_v3_20: -7637552527946300853
+      EndingRoad_PixelArt_v3_21: 7469870300949566233
+      EndingRoad_PixelArt_v3_22: 2133142445183783480
+      EndingRoad_PixelArt_v3_23: 2597606852313191460
+      EndingRoad_PixelArt_v3_24: 5506381289098642882
+      EndingRoad_PixelArt_v3_25: -4136540757711967437
+      EndingRoad_PixelArt_v3_26: -6715610747073675557
+      EndingRoad_PixelArt_v3_27: -2154374336135426974
+      EndingRoad_PixelArt_v3_28: -2538469314322353718
+      EndingRoad_PixelArt_v3_29: 4025454461198010880
+      EndingRoad_PixelArt_v3_3: -377462921702518575
+      EndingRoad_PixelArt_v3_30: -8282246671074025031
+      EndingRoad_PixelArt_v3_31: -5665633489768924176
+      EndingRoad_PixelArt_v3_32: 4850478680505099647
+      EndingRoad_PixelArt_v3_33: -733870896873098245
+      EndingRoad_PixelArt_v3_34: -8740240001491328771
+      EndingRoad_PixelArt_v3_35: -5868369789058236951
+      EndingRoad_PixelArt_v3_36: -8168356019706495915
+      EndingRoad_PixelArt_v3_37: 3377604939523529831
+      EndingRoad_PixelArt_v3_4: 1374696240240273894
+      EndingRoad_PixelArt_v3_5: 9189446180369195614
+      EndingRoad_PixelArt_v3_6: -2643775675303200396
+      EndingRoad_PixelArt_v3_7: -3595783657650856118
+      EndingRoad_PixelArt_v3_8: 7227267679914895097
+      EndingRoad_PixelArt_v3_9: -171986972628850027
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

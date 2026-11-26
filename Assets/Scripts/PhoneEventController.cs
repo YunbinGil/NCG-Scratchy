@@ -9,7 +9,8 @@ public enum PhoneCallEventType
     Level4Reached,
     Level5Reached,
     Level6Reached,
-    Level7Reached
+    Level7Reached,
+    EndingGoalReached
 }
 
 [Serializable]
@@ -132,8 +133,27 @@ public class PhoneEventController : MonoBehaviour
             phoneCallTrigger = FindFirstObjectByType<PhoneCallTrigger>();
     }
 
+    private bool endingCallStarted;
+
+    public bool TryRingEndingCall(out PhoneCallTrigger phone)
+    {
+        phone = phoneCallTrigger;
+        if (endingCallStarted || phone == null || !phone.isActiveAndEnabled)
+            return false;
+
+        endingCallStarted = true;
+        _hasPendingCall = true;
+        _pendingEventType = PhoneCallEventType.EndingGoalReached;
+        _pendingLines = null;
+        phone.RingPhone();
+        return true;
+    }
+
     public void TriggerEvent(PhoneCallEventType eventType)
     {
+        if (endingCallStarted)
+            return;
+
         if (phoneCallTrigger == null)
             phoneCallTrigger = FindFirstObjectByType<PhoneCallTrigger>();
 

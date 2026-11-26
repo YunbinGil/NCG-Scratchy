@@ -36,7 +36,7 @@ public class PhoneCallTrigger : MonoBehaviour
     {
         if (!IsRinging || isPaused) return;
 
-        float angle = Mathf.Sin(Time.time * ringShakeSpeed) * ringShakeAngle;
+        float angle = Mathf.Sin(Time.unscaledTime * ringShakeSpeed) * ringShakeAngle;
         transform.localRotation = BaseRotation * Quaternion.Euler(0f, 0f, angle);
     }
 
