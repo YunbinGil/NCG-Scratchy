@@ -1,12 +1,15 @@
+using System.Data.Common;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class CatalogSlot : MonoBehaviour
 {
-    [SerializeField] private string ticketName;
-    [SerializeField, Min(0)] private int price;
-    [SerializeField] private GameObject ticketPrefab;
+
+    [SerializeField] private LotteryData data;
+    [SerializeField] private string lotteryName; 
+    [SerializeField] private int price;
+    [SerializeField] private GameObject lotteryPrefab;
 
     [SerializeField] private TMP_Text nameText;
     [SerializeField] private TMP_Text priceText;
@@ -23,11 +26,11 @@ public class CatalogSlot : MonoBehaviour
     [SerializeField, Min(0)] private int maxLevel = 10;
 
     [Header("잠금 해제")]
-    [SerializeField, Min(0)] private int requiredPlayerLevel;
+    [SerializeField] private int requiredPlayerLevel;
     [SerializeField] private GameObject lockOverlay;
 
     private CatalogShop shop;
-    private GameManager playerProgress;
+    private GameManager gameManager;
     private bool isLocked;
     private ProductProgress productProgress;
     private string activeProductId;
@@ -35,14 +38,21 @@ public class CatalogSlot : MonoBehaviour
 
     public void Initialize(CatalogShop ticketShop)
     {
-        if (playerProgress != null)
-            playerProgress.OnLevelChanged -= UpdateLock;
+        if (data != null)
+        {
+            lotteryName = data.lotteryName;
+            price = data.price;
+            lotteryPrefab = data.lotteryTablePrefab;
+            requiredPlayerLevel = data.requiredPlayerLevel;
+        }
+        if (gameManager != null)
+            gameManager.OnLevelChanged -= UpdateLock;
 
         shop = ticketShop;
-        playerProgress = shop != null ? shop.PlayerProgress : null;
+        gameManager = shop != null ? shop.PlayerProgress : null;
 
         if (nameText != null)
-            Localization.Bind(nameText, $"shop.item.{(ticketName ?? string.Empty).ToLowerInvariant()}", ticketName);
+            Localization.Bind(nameText, $"shop.item.{(lotteryName ?? string.Empty).ToLowerInvariant()}", lotteryName);
 
         if (priceText != null)
             priceText.text = price.ToString();
@@ -56,10 +66,10 @@ public class CatalogSlot : MonoBehaviour
             purchaseButton.onClick.AddListener(Purchase);
         }
 
-        if (playerProgress != null)
-            playerProgress.OnLevelChanged += UpdateLock;
+        if (gameManager != null)
+            gameManager.OnLevelChanged += UpdateLock;
 
-        UpdateLock(playerProgress != null ? playerProgress.Level : 0);
+        UpdateLock(gameManager != null ? gameManager.Level : 0);
         ConnectProgress();
     }
 
@@ -69,10 +79,10 @@ public class CatalogSlot : MonoBehaviour
             productProgress.ProgressChanged -= UpdateProgress;
 
         productProgress = null;
-        if (experienceMask == null || shop == null || ticketPrefab == null)
+        if (experienceMask == null || shop == null || lotteryPrefab == null)
             return;
 
-        activeProductId = string.IsNullOrWhiteSpace(productId) ? $"lottery:{ticketPrefab.name}" : productId;
+        activeProductId = string.IsNullOrWhiteSpace(productId) ? $"lottery:{lotteryPrefab.name}" : productId;
         productProgress = FindFirstObjectByType<ProductProgress>();
         if (productProgress == null)
             productProgress = shop.gameObject.AddComponent<ProductProgress>();
@@ -95,7 +105,7 @@ public class CatalogSlot : MonoBehaviour
 
     private void Purchase()
     {
-        if (isLocked || shop == null || !shop.TryPurchase(ticketPrefab, price))
+        if (isLocked || shop == null || !shop.TryPurchase(lotteryPrefab, price))
             return;
 
         if (productProgress != null)
@@ -142,8 +152,8 @@ public class CatalogSlot : MonoBehaviour
 
     private void OnDestroy()
     {
-        if (playerProgress != null)
-            playerProgress.OnLevelChanged -= UpdateLock;
+        if (gameManager != null)
+            gameManager.OnLevelChanged -= UpdateLock;
 
         if (purchaseButton != null)
             purchaseButton.onClick.RemoveListener(Purchase);

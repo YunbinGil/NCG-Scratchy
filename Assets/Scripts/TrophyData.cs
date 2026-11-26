@@ -15,6 +15,8 @@ public class TrophyData : ScriptableObject
     public Sprite cleanSprite;          // 어느 정도 다 닦았을 때 표시용
     public Sprite stainSprite;          // 얼룩 오버레이용
     public Sprite brokenSprite;         // 깨진 상태용
+    public GameObject trophyViewPrefab;
+
 
     [Header("경제 및 파손 수치")]
     [Min(0)] public int buyPrice = 1;                   // 상점 구매가격

@@ -42,7 +42,6 @@ public class InspectViewManager : MonoBehaviour
 
     [Header("얼룩 오브젝트 생성 설정")]
     [SerializeField] private GameObject stainOverlayPrefab; // SpriteRenderer + Scratchable이 붙은 프리팹
-    [SerializeField] private Transform stainOverlayParent; // 생성할 부모(없으면 null)
 
     public ViewState CurrentState { get; private set; } = ViewState.Table;
     public bool IsInspecting => CurrentState == ViewState.Inspect;
@@ -53,6 +52,7 @@ public class InspectViewManager : MonoBehaviour
     private GameObject currentActiveOverlay;
     private List<GameObject> LotteryPreviews = new List<GameObject>(); // 실제 생성된 GO들 넣고 icons랑 stainoverlay만 바꿀
     private LotteryPreviewItem currentLotteryPreview;
+    private GameObject TrophyPreview;
 
     private void Awake()
     {
@@ -210,35 +210,38 @@ public class InspectViewManager : MonoBehaviour
 
     public void OpenTrophyView(Trophy trophy)
     {
-        Sprite sprite = trophy.GetInspectSprite();
-        float scale = Mathf.Max(0.1f, trophy.GetInspectScale());
+        // Sprite sprite = trophy.GetInspectSprite();
+        
+        // if (centerPreviewImage != null)
+        // {
+        //     centerPreviewImage.sprite = sprite;
+        //     centerPreviewImage.enabled = sprite != null;
+        //     // centerPreviewImage.rectTransform.localScale = Vector3.one * (basePreviewScale * scale);
+        // }
 
-        if (centerPreviewImage != null)
+        // if (centerPreviewRenderer != null)
+        // {
+        //     centerPreviewRenderer.sprite = sprite;
+        //     centerPreviewRenderer.enabled = sprite != null;
+        //     // centerPreviewRenderer.transform.localScale = Vector3.one * (basePreviewScale * scale);
+        // }
+        if(TrophyPreview == null)
         {
-            centerPreviewImage.sprite = sprite;
-            centerPreviewImage.enabled = sprite != null;
-            centerPreviewImage.rectTransform.localScale = Vector3.one * (basePreviewScale * scale);
+            TrophyPreview = Instantiate(trophy.Data.trophyViewPrefab, centerPreviewRect, false);
         }
-
-        if (centerPreviewRenderer != null)
-        {
-            centerPreviewRenderer.sprite = sprite;
-            centerPreviewRenderer.enabled = sprite != null;
-            centerPreviewRenderer.transform.localScale = Vector3.one * (basePreviewScale * scale);
-        }
-
+        TrophyPreview.GetComponent<SpriteRenderer>().sprite = trophy.Data.cleanSprite;
         currentActiveOverlay = GetOrCreateOverlayForTrophy(trophy);
     }
 
     public void OpenLotteryView(Lottery lottery)
     {
-        if (lottery == null || lottery.Data == null || lottery.Data.lotteryPrefab == null)
+        if (lottery == null || lottery.Data == null || lottery.Data.lotteryTablePrefab == null)
         {
             Debug.LogWarning("OpenLotteryView: lottery 또는 lotteryPrefab이 null입니다.");
             return;
         }
 
-        GameObject lotteryPrefab = lottery.Data.lotteryPrefab;
+        GameObject lotteryPrefab = lottery.Data.lotteryTablePrefab;
         GameObject targetInstance = null;
 
         foreach (var previewObj in LotteryPreviews)
@@ -269,12 +272,12 @@ public class InspectViewManager : MonoBehaviour
             currentLotteryPreview = targetInstance.GetComponent<LotteryPreviewItem>();
         }
 
-        float itemScale = Mathf.Max(0.1f, lottery.GetInspectScale());
-        Vector3 finalScale = lotteryPrefab.transform.localScale * (itemScale);
+        // float itemScale = Mathf.Max(0.1f, lottery.GetInspectScale());
+        // Vector3 finalScale = lotteryPrefab.transform.localScale * (itemScale);
 
         if (currentLotteryPreview != null)
         {
-            targetInstance.transform.localScale = finalScale;
+            targetInstance.transform.localScale = lotteryPrefab.transform.localScale;
             targetInstance.transform.localPosition = currentLotteryPreview.Offset;
         }
 
@@ -404,7 +407,7 @@ public class InspectViewManager : MonoBehaviour
         GameObject overlay = trophy.GetStainOverlay();
         if (overlay == null && stainOverlayPrefab != null)
         {
-            overlay = Instantiate(stainOverlayPrefab, stainOverlayParent, false);
+            overlay = Instantiate(stainOverlayPrefab, TrophyPreview.GetComponent<RectTransform>(), false);
             overlay.name = $"{trophy.gameObject.name}_StainOverlay";
             overlay.GetComponent<Scratchable>().CurrentItem = trophy;
 
@@ -443,16 +446,7 @@ public class InspectViewManager : MonoBehaviour
     public void OnTrophyCleaned(Trophy trophy)
     {
         Sprite resultSprite = trophy.Reward > 0 ? trophy.GetInspectSprite() : trophy.GetBrokenSprite();
-        if (centerPreviewImage != null)
-        {
-            centerPreviewImage.sprite = resultSprite;
-            centerPreviewImage.enabled = resultSprite != null;
-        }
-        if (centerPreviewRenderer != null)
-        {
-            centerPreviewRenderer.sprite = resultSprite;
-            centerPreviewRenderer.enabled = resultSprite != null;
-        }
+        TrophyPreview.GetComponent<Image>().sprite = resultSprite;
         if (trophy.Reward < 0)
             PhoneEventController.Instance?.TriggerBrokenOrLossCall();
     }
