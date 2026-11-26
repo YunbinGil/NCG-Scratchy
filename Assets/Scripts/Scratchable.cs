@@ -37,6 +37,7 @@ public class Scratchable : MonoBehaviour
     public IInspectableSource CurrentItem { get; set; }
     public int SlotIndex { get; set; }
     public event Action<Scratchable> OnScratchCompleted;
+    private GameManager gameManager;
 
     void Start()
     {
@@ -44,6 +45,7 @@ public class Scratchable : MonoBehaviour
         if (controllerObj != null)
         {
             inspectViewManager = controllerObj.GetComponent<InspectViewManager>();
+            gameManager = controllerObj.GetComponent<GameManager>();
         }
 
         if (targetCamera == null) targetCamera = Camera.main;
@@ -171,7 +173,7 @@ public class Scratchable : MonoBehaviour
         else if (Input.GetMouseButton(0) && isErasing)
         {
             float dist = Vector2.Distance(prevWorldPos, currentWorld);
-            float stepSize = Mathf.Max(0.03f, brushWorldRadius * 0.25f);
+            float stepSize = Mathf.Max(0.03f, GetEffectiveBrushRadius() * 0.25f);
             int steps = Mathf.Max(1, Mathf.CeilToInt(dist / stepSize));
 
             for (int i = 1; i <= steps; i++)
@@ -198,8 +200,8 @@ public class Scratchable : MonoBehaviour
         float u = (worldPos.x - bounds.min.x) / bounds.size.x;
         float v = (worldPos.y - bounds.min.y) / bounds.size.y;
 
-        float radiusPxX = (brushWorldRadius / bounds.size.x) * texWidth;
-        float radiusPxY = (brushWorldRadius / bounds.size.y) * texHeight;
+        float radiusPxX = (GetEffectiveBrushRadius() / bounds.size.x) * texWidth;
+        float radiusPxY = (GetEffectiveBrushRadius() / bounds.size.y) * texHeight;
         float radiusPx = Mathf.Max(radiusPxX, radiusPxY);
 
         int centerX = Mathf.RoundToInt(u * texWidth);
@@ -221,7 +223,7 @@ public class Scratchable : MonoBehaviour
                 int bx = Mathf.Clamp(Mathf.FloorToInt(normX * brushMaskSize), 0, brushMaskSize - 1);
                 int by = Mathf.Clamp(Mathf.FloorToInt(normY * brushMaskSize), 0, brushMaskSize - 1);
 
-                float eraseStrength = brushMask[by * brushMaskSize + bx];
+                float eraseStrength = brushMask[by * brushMaskSize + bx] * GetEffectiveAlphaMultiplier();
                 if (eraseStrength <= 0.01f) continue;
 
                 int idx = y * texWidth + x;
@@ -276,5 +278,22 @@ public class Scratchable : MonoBehaviour
     void OnDestroy()
     {
         if (runtimeTex != null) Destroy(runtimeTex);
+    }
+    private float GetEffectiveBrushRadius()
+    {
+        if (CurrentItem is Lottery && gameManager != null)
+        {
+            return brushWorldRadius * gameManager.CoinSizeMultiplier;
+        }
+        return brushWorldRadius;
+    }
+
+    private float GetEffectiveAlphaMultiplier()
+    {
+        if (CurrentItem is Lottery && gameManager != null)
+        {
+            return gameManager.CoinAlphaMultiplier;
+        }
+        return 1f;
     }
 }
