@@ -56,12 +56,7 @@ public class InspectViewManager : MonoBehaviour
 
     private void Awake()
     {
-        if (centerPreview != null)
-        {
-            centerPreviewRect = centerPreview.GetComponent<RectTransform>();
-            centerPreviewImage = centerPreview.GetComponent<Image>();
-            centerPreviewRenderer = centerPreview.GetComponent<SpriteRenderer>();
-        }
+        centerPreviewRect = EnsureCenterPreviewRect();
 
         if (Instance != null && Instance != this)
         {
@@ -86,6 +81,28 @@ public class InspectViewManager : MonoBehaviour
             uiManager = controllerObj.GetComponent<UiManager>();
             gameManager = controllerObj.GetComponent<GameManager>();
         }
+    }
+
+    private RectTransform EnsureCenterPreviewRect()
+    {
+        if (centerPreview != null)
+        {
+            if (centerPreviewImage == null)
+                centerPreviewImage = centerPreview.GetComponent<Image>();
+
+            if (centerPreviewRenderer == null)
+                centerPreviewRenderer = centerPreview.GetComponent<SpriteRenderer>();
+
+            if (centerPreviewRect == null)
+                centerPreviewRect = centerPreview.GetComponent<RectTransform>();
+        }
+
+        if (centerPreviewRect == null && centerPreviewImage != null)
+        {
+            centerPreviewRect = centerPreviewImage.rectTransform;
+        }
+
+        return centerPreviewRect;
     }
 
     private void HandleDimmedBackgroundClick()
@@ -159,7 +176,7 @@ public class InspectViewManager : MonoBehaviour
 
         if (currentActiveOverlay != null)
         {
-            Debug.Log($"{currentActiveOverlay.name}: {currentActiveOverlay.activeSelf}");
+            // Debug.Log($"{currentActiveOverlay.name}: {currentActiveOverlay.activeSelf}");
             currentActiveOverlay.SetActive(true);
         }
 
@@ -237,23 +254,32 @@ public class InspectViewManager : MonoBehaviour
             }
 
             currentLotteryPreview = previewItem;
-            targetInstance.transform.localPosition = currentLotteryPreview.Offset;
             targetInstance.name = lotteryPrefab.name;
             LotteryPreviews.Add(targetInstance);
         }
         else
         {
             currentLotteryPreview = targetInstance.GetComponent<LotteryPreviewItem>();
-            if (currentLotteryPreview != null)
-            {
-                targetInstance.transform.localPosition = currentLotteryPreview.Offset;
-            }
+        }
+
+        float itemScale = Mathf.Max(0.1f, lottery.GetInspectScale());
+        Vector3 finalScale = lotteryPrefab.transform.localScale * itemScale;
+
+        if (currentLotteryPreview != null)
+        {
+            targetInstance.transform.localScale = finalScale;
+            targetInstance.transform.localPosition = currentLotteryPreview.Offset;
         }
 
         targetInstance.SetActive(true);
-        currentActiveOverlay = GetOrCreateOverlayForLottery(lottery);
-    }
 
+        currentActiveOverlay = GetOrCreateOverlayForLottery(lottery);
+        if (currentActiveOverlay != null)
+        {
+            currentActiveOverlay.transform.localScale = Vector3.one;
+            currentActiveOverlay.SetActive(true);
+        }
+    }
     private GameObject GetOrCreateOverlayForLottery(Lottery lottery)
     {
         if (lottery == null || currentLotteryPreview == null) return null;
