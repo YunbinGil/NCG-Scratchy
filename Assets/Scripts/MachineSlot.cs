@@ -21,6 +21,11 @@ public class MachineSlot : MonoBehaviour
 
     internal bool IsLocked => isLocked;
 
+    internal bool IsPurchaseButton(Button button)
+    {
+        return purchaseButton == button && !TryGetComponent<ScratchBotUpgradeSlot>(out _);
+    }
+
     [Header("스크래치 봇 해금 설정 (추가)")]
     [SerializeField] private bool isScratchBotSlot = false;
     [SerializeField] private bool requiresScratchBotUnlocked = false;

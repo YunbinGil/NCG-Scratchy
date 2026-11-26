@@ -141,6 +141,7 @@ public class ScratchBotUpgradeManager : MonoBehaviour
         }
 
         NotifyUpgraded();
+        GameAudio.Play(SoundEffect.Cash);
         return true;
     }
 

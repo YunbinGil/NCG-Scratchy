@@ -17,7 +17,7 @@ MonoBehaviour:
   price: 2000
   description: You can earn a reward for each jewel you find, but be careful not
     to find the cat
-  nameKey: 
+  nameKey: lottery.apple
   descriptionKey: 
   tableSprite: {fileID: -4285199274580427658, guid: 04e0ec9d36d580148bb947cf1095cd4f, type: 3}
   inspectSprite: {fileID: -4285199274580427658, guid: 41caa41cda7d9de449ed1d56adcf3ec4, type: 3}
@@ -33,6 +33,6 @@ MonoBehaviour:
   - {fileID: 11400000, guid: f0ad70ab491345f4d8015e9a6497b9ba, type: 2}
   - {fileID: 11400000, guid: d4612f846f386b14c88fd5c7be5800cb, type: 2}
   - {fileID: 11400000, guid: 9d673b973c05e494c84a3d920d074335, type: 2}
-  - {fileID: 11400000, guid: 73ac95592d8fda547a1fd3c43a1c1c4e, type: 2}
-  - {fileID: 11400000, guid: f2c2e5774d999d14b8ff4887e9305c0a, type: 2}
+  - {fileID: 11400000, guid: 68810348b3143c1488ea4446aa501295, type: 2}
+  - {fileID: 11400000, guid: cfcfe2b7270cc684ca8b221bf7a0699a, type: 2}
   - {fileID: 11400000, guid: 9e1c51e4a7d35204e8778fec97e78b73, type: 2}

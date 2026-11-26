@@ -14,6 +14,7 @@ public class CatalogSlot : MonoBehaviour
     [SerializeField] private TMP_Text nameText;
     [SerializeField] private TMP_Text priceText;
     [SerializeField] private Button purchaseButton;
+    internal Button PurchaseButton => purchaseButton != null ? purchaseButton : GetComponent<Button>();
 
     [Header("레벨 관리")]
     [SerializeField] private RectMask2D experienceMask;
@@ -55,8 +56,7 @@ public class CatalogSlot : MonoBehaviour
         if (priceText != null)
             priceText.text = price.ToString();
 
-        if (purchaseButton == null)
-            purchaseButton = GetComponent<Button>();
+        purchaseButton = PurchaseButton;
 
         if (purchaseButton != null)
         {

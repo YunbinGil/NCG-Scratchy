@@ -69,6 +69,7 @@ public class MachineShop : MonoBehaviour
                 continue;
 
             GameObject slotObj = Instantiate(equipmentPrefab, equipmentContent);
+            GameAudio.RegisterButtons(slotObj);
 
             MachineSlot slot = slotObj.GetComponent<MachineSlot>();
             if (slot != null)
@@ -155,6 +156,7 @@ public class MachineShop : MonoBehaviour
             return;
 
         GameObject equipment = Instantiate(equipmentPrefab, canvasRect);
+        GameAudio.RegisterButtons(equipment);
 
         RectTransform rect = equipment.GetComponent<RectTransform>();
         if (rect == null)

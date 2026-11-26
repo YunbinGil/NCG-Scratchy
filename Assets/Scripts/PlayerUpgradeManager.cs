@@ -68,6 +68,7 @@ public sealed class PlayerUpgradeManager
         }
 
         ApplyEffects();
+        GameAudio.Play(SoundEffect.Cash);
         return true;
     }
 

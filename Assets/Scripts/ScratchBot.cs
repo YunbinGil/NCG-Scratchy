@@ -80,6 +80,7 @@ public class ScratchBot : MonoBehaviour
     private void OnDisable()
     {
         ActiveBots.Remove(this);
+        GameAudio.SetRobotScratching(this, false);
     }
 
     private void Awake()
@@ -353,6 +354,7 @@ public class ScratchBot : MonoBehaviour
 
     private void UpdateAbsorbAndScratch()
     {
+        bool scratching = false;
         float moveSpeed = CurrentEffectiveAbsorbSpeed;
         GetClampedVerticalRange(out float fixedX, out _, out float targetY, out float fixedZ);
 
@@ -400,8 +402,11 @@ public class ScratchBot : MonoBehaviour
                 Debug.Log("봇이 복권을 다 긁었습니다. 복권을 눌러 당첨 결과를 확인하세요.");
             }
 
+            scratching |= !entry.isScratchedComplete;
             if (draggable != null)
                 draggable.enabled = true;
         }
+
+        GameAudio.SetRobotScratching(this, scratching);
     }
 }

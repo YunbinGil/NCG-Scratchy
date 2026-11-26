@@ -26,6 +26,7 @@ public class Draggable : MonoBehaviour,
     private Vector2 pressPosition;
     private float dragThreshold = 10f;
     private IInspectableSource itemSource;
+    private bool HasItemAudio => itemSource is Lottery or Trophy;
 
     private void Awake()
     {
@@ -48,6 +49,9 @@ public class Draggable : MonoBehaviour,
     {
         if (isDragging)
             return;
+
+        if (HasItemAudio)
+            GameAudio.Play(SoundEffect.Dish);
 
         isTilted = !isTilted;
         objectRect.localRotation = isTilted
@@ -100,6 +104,8 @@ public class Draggable : MonoBehaviour,
         if (!isDragging && distance >= dragThreshold)
         {
             SetDragging(true);
+            if (HasItemAudio)
+                GameAudio.Play(SoundEffect.Dish);
         }
 
         if (!isDragging)
@@ -133,6 +139,8 @@ public class Draggable : MonoBehaviour,
     {
         if (!isDragging)
         {
+            if (HasItemAudio && eventData.button == PointerEventData.InputButton.Left)
+                GameAudio.Play(SoundEffect.Dish);
             itemSource?.HandleClick();
         }
     }

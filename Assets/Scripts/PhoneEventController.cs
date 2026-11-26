@@ -9,7 +9,8 @@ public enum PhoneCallEventType
     Level4Reached,
     Level5Reached,
     Level6Reached,
-    Level7Reached
+    Level7Reached,
+    EndingGoalReached
 }
 
 [Serializable]
@@ -102,8 +103,33 @@ public class PhoneEventController : MonoBehaviour
             phoneCallTrigger = FindFirstObjectByType<PhoneCallTrigger>();
     }
 
+    private static readonly string[] EndingLineKeys =
+    {
+        "phone.ending.01", "phone.ending.02", "phone.ending.03"
+    };
+
+    private bool endingCallStarted;
+    public bool IsEndingCallPending => _hasPendingCall && _pendingEventType == PhoneCallEventType.EndingGoalReached;
+
+    public bool TryRingEndingCall(out PhoneCallTrigger phone)
+    {
+        phone = phoneCallTrigger;
+        if (endingCallStarted || phone == null || !phone.isActiveAndEnabled)
+            return false;
+
+        endingCallStarted = true;
+        _hasPendingCall = true;
+        _pendingEventType = PhoneCallEventType.EndingGoalReached;
+        _pendingLegacyLines = null;
+        phone.RingPhone(EndingLineKeys);
+        return true;
+    }
+
     public void TriggerEvent(PhoneCallEventType eventType)
     {
+        if (endingCallStarted)
+            return;
+
         if (phoneCallTrigger == null)
             phoneCallTrigger = FindFirstObjectByType<PhoneCallTrigger>();
 
@@ -175,7 +201,9 @@ public class PhoneEventController : MonoBehaviour
         if (saveData != null && saveData.hasPendingCall)
         {
             PhoneCallScriptEntry entry = callEntries.Find(e => e.eventType == saveData.pendingEventType);
-            string[] lineKeys = entry?.lineKeys;
+            string[] lineKeys = saveData.pendingEventType == PhoneCallEventType.EndingGoalReached
+                ? EndingLineKeys
+                : entry?.lineKeys;
             _pendingLegacyLines = lineKeys == null || lineKeys.Length == 0 ? saveData.pendingLines : null;
             _hasPendingCall = true;
             _pendingEventType = saveData.pendingEventType;

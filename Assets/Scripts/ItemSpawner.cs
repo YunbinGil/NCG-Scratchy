@@ -114,6 +114,8 @@ public class ItemSpawner : MonoBehaviour
             parentRect
         );
 
+        GameAudio.RegisterButtons(spawnedObject);
+
         RectTransform spawnItem =
             spawnedObject.GetComponent<RectTransform>();
 
@@ -331,6 +333,7 @@ public class ItemSpawner : MonoBehaviour
             return false;
 
         GameObject botObj = Instantiate(scratchBotPrefab, baseRect);
+        GameAudio.RegisterButtons(botObj);
         RectTransform botRect = botObj.GetComponent<RectTransform>();
         if (botRect != null)
         {

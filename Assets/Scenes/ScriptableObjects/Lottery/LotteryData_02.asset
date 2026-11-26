@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::LotteryData
   id: 2
   lotteryName: MINI SCRATCH
+  nameKey: lottery.mini
   price: 100
   description: '2 match, win '
   tableSprite: {fileID: -3483040353493384013, guid: 971c5b1623375eb48917461dab203244, type: 3}

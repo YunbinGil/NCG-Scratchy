@@ -15,6 +15,7 @@ public class TrashCan : MonoBehaviour, IDropHandler
         if (draggable == null)
             return;
 
+        GameAudio.Play(SoundEffect.TrashCan);
         Destroy(item);
 
         Debug.Log("아이템 삭제 완료");

@@ -86,6 +86,7 @@ public class CatalogShop : MonoBehaviour
             return;
 
         GameObject catalog = Instantiate(catalogPrefab, ticketContent);
+        GameAudio.RegisterButtons(catalog);
 
         foreach (CatalogSlot item in catalog.GetComponentsInChildren<CatalogSlot>(true))
         {
@@ -125,7 +126,11 @@ public class CatalogShop : MonoBehaviour
         if (!itemSpawner.TrySpawnItem(ticketPrefab))
             return false;
 
-        return gameManager.TrySpendMoney(price);
+        if (!gameManager.TrySpendMoney(price))
+            return false;
+
+        GameAudio.Play(SoundEffect.Cash);
+        return true;
     }
 
     private void OnDestroy()

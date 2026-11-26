@@ -1,14 +1,13 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 [RequireComponent(typeof(Button))]
 public class PhoneCallTrigger : MonoBehaviour
 {
     [Header("전화기 울림 연출")]
     [SerializeField] private GameObject ringingIndicator; // 느낌표/발광 등 울림 표시 오브젝트
-    // 오디오
-    // [SerializeField] private AudioSource phoneAudioSource;
-    // [SerializeField] private AudioClip ringClip;
+    [SerializeField] private AudioSource phoneVoiceSource;
     [SerializeField] private float ringShakeAngle = 8f;
     [SerializeField] private float ringShakeSpeed = 28f;
 
@@ -36,7 +35,7 @@ public class PhoneCallTrigger : MonoBehaviour
     {
         if (!IsRinging || isPaused) return;
 
-        float angle = Mathf.Sin(Time.time * ringShakeSpeed) * ringShakeAngle;
+        float angle = Mathf.Sin(Time.unscaledTime * ringShakeSpeed) * ringShakeAngle;
         transform.localRotation = BaseRotation * Quaternion.Euler(0f, 0f, angle);
     }
 
@@ -57,13 +56,6 @@ public class PhoneCallTrigger : MonoBehaviour
         queuedLegacyLines = legacyLines;
         IsRinging = true;
         SetRingingVisual(true);
-        // 오디오
-        // if (phoneAudioSource != null && ringClip != null && !phoneAudioSource.isPlaying)
-        // {
-        //     phoneAudioSource.clip = ringClip;
-        //     phoneAudioSource.loop = true;
-        //     phoneAudioSource.Play();
-        // }
     }
 
     public void StopRinging()
@@ -73,11 +65,6 @@ public class PhoneCallTrigger : MonoBehaviour
         queuedLegacyLines = null;
         transform.localRotation = BaseRotation;
         SetRingingVisual(false);
-        // 오디오
-        // if (phoneAudioSource != null && phoneAudioSource.isPlaying)
-        // {
-        //     phoneAudioSource.Stop();
-        // }
     }
 
     private void OnPhoneClicked()
@@ -88,13 +75,24 @@ public class PhoneCallTrigger : MonoBehaviour
             ? System.Array.ConvertAll(queuedLineKeys, key => Localization.Get(key, key))
             : queuedLegacyLines;
 
+        var phoneEvents = PhoneEventController.Instance;
+        bool isEnding = phoneEvents != null && phoneEvents.IsEndingCallPending;
         StopRinging();
-        PhoneEventController.Instance?.NotifyCallAnswered();
+        phoneEvents?.NotifyCallAnswered();
 
         if (DialogueManager.Instance != null)
         {
-            DialogueManager.Instance.StartDialog(linesToPlay);
+            DialogueManager.Instance.StartDialog(linesToPlay, isEnding ? LoadEnding : null, isEnding, phoneVoiceSource);
         }
+        else if (isEnding)
+        {
+            LoadEnding();
+        }
+    }
+
+    private static void LoadEnding()
+    {
+        SceneManager.LoadScene("Ending");
     }
 
     private void SetRingingVisual(bool ringing)

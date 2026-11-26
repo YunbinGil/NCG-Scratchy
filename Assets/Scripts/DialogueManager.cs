@@ -19,8 +19,16 @@ public class DialogueManager : MonoBehaviour, IPointerClickHandler
     private bool isActive;
     private float ignoreInputUntil;
     private Action onDialogComplete;
+    private bool useUnscaledTyping;
+    private AudioSource phoneVoice;
+    [SerializeField] private TMP_FontAsset endingDialogueFont;
 
     public bool IsActive => isActive;
+
+    public bool OwnsDialogueGraphic(Graphic graphic)
+    {
+        return dialoguePanel != null && graphic.transform.IsChildOf(dialoguePanel.transform);
+    }
 
     private void Awake()
     {
@@ -33,6 +41,11 @@ public class DialogueManager : MonoBehaviour, IPointerClickHandler
 
         if (dialoguePanel != null)
             dialoguePanel.SetActive(false);
+    }
+
+    private void OnDisable()
+    {
+        StopPhoneVoice();
     }
 
     private void Update()
@@ -62,6 +75,7 @@ public class DialogueManager : MonoBehaviour, IPointerClickHandler
             StopCoroutine(typingCoroutine);
             typingCoroutine = null;
             dialogueText.text = lines[index];
+            StopPhoneVoice();
         }
         else
         {
@@ -69,13 +83,18 @@ public class DialogueManager : MonoBehaviour, IPointerClickHandler
         }
     }
 
-    public void StartDialog(string[] texts, Action onComplete = null)
+    public void StartDialog(string[] texts, Action onComplete = null, bool isEnding = false, AudioSource voice = null)
     {
         if (texts == null || texts.Length == 0) return;
 
+        StopPhoneVoice();
+        phoneVoice = voice;
         lines = texts;
         index = 0;
         onDialogComplete = onComplete;
+        useUnscaledTyping = isEnding;
+        if (isEnding && endingDialogueFont != null)
+            dialogueText.font = endingDialogueFont;
         isActive = true;
         ignoreInputUntil = Time.unscaledTime + 1f; // 전화기 클릭 직후 첫 줄 스킵 방지
 
@@ -91,6 +110,8 @@ public class DialogueManager : MonoBehaviour, IPointerClickHandler
         {
             StopCoroutine(typingCoroutine);
         }
+        if (phoneVoice != null && phoneVoice.clip != null && !string.IsNullOrEmpty(lines[index]))
+            phoneVoice.Play();
         typingCoroutine = StartCoroutine(TypeLine(lines[index]));
     }
 
@@ -100,9 +121,16 @@ public class DialogueManager : MonoBehaviour, IPointerClickHandler
         foreach (char c in line)
         {
             dialogueText.text += c;
-            yield return new WaitForSeconds(typingSpeed);
+            yield return useUnscaledTyping ? (object)new WaitForSecondsRealtime(typingSpeed) : new WaitForSeconds(typingSpeed);
         }
         typingCoroutine = null;
+        StopPhoneVoice();
+    }
+
+    private void StopPhoneVoice()
+    {
+        if (phoneVoice != null && phoneVoice.isPlaying)
+            phoneVoice.Stop();
     }
 
     private void NextLine()
@@ -118,8 +146,25 @@ public class DialogueManager : MonoBehaviour, IPointerClickHandler
         }
     }
 
+    public void DismissForEndingCall()
+    {
+        if (!isActive)
+            return;
+
+        if (typingCoroutine != null)
+        {
+            StopCoroutine(typingCoroutine);
+            typingCoroutine = null;
+        }
+
+        onDialogComplete = null;
+        EndDialog();
+    }
+
     private void EndDialog()
     {
+        StopPhoneVoice();
+        phoneVoice = null;
         isActive = false;
         lines = null;
         index = 0;

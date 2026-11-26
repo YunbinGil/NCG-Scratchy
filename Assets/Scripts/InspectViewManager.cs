@@ -39,6 +39,11 @@ public class InspectViewManager : MonoBehaviour
     [SerializeField] private InspectDetailPanel detailPanel;
     [SerializeField] private Button resultButton;
 
+    [Header("스크래치 오디오")]
+    [SerializeField] private AudioSource scratchSound;
+    [SerializeField] private AudioSource getCoinSound;
+    private float scratchSoundUntil;
+
     [Header("얼룩 오브젝트 생성 설정")]
     [SerializeField] private GameObject stainOverlayPrefab; // SpriteRenderer + Scratchable이 붙은 프리팹
     [SerializeField] private Transform stainOverlayParent;  // 생성할 부모(없으면 null)
@@ -88,6 +93,31 @@ public class InspectViewManager : MonoBehaviour
         {
             gameManager = controllerObj.GetComponent<GameManager>();
         }
+    }
+
+    internal void ReportManualScratch(IInspectableSource item)
+    {
+        if (scratchSound == null || scratchSound.clip == null || Time.timeScale <= 0f ||
+            item == null || !ReferenceEquals(ActiveScratchTarget, item))
+            return;
+
+        scratchSoundUntil = Time.unscaledTime + 0.08f;
+        if (!scratchSound.isPlaying)
+            scratchSound.Play();
+    }
+
+    internal void PlayScratchComplete()
+    {
+        if (getCoinSound != null && getCoinSound.clip != null)
+            getCoinSound.PlayOneShot(getCoinSound.clip);
+    }
+
+    private void LateUpdate()
+    {
+        if (scratchSound != null && scratchSound.isPlaying &&
+            (Time.timeScale <= 0f || ActiveScratchTarget == null ||
+             Time.unscaledTime >= scratchSoundUntil || Input.GetMouseButtonUp(0)))
+            scratchSound.Stop();
     }
 
     private RectTransform EnsureCenterPreviewRect()
@@ -434,6 +464,9 @@ public class InspectViewManager : MonoBehaviour
 
     public void SetState(ViewState nextState)
     {
+        if (nextState == ViewState.Table && scratchSound != null)
+            scratchSound.Stop();
+
         CurrentState = nextState;
         bool isInspect = nextState == ViewState.Inspect;
 
@@ -528,6 +561,7 @@ public class InspectViewManager : MonoBehaviour
             target.DestoryItem();
         });
 
+        GameAudio.RegisterButton(resultButton);
         TMP_Text label = resultButton.GetComponentInChildren<TMP_Text>();
         if (label != null)
             label.text = $"${target.Reward}";

@@ -88,11 +88,12 @@ public class Trophy : MonoBehaviour, IInspectableSource
 
     public void CompleteScratch()
     {
-        if (trophyData == null) return;
+        if (trophyData == null || IsCleaned) return;
         IsCleaned = true;
         Reward = Random.value < breakChanceAtSpawn
             ? -Mathf.Abs(trophyData.breakPenalty)
             : sellPriceAtSpawn;
+        InspectViewManager.Instance?.PlayScratchComplete();
     }
 
     public void DestoryItem()

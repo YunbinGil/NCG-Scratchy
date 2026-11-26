@@ -230,6 +230,7 @@ public sealed class UnlockEffect : MonoBehaviour
                 return null;
 
             UnlockLotteryCatalog visual = UnityEngine.Object.Instantiate(effect.effectPrefab, table, false);
+            GameAudio.RegisterButtons(visual.gameObject);
             RectTransform rect = (RectTransform)visual.transform;
             rect.position += table.TransformPoint(table.rect.center) - rect.TransformPoint(rect.rect.center);
             rect.SetAsLastSibling();

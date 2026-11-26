@@ -73,7 +73,10 @@ public class ProductProgress : MonoBehaviour
         product.Exp = (int)exp;
 
         if (product.Level != previousLevel)
+        {
+            GameAudio.Play(SoundEffect.LevelUp);
             LevelChanged?.Invoke(productId, product.Level);
+        }
 
         ProgressChanged?.Invoke(productId, product.Level, product.Exp);
     }

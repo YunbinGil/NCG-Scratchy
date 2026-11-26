@@ -1,0 +1,339 @@
+fileFormatVersion: 2
+guid: c60e29da0daf41d09c5e25b073709917
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 21300000
+    second: EndingCar_00
+  - first:
+      213: 21300002
+    second: EndingCar_01
+  - first:
+      213: 21300004
+    second: EndingCar_02
+  - first:
+      213: 21300006
+    second: EndingCar_03
+  - first:
+      213: 21300008
+    second: EndingCar_04
+  - first:
+      213: 21300010
+    second: EndingCar_05
+  - first:
+      213: 21300012
+    second: EndingCar_06
+  - first:
+      213: 21300014
+    second: EndingCar_07
+  - first:
+      213: 21300016
+    second: EndingCar_08
+  - first:
+      213: 21300018
+    second: EndingCar_09
+  - first:
+      213: 21300020
+    second: EndingCar_10
+  - first:
+      213: 21300022
+    second: EndingCar_11
+  - first:
+      213: 21300024
+    second: EndingCar_12
+  - first:
+      213: 21300026
+    second: EndingCar_13
+  - first:
+      213: 21300028
+    second: EndingCar_14
+  - first:
+      213: 21300030
+    second: EndingCar_15
+  serializedVersion: 13
+  mipmaps:
+    enableMipMap: 0
+    sRGBTexture: 1
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  spriteMode: 2
+  spriteMeshType: 0
+  spritePixelsToUnits: 100
+  spriteGenerateFallbackPhysicsShape: 0
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  textureType: 8
+  textureShape: 1
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    textureFormat: -1
+    textureCompression: 0
+    overridden: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: EndingCar_00
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 960
+        width: 320
+        height: 320
+      alignment: 9
+      pivot: {x: 0.5, y: 0.07}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      spriteID: 00000000000000000000000001450320
+      internalID: 21300000
+      outline: []
+      physicsShape: []
+    - serializedVersion: 2
+      name: EndingCar_01
+      rect:
+        serializedVersion: 2
+        x: 320
+        y: 960
+        width: 320
+        height: 320
+      alignment: 9
+      pivot: {x: 0.5, y: 0.07}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      spriteID: 00000000000000000000000001450322
+      internalID: 21300002
+      outline: []
+      physicsShape: []
+    - serializedVersion: 2
+      name: EndingCar_02
+      rect:
+        serializedVersion: 2
+        x: 640
+        y: 960
+        width: 320
+        height: 320
+      alignment: 9
+      pivot: {x: 0.5, y: 0.07}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      spriteID: 00000000000000000000000001450324
+      internalID: 21300004
+      outline: []
+      physicsShape: []
+    - serializedVersion: 2
+      name: EndingCar_03
+      rect:
+        serializedVersion: 2
+        x: 960
+        y: 960
+        width: 320
+        height: 320
+      alignment: 9
+      pivot: {x: 0.5, y: 0.07}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      spriteID: 00000000000000000000000001450326
+      internalID: 21300006
+      outline: []
+      physicsShape: []
+    - serializedVersion: 2
+      name: EndingCar_04
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 640
+        width: 320
+        height: 320
+      alignment: 9
+      pivot: {x: 0.5, y: 0.07}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      spriteID: 00000000000000000000000001450328
+      internalID: 21300008
+      outline: []
+      physicsShape: []
+    - serializedVersion: 2
+      name: EndingCar_05
+      rect:
+        serializedVersion: 2
+        x: 320
+        y: 640
+        width: 320
+        height: 320
+      alignment: 9
+      pivot: {x: 0.5, y: 0.07}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      spriteID: 0000000000000000000000000145032a
+      internalID: 21300010
+      outline: []
+      physicsShape: []
+    - serializedVersion: 2
+      name: EndingCar_06
+      rect:
+        serializedVersion: 2
+        x: 640
+        y: 640
+        width: 320
+        height: 320
+      alignment: 9
+      pivot: {x: 0.5, y: 0.07}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      spriteID: 0000000000000000000000000145032c
+      internalID: 21300012
+      outline: []
+      physicsShape: []
+    - serializedVersion: 2
+      name: EndingCar_07
+      rect:
+        serializedVersion: 2
+        x: 960
+        y: 640
+        width: 320
+        height: 320
+      alignment: 9
+      pivot: {x: 0.5, y: 0.07}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      spriteID: 0000000000000000000000000145032e
+      internalID: 21300014
+      outline: []
+      physicsShape: []
+    - serializedVersion: 2
+      name: EndingCar_08
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 320
+        width: 320
+        height: 320
+      alignment: 9
+      pivot: {x: 0.5, y: 0.07}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      spriteID: 00000000000000000000000001450330
+      internalID: 21300016
+      outline: []
+      physicsShape: []
+    - serializedVersion: 2
+      name: EndingCar_09
+      rect:
+        serializedVersion: 2
+        x: 320
+        y: 320
+        width: 320
+        height: 320
+      alignment: 9
+      pivot: {x: 0.5, y: 0.07}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      spriteID: 00000000000000000000000001450332
+      internalID: 21300018
+      outline: []
+      physicsShape: []
+    - serializedVersion: 2
+      name: EndingCar_10
+      rect:
+        serializedVersion: 2
+        x: 640
+        y: 320
+        width: 320
+        height: 320
+      alignment: 9
+      pivot: {x: 0.5, y: 0.07}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      spriteID: 00000000000000000000000001450334
+      internalID: 21300020
+      outline: []
+      physicsShape: []
+    - serializedVersion: 2
+      name: EndingCar_11
+      rect:
+        serializedVersion: 2
+        x: 960
+        y: 320
+        width: 320
+        height: 320
+      alignment: 9
+      pivot: {x: 0.5, y: 0.07}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      spriteID: 00000000000000000000000001450336
+      internalID: 21300022
+      outline: []
+      physicsShape: []
+    - serializedVersion: 2
+      name: EndingCar_12
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 320
+        height: 320
+      alignment: 9
+      pivot: {x: 0.5, y: 0.07}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      spriteID: 00000000000000000000000001450338
+      internalID: 21300024
+      outline: []
+      physicsShape: []
+    - serializedVersion: 2
+      name: EndingCar_13
+      rect:
+        serializedVersion: 2
+        x: 320
+        y: 0
+        width: 320
+        height: 320
+      alignment: 9
+      pivot: {x: 0.5, y: 0.07}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      spriteID: 0000000000000000000000000145033a
+      internalID: 21300026
+      outline: []
+      physicsShape: []
+    - serializedVersion: 2
+      name: EndingCar_14
+      rect:
+        serializedVersion: 2
+        x: 640
+        y: 0
+        width: 320
+        height: 320
+      alignment: 9
+      pivot: {x: 0.5, y: 0.07}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      spriteID: 0000000000000000000000000145033c
+      internalID: 21300028
+      outline: []
+      physicsShape: []
+    - serializedVersion: 2
+      name: EndingCar_15
+      rect:
+        serializedVersion: 2
+        x: 960
+        y: 0
+        width: 320
+        height: 320
+      alignment: 9
+      pivot: {x: 0.5, y: 0.07}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      spriteID: 0000000000000000000000000145033e
+      internalID: 21300030
+      outline: []
+      physicsShape: []
+    nameFileIdTable:
+      EndingCar_00: 21300000
+      EndingCar_01: 21300002
+      EndingCar_02: 21300004
+      EndingCar_03: 21300006
+      EndingCar_04: 21300008
+      EndingCar_05: 21300010
+      EndingCar_06: 21300012
+      EndingCar_07: 21300014
+      EndingCar_08: 21300016
+      EndingCar_09: 21300018
+      EndingCar_10: 21300020
+      EndingCar_11: 21300022
+      EndingCar_12: 21300024
+      EndingCar_13: 21300026
+      EndingCar_14: 21300028
+      EndingCar_15: 21300030

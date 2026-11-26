@@ -1,5 +1,7 @@
 using System;
 using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
 {
@@ -9,6 +11,11 @@ public class GameManager : MonoBehaviour
     };
 
     [SerializeField, Min(10)] private int startingMoney;
+
+    [Header("엔딩")]
+    [SerializeField, Min(1)] private int endingMoneyGoal = 1000000;
+    private bool isEndingLocked;
+    private float timeScaleBeforeEnding;
 
     [Header("스크래치 봇 해금 상태")]
     [SerializeField] private int scratchBotUnlockLevel = 6;
@@ -97,6 +104,7 @@ public class GameManager : MonoBehaviour
         if (Level < levelExpInfo.Length && Exp >= levelExpInfo[Level])
         {
             Level++;
+            GameAudio.Play(SoundEffect.LevelUp);
             PhoneEventController.Instance?.CheckLevelEvents(Level);
             CheckScratchBotUnlock(Level);
             Exp = 0;
@@ -132,7 +140,66 @@ public class GameManager : MonoBehaviour
 
     private void LateUpdate()
     {
+        if (isEndingLocked)
+            return;
+
+        // Let payout and saved-state restoration finish before locking gameplay.
+        if (endingMoneyGoal > 0 && Money >= endingMoneyGoal &&
+            PhoneEventController.Instance != null &&
+            PhoneEventController.Instance.TryRingEndingCall(out PhoneCallTrigger phone))
+        {
+            LockForEndingCall(phone);
+            return;
+        }
+
         UnlockEffects.Tick();
+    }
+
+    private void LockForEndingCall(PhoneCallTrigger phone)
+    {
+        isEndingLocked = true;
+        FindFirstObjectByType<PausePanelController>()?.ContinueGame();
+        FindFirstObjectByType<InspectViewManager>()?.CloseInspect();
+        var dialogue = DialogueManager.Instance;
+        dialogue?.DismissForEndingCall();
+
+        if (EventSystem.current != null)
+            EventSystem.current.SetSelectedGameObject(null);
+
+        foreach (Graphic graphic in FindObjectsByType<Graphic>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+        {
+            if (!graphic.transform.IsChildOf(phone.transform) &&
+                (dialogue == null || !dialogue.OwnsDialogueGraphic(graphic)))
+                graphic.raycastTarget = false;
+        }
+
+        foreach (Selectable control in FindObjectsByType<Selectable>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+        {
+            if (control.gameObject != phone.gameObject)
+                control.interactable = false;
+        }
+
+        DisableGameplayUpdates<PhysicsRaycaster>();
+        DisableGameplayUpdates<PausePanelController>();
+        DisableGameplayUpdates<Scratchable>();
+        DisableGameplayUpdates<ScratchBot>();
+        DisableGameplayUpdates<ItemSpawner>();
+
+        phone.SetPaused(false);
+        timeScaleBeforeEnding = Time.timeScale;
+        Time.timeScale = 0f;
+    }
+
+    private static void DisableGameplayUpdates<T>() where T : Behaviour
+    {
+        foreach (T behaviour in FindObjectsByType<T>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            behaviour.enabled = false;
+    }
+
+    private void OnDestroy()
+    {
+        if (isEndingLocked)
+            Time.timeScale = timeScaleBeforeEnding;
     }
 
     private void RefreshLevelUI()
@@ -158,6 +225,9 @@ public class GameManager : MonoBehaviour
     private void Update()
     {
 #if UNITY_EDITOR
+        if (isEndingLocked)
+            return;
+
         // F1: 현재 레벨 필요 경험치만큼 한 번에 추가 (연타하면 6레벨까지 금방 도달)
         if (Input.GetKeyDown(KeyCode.F1))
         {

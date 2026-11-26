@@ -24,6 +24,7 @@ public class Scratchable : MonoBehaviour
     private int erasedPixels;
 
     private bool isErasing;
+    private bool erasedThisFrame;
     private Vector2 prevWorldPos;
     private float nextCheckTime;
     public bool IsCompleted { get; private set; }
@@ -145,7 +146,10 @@ public class Scratchable : MonoBehaviour
     {
         if (IsCompleted || runtimeTex == null) return;
 
+        erasedThisFrame = false;
         HandleEraseInput();
+        if (erasedThisFrame)
+            inspectViewManager?.ReportManualScratch(CurrentItem);
 
         if (Time.time >= nextCheckTime)
         {
@@ -232,7 +236,10 @@ public class Scratchable : MonoBehaviour
 
                 byte newAlpha = (byte)Mathf.Max(0, oldAlpha - Mathf.RoundToInt(eraseStrength * 255f));
                 if (newAlpha != oldAlpha)
+                {
                     HasScratchMarks = true;
+                    erasedThisFrame = true;
+                }
                 pixels[idx].a = newAlpha;
 
                 if (oldAlpha > 20 && newAlpha <= 20)

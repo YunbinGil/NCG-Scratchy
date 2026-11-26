@@ -302,7 +302,11 @@ public class Lottery : MonoBehaviour, IInspectableSource
 
     public void CompleteScratch()
     {
+        if (IsCleaned)
+            return;
+
         IsCleaned = true;
+        InspectViewManager.Instance?.PlayScratchComplete();
     }
 
     public void RefreshScratchablesActiveState()
