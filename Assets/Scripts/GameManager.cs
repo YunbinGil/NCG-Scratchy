@@ -24,6 +24,10 @@ public class GameManager : MonoBehaviour
     public int Money { get; private set; }
 
     public event Action<int> OnLevelChanged;
+    public float CoinSizeMultiplier { get; private set; } = 1f;
+    public float CoinAlphaMultiplier { get; private set; } = 1f;
+    public float LuckMultiplier { get; private set; } = 1f; //Lottery.RollWeightedIcons또는 Lottery.RollWeightedIcons에서 참조
+
 
     private void Awake()
     {
@@ -140,5 +144,19 @@ public class GameManager : MonoBehaviour
             AddMoney(100000);
         }
 #endif
+    }
+    public void UpgradeCursorSize()
+    {
+        CoinSizeMultiplier += 0.2f; // 원하는 증가량/테이블로 조정
+    }
+
+    public void UpgradeLeadCoinAlpha()
+    {
+        CoinAlphaMultiplier += 0.25f;
+    }
+
+    public void UpgradeLuck()
+    {
+        LuckMultiplier += 0.1f;
     }
 }
