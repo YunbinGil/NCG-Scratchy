@@ -2607,7 +2607,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7952588149342728083, guid: 30e7eb5b629f65642a207e4b9a476236, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 0.000579834
+      value: 0.00033569336
       objectReference: {fileID: 0}
     - target: {fileID: 7994922925460622214, guid: 30e7eb5b629f65642a207e4b9a476236, type: 3}
       propertyPath: m_AnchoredPosition.y
@@ -3752,6 +3752,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameManager
   startingMoney: 100000
   scratchBotUnlockLevel: 6
+  lotteryBaseSizeScale: 0.25
+  lotteryBaseAlphaScale: 0.104
 --- !u!4 &8034244232417910986
 Transform:
   m_ObjectHideFlags: 0

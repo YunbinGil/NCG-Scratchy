@@ -11,7 +11,6 @@ public class Scratchable : MonoBehaviour
     [Header("Brush & Clean Settings")]
     [SerializeField] private float brushWorldRadius = 0.45f; // 월드 기준 지우개 반지름
     [Range(0.5f, 1f)]
-    [SerializeField] private float cleanThreshold = 0.85f;   // 85% 지우면 자동 완료
     [SerializeField] private float checkInterval = 0.1f;
 
     public SpriteRenderer BackgroundSprite { get; set; }     // 발광 효과를 줄 base background Sprite
@@ -248,8 +247,9 @@ public class Scratchable : MonoBehaviour
     {
         if (totalInitialOpaquePixels <= 0) return;
 
+        float threshold = gameManager != null ? gameManager.CleanThreshold : 0.85f;
         float ratio = (float)erasedPixels / totalInitialOpaquePixels;
-        if (ratio >= cleanThreshold)
+        if (ratio >= threshold)
         {
             IsCompleted = true;
             dirtyRenderer.enabled = false;
@@ -286,7 +286,8 @@ public class Scratchable : MonoBehaviour
     {
         if (CurrentItem is Lottery && gameManager != null)
         {
-            return brushWorldRadius * gameManager.CoinSizeMultiplier;
+            float radius = brushWorldRadius * gameManager.LotteryBaseSizeScale * gameManager.CoinSizeMultiplier;
+            return Mathf.Max(0.02f, radius);
         }
         return brushWorldRadius;
     }
@@ -295,7 +296,8 @@ public class Scratchable : MonoBehaviour
     {
         if (CurrentItem is Lottery && gameManager != null)
         {
-            return gameManager.CoinAlphaMultiplier;
+            float alpha = gameManager.LotteryBaseAlphaScale * gameManager.CoinAlphaMultiplier;
+            return Mathf.Clamp(alpha, 0.01f, 1f);
         }
         return 1f;
     }
