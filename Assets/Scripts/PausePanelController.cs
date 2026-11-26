@@ -384,6 +384,11 @@ public class PausePanelController : MonoBehaviour
         ApplyProductProgresses(snapshot.productProgresses);
     }
 
+    public static void ClearUpgradeSnapshotForNewGame()
+    {
+        DeleteUpgradeSnapshot();
+    }
+
 
     private static void DeleteUpgradeSnapshot()
     {

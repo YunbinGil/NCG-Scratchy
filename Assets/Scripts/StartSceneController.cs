@@ -22,6 +22,7 @@ public class StartSceneController : MonoBehaviour
         PlayerPrefs.SetInt(LoadFlagKey, 0);
         UpgradeUnlock.ClearSavedUnlockState();
         PlayerPrefs.Save();
+        PausePanelController.ClearUpgradeSnapshotForNewGame();
 
         if (!string.IsNullOrEmpty(gameSceneName))
         {

@@ -23,4 +23,3 @@ public class ScratchBotDropReceiver : MonoBehaviour, IDropHandler
         scratchBot.TryAbsorbLottery(draggedObj);
     }
 }
-

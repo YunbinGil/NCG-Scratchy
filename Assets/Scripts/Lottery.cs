@@ -1,8 +1,19 @@
-using System.Collections;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+
+[Serializable]
+public struct OpenedSymbolChance
+{
+    public int slotIndex;
+    public LotteryIconData symbol;
+    public string symbolName;
+    public float spawnProbabilityPercent; // 0~100 (%)
+    public int openedCount;
+    public int payout;
+}
 
 [RequireComponent(typeof(Button))]
 public class Lottery : MonoBehaviour, IInspectableSource
@@ -25,14 +36,17 @@ public class Lottery : MonoBehaviour, IInspectableSource
 
     public int Reward { get; private set; }
     public bool IsJackpot { get; private set; }
-    public int JackpotReward {get; set;}
+    public int JackpotReward { get; set; }
     public bool IsCleaned { get; private set; } = false;
     public List<LotteryIconData> currentLotteryIcons;
     private readonly List<int> currentOpened = new List<int>();
     private readonly HashSet<int> highlightedSlots = new HashSet<int>();
+    private readonly List<OpenedSymbolChance> lastEvaluatedChances = new List<OpenedSymbolChance>();
     private Coroutine glowRoutine;
     private UIJackpotEffectController jackpotEffectController;
     private readonly Dictionary<int, IconArea> slotAreasByIndex = new Dictionary<int, IconArea>();
+
+    public IReadOnlyList<OpenedSymbolChance> LastEvaluatedChances => lastEvaluatedChances;
 
     public void Awake()
     {
@@ -48,6 +62,7 @@ public class Lottery : MonoBehaviour, IInspectableSource
         lotteryData = data;
         currentOpened.Clear();
         highlightedSlots.Clear();
+        lastEvaluatedChances.Clear();
         Reward = 0;
         IsCleaned = false;
 
@@ -87,7 +102,6 @@ public class Lottery : MonoBehaviour, IInspectableSource
                 totalWeight += icon.spawnWeight;
             }
         }
-
         // 가중치가 모두 0 이하일 경우 균등 fallback
         if (totalWeight <= 0f)
         {
@@ -101,14 +115,14 @@ public class Lottery : MonoBehaviour, IInspectableSource
 
             for (int i = 0; i < count; i++)
             {
-                result.Add(fallback[Random.Range(0, fallback.Count)]);
+                result.Add(fallback[UnityEngine.Random.Range(0, fallback.Count)]);
             }
             return result;
         }
 
         for (int i = 0; i < count; i++)
         {
-            float roll = Random.Range(0f, totalWeight);
+            float roll = UnityEngine.Random.Range(0f, totalWeight);
             float cumulative = 0f;
             LotteryIconData picked = validIcons[validIcons.Count - 1];
 
@@ -126,7 +140,8 @@ public class Lottery : MonoBehaviour, IInspectableSource
 
         return result;
     }
-    private int FindJackpotReward(List<LotteryIconData> candidates) //lotteryData.availableIcons 넣을때 확률내림차순으로 넣어야 정상작동
+
+    private int FindJackpotReward(List<LotteryIconData> candidates)
     {
         if (candidates == null || candidates.Count == 0) return 0;
         LotteryIconData lastIcon = candidates[candidates.Count - 1];
@@ -135,6 +150,73 @@ public class Lottery : MonoBehaviour, IInspectableSource
             return 0;
 
         return lastIcon.matchPayouts[lastIcon.matchPayouts.Length - 1];
+    }
+
+    private float GetTotalSpawnWeight()
+    {
+        if (lotteryData == null || lotteryData.availableIcons == null)
+            return 0f;
+
+        float total = 0f;
+        foreach (var icon in lotteryData.availableIcons)
+        {
+            if (icon != null && icon.spawnWeight > 0f)
+                total += icon.spawnWeight;
+        }
+        return total;
+    }
+
+    private float CalculateSymbolProbabilityPercent(LotteryIconData symbol, float totalWeight)
+    {
+        if (symbol == null || totalWeight <= 0f || symbol.spawnWeight <= 0f)
+            return 0f;
+
+        return (symbol.spawnWeight / totalWeight) * 100f;
+    }
+
+    public List<OpenedSymbolChance> GetCurrentOpenedSymbolsWithProbability()
+    {
+        var list = new List<OpenedSymbolChance>();
+        if (lotteryData == null || currentLotteryIcons == null)
+            return list;
+
+        float totalWeight = GetTotalSpawnWeight();
+        var counts = new Dictionary<LotteryIconData, int>();
+
+        foreach (int slotIdx in currentOpened)
+        {
+            if (slotIdx < 0 || slotIdx >= currentLotteryIcons.Count) continue;
+            LotteryIconData icon = currentLotteryIcons[slotIdx];
+            if (icon == null) continue;
+
+            if (!counts.ContainsKey(icon))
+                counts[icon] = 0;
+            counts[icon]++;
+        }
+
+        foreach (int slotIdx in currentOpened)
+        {
+            if (slotIdx < 0 || slotIdx >= currentLotteryIcons.Count) continue;
+            LotteryIconData icon = currentLotteryIcons[slotIdx];
+            if (icon == null) continue;
+
+            int openedCount = counts.TryGetValue(icon, out int c) ? c : 1;
+            int payout = openedCount >= lotteryData.requiredMatchCount
+                ? icon.GetPayoutForMatchCount(openedCount)
+                : 0;
+
+            list.Add(new OpenedSymbolChance
+            {
+                slotIndex = slotIdx,
+                symbol = icon,
+                symbolName = string.IsNullOrWhiteSpace(icon.iconName) ? icon.name : icon.iconName,
+                spawnProbabilityPercent = CalculateSymbolProbabilityPercent(icon, totalWeight),
+                openedCount = openedCount,
+                payout = payout
+            });
+        }
+
+        return list;
     }
 
     public void HandleClick()
@@ -249,10 +331,11 @@ public class Lottery : MonoBehaviour, IInspectableSource
         }
     }
 
-    private void EvaluateOpenedSlots()
+    public void EvaluateOpenedSlots()
     {
         if (lotteryData == null || currentLotteryIcons == null) return;
 
+        var openedSymbols = new List<LotteryIconData>();
         var counts = new Dictionary<LotteryIconData, int>();
         var slotsByIcon = new Dictionary<LotteryIconData, List<int>>();
 
@@ -262,6 +345,8 @@ public class Lottery : MonoBehaviour, IInspectableSource
             if (slotIdx < 0 || slotIdx >= currentLotteryIcons.Count) continue;
             LotteryIconData icon = currentLotteryIcons[slotIdx];
             if (icon == null) continue;
+
+            openedSymbols.Add(icon);
 
             if (!counts.ContainsKey(icon))
             {
@@ -298,21 +383,51 @@ public class Lottery : MonoBehaviour, IInspectableSource
         Reward = totalReward;
         Debug.Log($"Reward: {Reward}");
 
+        lastEvaluatedChances.Clear();
+        float totalWeight = GetTotalSpawnWeight();
+        for (int i = 0; i < currentOpened.Count && i < openedSymbols.Count; i++)
+        {
+            int slotIdx = currentOpened[i];
+            LotteryIconData icon = openedSymbols[i];
+            int openedCount = counts.TryGetValue(icon, out int c) ? c : 1;
+            int payout = openedCount >= lotteryData.requiredMatchCount
+                ? icon.GetPayoutForMatchCount(openedCount)
+                : 0;
+
+            lastEvaluatedChances.Add(new OpenedSymbolChance
+            {
+                slotIndex = slotIdx,
+                symbol = icon,
+                symbolName = string.IsNullOrWhiteSpace(icon.iconName) ? icon.name : icon.iconName,
+                spawnProbabilityPercent = CalculateSymbolProbabilityPercent(icon, totalWeight),
+                openedCount = openedCount,
+                payout = payout
+            });
+        }
+
+        ScratchedLotteryClickHandler handler = GetComponent<ScratchedLotteryClickHandler>();
+        if (handler == null)
+            handler = GetComponentInChildren<ScratchedLotteryClickHandler>();
+        if (handler != null)
+        {
+            handler.SetSymbolProbabilities(lastEvaluatedChances);
+        }
+
         if (newlyMatchedSlots.Count > 0)
         {
             string keys = slotAreasByIndex.Count == 0
-    ? "EMPTY"
-    : string.Join(", ", slotAreasByIndex.Keys);
+                ? "EMPTY"
+                : string.Join(", ", slotAreasByIndex.Keys);
             PlayMatchGlowForSlots(newlyMatchedSlots);
         }
-        ;
+
         if (IsJackpot = Reward == JackpotReward)
         {
             if (jackpotEffectController == null)
-    {
-        Debug.LogWarning("jackpotEffectController가 할당되지 않았습니다.", this);
-        return;
-    }
+            {
+                Debug.LogWarning("jackpotEffectController가 할당되지 않았습니다.", this);
+                return;
+            }
             jackpotEffectController.TryPlayJackpot(Reward, JackpotReward);
         }
     }
