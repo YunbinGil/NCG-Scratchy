@@ -41,7 +41,7 @@ public class CatalogSlot : MonoBehaviour
         shop = ticketShop;
         playerProgress = shop != null ? shop.PlayerProgress : null;
 
-        if (nameText != null)
+        if (nameText != null && !LocalizedLabel.HasKey(nameText))
             Localization.Bind(nameText, $"shop.item.{(ticketName ?? string.Empty).ToLowerInvariant()}", ticketName);
 
         if (priceText != null)

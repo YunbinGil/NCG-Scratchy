@@ -9,6 +9,7 @@ public class MachineShop : MonoBehaviour
         public GameObject slotPrefab;
         [Min(0)] public int unlockLevel;
         public UnlockLotteryCatalog unlockPrefab;
+        public MachineSlot unlockWithSlot;
     }
 
     [Header("장비 목록")]
@@ -23,12 +24,11 @@ public class MachineShop : MonoBehaviour
 
     [Header("해금 연출")]
     [SerializeField] private Texture2D unlockLightTexture;
-
     [SerializeField] private GameManager gameManager;
 
     private readonly List<MachineSlot> equipmentSlots = new List<MachineSlot>();
     private readonly HashSet<string> revealedEquipmentNames = new HashSet<string>();
-    private ItemSpawner itemSpawner;
+    [SerializeField] private ItemSpawner itemSpawner;
     private ScratchBotUpgradeManager botUpgradeManager;
     private GameObject activeUnlockItem;
     private bool unlockCheckRequested;
@@ -57,7 +57,8 @@ public class MachineShop : MonoBehaviour
         if (gameManager == null)
             gameManager = FindFirstObjectByType<GameManager>();
 
-        itemSpawner = FindFirstObjectByType<ItemSpawner>();
+        if (itemSpawner == null)
+            itemSpawner = FindFirstObjectByType<ItemSpawner>();
         botUpgradeManager = ScratchBotUpgradeManager.Instance;
         CreateEquipmentUI();
 
@@ -85,6 +86,7 @@ public class MachineShop : MonoBehaviour
                 slot.equipmentShop = this;
                 slot.UnlockLevel = entry.unlockLevel;
                 slot.UnlockRevealPrefab = entry.unlockPrefab;
+                slot.UnlockWithSlot = entry.unlockWithSlot;
                 equipmentSlots.Add(slot);
             }
         }

@@ -19,7 +19,9 @@ public class CatalogShop : MonoBehaviour
     public int CurrentCatalogIndexForSave => currentCatalogIndex;
 
     private int currentCatalogIndex;
-    private bool isUnlocking;
+    private GameObject activeUnlockItem;
+    private int activeUnlockIndex = -1;
+    private bool unlockCheckRequested;
 
     private void Start()
     {
@@ -43,9 +45,9 @@ public class CatalogShop : MonoBehaviour
             currentCatalogIndex++;
         }
 
-        gameManager.OnLevelChanged += CheckUnlockCondition;
+        gameManager.OnLevelChanged += RequestUnlockCheck;
 
-        CheckUnlockCondition(gameManager.Level);
+        RequestUnlockCheck(gameManager.Level);
     }
 
     public void ApplyCatalogIndex(int savedIndex)
@@ -62,21 +64,30 @@ public class CatalogShop : MonoBehaviour
             }
         }
 
-        isUnlocking = false;
-        CheckUnlockCondition(gameManager != null ? gameManager.Level : 0);
+        if (activeUnlockItem != null && activeUnlockIndex != currentCatalogIndex)
+            ClearActiveUnlock();
+
+        unlockCheckRequested = true;
     }
 
-    private void CheckUnlockCondition(int level)
+    private void RequestUnlockCheck(int level)
     {
-        if (isUnlocking || currentCatalogIndex >= catalogList.Count)
+        unlockCheckRequested = true;
+    }
+
+    private void LateUpdate()
+    {
+        if (!unlockCheckRequested || activeUnlockItem != null)
+            return;
+
+        unlockCheckRequested = false;
+        if (gameManager == null || itemSpawner == null || ticketContent == null ||
+            currentCatalogIndex >= catalogList.Count)
             return;
 
         CatalogData catalog = catalogList[currentCatalogIndex];
-
-        if (level < catalog.unlockLevel)
-            return;
-
-        SpawnUnlockItem(catalog.unlockImagePrefab);
+        if (gameManager.Level >= catalog.unlockLevel)
+            SpawnUnlockItem(catalog.unlockPrefab);
     }
 
     private void SpawnUnlockItem(GameObject unlockPrefab)
@@ -88,28 +99,34 @@ public class CatalogShop : MonoBehaviour
             return;
         }
 
-        isUnlocking = true;
-
         if (!itemSpawner.TrySpawnItemAtTableCenter(unlockPrefab, out GameObject spawnedObject))
-        {
-            isUnlocking = false;
             return;
-        }
 
+        int catalogIndex = currentCatalogIndex;
+        activeUnlockItem = spawnedObject;
+        activeUnlockIndex = catalogIndex;
         UnlockLotteryCatalog unlock = spawnedObject.GetComponent<UnlockLotteryCatalog>();
-        unlock.Initialize(lightTexture, CompleteUnlock);
+        unlock.Initialize(lightTexture, () => CompleteUnlock(spawnedObject, catalogIndex));
     }
 
-    private void CompleteUnlock()
+    private void CompleteUnlock(GameObject item, int catalogIndex)
     {
-        CatalogData catalog = catalogList[currentCatalogIndex];
+        if (activeUnlockItem != item || currentCatalogIndex != catalogIndex)
+            return;
 
-        AddCatalog(catalog.catalogPrefab);
-
+        AddCatalog(catalogList[catalogIndex].catalogPrefab);
         currentCatalogIndex++;
-        isUnlocking = false;
+        ClearActiveUnlock();
+        unlockCheckRequested = true;
+    }
 
-        CheckUnlockCondition(gameManager.Level);
+    private void ClearActiveUnlock()
+    {
+        if (activeUnlockItem != null)
+            Destroy(activeUnlockItem);
+
+        activeUnlockItem = null;
+        activeUnlockIndex = -1;
     }
 
     private void AddCatalog(GameObject catalogPrefab)
@@ -163,6 +180,10 @@ public class CatalogShop : MonoBehaviour
     private void OnDestroy()
     {
         if (gameManager != null)
-            gameManager.OnLevelChanged -= CheckUnlockCondition;
+        {
+            gameManager.OnLevelChanged -= RequestUnlockCheck;
+        }
+
+        ClearActiveUnlock();
     }
 }

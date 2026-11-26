@@ -20,8 +20,10 @@ public class MachineSlot : MonoBehaviour
     [SerializeField] private GameObject lockOverlay;
 
     internal int UnlockLevel { get; set; }
+    internal MachineSlot UnlockWithSlot { get; set; }
     internal UnlockLotteryCatalog UnlockRevealPrefab { get; set; }
     internal bool IsReadyForUnlockReveal { get; private set; }
+    internal bool IsLocked => isLocked;
 
     [Header("스크래치 봇 해금 설정 (추가)")]
     [SerializeField] private bool isScratchBotSlot = false;
@@ -35,13 +37,13 @@ public class MachineSlot : MonoBehaviour
     private GameManager gameManager;
     private ScratchBotUpgradeSlot upgradeSlot;
     private bool isLocked;
-    internal bool IsLocked => isLocked;
     private bool isPurchased;
 
     private void Start()
     {
         upgradeSlot = GetComponent<ScratchBotUpgradeSlot>();
-        if (nameText != null) nameText.text = equipmentName;
+        if (nameText != null && !LocalizedLabel.HasKey(nameText))
+            nameText.text = equipmentName;
         if (priceText != null) priceText.text = equipmentPrice.ToString();
         if (purchaseText != null) purchaseText.text = string.Empty;
 
@@ -92,13 +94,23 @@ public class MachineSlot : MonoBehaviour
 
     public void UpdateLock(int currentLevel)
     {
-        bool levelLocked = currentLevel < UnlockLevel;
         bool botUnlocked = IsBotActuallyUnlocked();
-        bool botDependencyLocked = requiresScratchBotUnlocked && !botUnlocked;
-        bool needsReveal = UnlockRevealPrefab != null && equipmentShop != null &&
-                           !(isScratchBotSlot && botUnlocked) && !equipmentShop.HasRevealedEquipment(equipmentName);
-        IsReadyForUnlockReveal = !isPurchased && !levelLocked && !botDependencyLocked && needsReveal;
-        isLocked = !isPurchased && (levelLocked || botDependencyLocked || needsReveal);
+        if (UnlockWithSlot != null && equipmentShop != null)
+        {
+            bool sourceUnlocked = equipmentShop.HasRevealedEquipment(UnlockWithSlot.equipmentName) ||
+                                  (UnlockWithSlot.isScratchBotSlot && botUnlocked);
+            IsReadyForUnlockReveal = false;
+            isLocked = !isPurchased && !sourceUnlocked;
+        }
+        else
+        {
+            bool levelLocked = currentLevel < UnlockLevel;
+            bool botDependencyLocked = requiresScratchBotUnlocked && !botUnlocked;
+            bool needsReveal = UnlockRevealPrefab != null && equipmentShop != null &&
+                               !(isScratchBotSlot && botUnlocked) && !equipmentShop.HasRevealedEquipment(equipmentName);
+            IsReadyForUnlockReveal = !isPurchased && !levelLocked && !botDependencyLocked && needsReveal;
+            isLocked = !isPurchased && (levelLocked || botDependencyLocked || needsReveal);
+        }
 
         if (lockOverlay != null)
             lockOverlay.SetActive(isLocked);
@@ -120,7 +132,8 @@ public class MachineSlot : MonoBehaviour
         if (!isScratchBotSlot)
             return;
 
-        Localization.Bind(nameText, $"machine.{(equipmentName ?? string.Empty).ToLowerInvariant()}", equipmentName);
+        if (!LocalizedLabel.HasKey(nameText))
+            Localization.Bind(nameText, $"machine.{(equipmentName ?? string.Empty).ToLowerInvariant()}", equipmentName);
         Localization.BindAuthoredLabels(gameObject);
 
         if (equipmentShop != null && equipmentShop.PlayerProgress != null && equipmentShop.PlayerProgress != playerProgress)
