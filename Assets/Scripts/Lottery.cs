@@ -64,6 +64,7 @@ public class Lottery : MonoBehaviour, IInspectableSource
         highlightedSlots.Clear();
         lastEvaluatedChances.Clear();
         Reward = 0;
+        IsJackpot = false;
         IsCleaned = false;
 
         if (lotteryData == null) return;
@@ -90,7 +91,6 @@ public class Lottery : MonoBehaviour, IInspectableSource
             return result;
         }
 
-        // 유효 아이콘(null 제외, spawnWeight > 0) 필터링 및 총 가중치 계산
         float totalWeight = 0f;
         var validIcons = new List<LotteryIconData>(candidates.Count);
 
@@ -102,7 +102,7 @@ public class Lottery : MonoBehaviour, IInspectableSource
                 totalWeight += icon.spawnWeight;
             }
         }
-        // 가중치가 모두 0 이하일 경우 균등 fallback
+
         if (totalWeight <= 0f)
         {
             var fallback = new List<LotteryIconData>();
@@ -311,6 +311,44 @@ public class Lottery : MonoBehaviour, IInspectableSource
         }
     }
 
+    public void OpenAllSlotsByBot()
+    {
+        if (lotteryData == null) return;
+
+        for (int i = 0; i < lotteryData.scratchCount; i++)
+        {
+            if (!currentOpened.Contains(i))
+            {
+                currentOpened.Add(i);
+            }
+        }
+
+        RefreshScratchablesActiveState();
+        EvaluateOpenedSlots(allowJackpotEffect: false);
+    }
+
+    public void TriggerJackpotIfNeeded()
+    {
+        EvaluateOpenedSlots(allowJackpotEffect: false);
+
+        if (!IsJackpot) return;
+
+        if (jackpotEffectController == null)
+        {
+            GameObject controllerObj = GameObject.FindWithTag("GameController");
+            if (controllerObj != null)
+                jackpotEffectController = controllerObj.GetComponent<UIJackpotEffectController>();
+        }
+
+        if (jackpotEffectController == null)
+        {
+            Debug.LogWarning("jackpotEffectController가 할당되지 않았습니다.", this);
+            return;
+        }
+
+        jackpotEffectController.TryPlayJackpot(Reward, JackpotReward);
+    }
+
     public void HandleSlotCompleted(Scratchable slot)
     {
         if (slot == null || lotteryData == null) return;
@@ -322,7 +360,7 @@ public class Lottery : MonoBehaviour, IInspectableSource
             slot.gameObject.SetActive(false);
         }
 
-        EvaluateOpenedSlots();
+        EvaluateOpenedSlots(allowJackpotEffect: true);
 
         if (currentOpened.Count >= lotteryData.scratchCount)
         {
@@ -332,6 +370,11 @@ public class Lottery : MonoBehaviour, IInspectableSource
     }
 
     public void EvaluateOpenedSlots()
+    {
+        EvaluateOpenedSlots(allowJackpotEffect: true);
+    }
+
+    public void EvaluateOpenedSlots(bool allowJackpotEffect)
     {
         if (lotteryData == null || currentLotteryIcons == null) return;
 
@@ -421,7 +464,9 @@ public class Lottery : MonoBehaviour, IInspectableSource
             PlayMatchGlowForSlots(newlyMatchedSlots);
         }
 
-        if (IsJackpot = Reward == JackpotReward)
+        IsJackpot = Reward > 0 && Reward == JackpotReward;
+
+        if (allowJackpotEffect && IsJackpot)
         {
             if (jackpotEffectController == null)
             {

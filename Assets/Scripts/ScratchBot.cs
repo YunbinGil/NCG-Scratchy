@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class ScratchBot : MonoBehaviour
 {
@@ -135,6 +136,74 @@ public class ScratchBot : MonoBehaviour
         return false;
     }
 
+    private void PeelScratchCover(GameObject lotteryObj, IInspectableSource inspectable, float progress)
+    {
+        Sprite coverSprite = null;
+        if (inspectable is Lottery lottery && lottery.Data != null)
+        {
+            coverSprite = lottery.Data.scratchCoverSprite;
+        }
+
+        if (lotteryObj != null)
+        {
+            Scratchable[] scratchables = lotteryObj.GetComponentsInChildren<Scratchable>(true);
+            for (int i = 0; i < scratchables.Length; i++)
+            {
+                if (scratchables[i] == null) continue;
+                if (progress >= 1f)
+                    scratchables[i].gameObject.SetActive(false);
+            }
+
+            SpriteRenderer[] srs = lotteryObj.GetComponentsInChildren<SpriteRenderer>(true);
+            for (int i = 0; i < srs.Length; i++)
+            {
+                if (srs[i] == null) continue;
+                bool isCover = (coverSprite != null && srs[i].sprite == coverSprite) ||
+                               srs[i].gameObject.name.ToLower().Contains("cover") ||
+                               srs[i].gameObject.name.ToLower().Contains("scratch");
+                if (isCover)
+                {
+                    Color c = srs[i].color;
+                    c.a = Mathf.Clamp01(1f - progress);
+                    srs[i].color = c;
+                    if (progress >= 1f)
+                        srs[i].gameObject.SetActive(false);
+                }
+            }
+
+            Image[] imgs = lotteryObj.GetComponentsInChildren<Image>(true);
+            for (int i = 0; i < imgs.Length; i++)
+            {
+                if (imgs[i] == null) continue;
+                bool isCover = (coverSprite != null && imgs[i].sprite == coverSprite) ||
+                               imgs[i].gameObject.name.ToLower().Contains("cover") ||
+                               imgs[i].gameObject.name.ToLower().Contains("scratch");
+                if (isCover)
+                {
+                    Color c = imgs[i].color;
+                    c.a = Mathf.Clamp01(1f - progress);
+                    imgs[i].color = c;
+                    if (progress >= 1f)
+                        imgs[i].gameObject.SetActive(false);
+                }
+            }
+        }
+
+        if (inspectable is Lottery lot)
+        {
+            GameObject overlay = lot.GetStainOverlay();
+            if (overlay != null)
+            {
+                Scratchable[] overlayScratchables = overlay.GetComponentsInChildren<Scratchable>(true);
+                for (int i = 0; i < overlayScratchables.Length; i++)
+                {
+                    if (overlayScratchables[i] != null && progress >= 1f)
+                        overlayScratchables[i].gameObject.SetActive(false);
+                }
+            }
+        }
+    }
+
     public bool TryAbsorbLottery(GameObject lotteryObj)
     {
         if (lotteryObj == null || !CanAbsorbMore())
@@ -195,6 +264,8 @@ public class ScratchBot : MonoBehaviour
                 ? entry.inspectable
                 : lotteryObj.GetComponent<IInspectableSource>();
 
+            PeelScratchCover(lotteryObj, target, 1f);
+
             if (target != null && !target.IsCleaned)
             {
                 target.CompleteScratch();
@@ -206,7 +277,11 @@ public class ScratchBot : MonoBehaviour
             {
                 InspectViewManager.Instance.OpenInspect(target);
 
-                if (target is Trophy trophy)
+                if (target is Lottery lottery)
+                {
+                    lottery.TriggerJackpotIfNeeded();
+                }
+                else if (target is Trophy trophy)
                 {
                     InspectViewManager.Instance.OnTrophyCleaned(trophy);
                 }
@@ -309,15 +384,22 @@ public class ScratchBot : MonoBehaviour
             float t = Mathf.Clamp01(traveledDist / totalDist);
             entry.progress = t;
 
+            PeelScratchCover(entry.lotteryObject, entry.inspectable, t);
+
             if (Mathf.Abs(nextY - entry.targetY) <= 1f || t >= 1f)
             {
                 entry.rectTransform.position = new Vector3(fixedX, entry.targetY, fixedZ);
                 entry.progress = 1f;
                 entry.isScratchedComplete = true;
+                if (entry.inspectable is Lottery lottery && lottery.Data != null)
+                {
+                    lottery.OpenAllSlotsByBot();
+                }
+                PeelScratchCover(entry.lotteryObject, entry.inspectable, 1f);
                 entry.inspectable?.CompleteScratch();
                 Debug.Log("봇이 복권을 다 긁었습니다. 복권을 눌러 당첨 결과를 확인하세요.");
             }
-            
+
             if (draggable != null)
                 draggable.enabled = true;
         }
