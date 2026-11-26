@@ -286,7 +286,8 @@ public class Scratchable : MonoBehaviour
     {
         if (CurrentItem is Lottery && gameManager != null)
         {
-            return brushWorldRadius * gameManager.CoinSizeMultiplier;
+            float radius = brushWorldRadius * gameManager.LotteryBaseSizeScale * gameManager.CoinSizeMultiplier;
+            return Mathf.Max(0.02f, radius);
         }
         return brushWorldRadius;
     }
@@ -295,7 +296,8 @@ public class Scratchable : MonoBehaviour
     {
         if (CurrentItem is Lottery && gameManager != null)
         {
-            return gameManager.CoinAlphaMultiplier;
+            float alpha = gameManager.LotteryBaseAlphaScale * gameManager.CoinAlphaMultiplier;
+            return Mathf.Clamp(alpha, 0.01f, 1f);
         }
         return 1f;
     }
