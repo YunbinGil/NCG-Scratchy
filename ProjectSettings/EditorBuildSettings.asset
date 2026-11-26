@@ -15,7 +15,7 @@ EditorBuildSettings:
     path: Assets/Scenes/SaveMenu.unity
     guid: 6266186f77bbf494fa25c4709618578f
   - enabled: 0
-    path: Assets/Scenes/Game.unity
+    path: Assets/Scenes/Game1.unity
     guid: 63212c9c2f1ced445b857475b81b6055
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}

@@ -14,6 +14,9 @@ public class Scratchable : MonoBehaviour
     [SerializeField] private float cleanThreshold = 0.85f;   // 85% 지우면 자동 완료
     [SerializeField] private float checkInterval = 0.1f;
 
+    public SpriteRenderer BackgroundSprite { get; set; }     // 발광 효과를 줄 base background Sprite
+    public IconArea OwnerIconArea { get; set; }
+
     private Texture2D runtimeTex;
     private Color32[] pixels;
     private int texWidth;
@@ -24,35 +27,38 @@ public class Scratchable : MonoBehaviour
     private bool isErasing;
     private Vector2 prevWorldPos;
     private float nextCheckTime;
-    public bool IsCompleted {get; private set;}
+    public bool IsCompleted { get; private set; }
+
     // 브러시 알파 마스크 캐시 (0 ~ 1)
     private float[] brushMask;
     private int brushMaskSize = 64;
-    
+
     private InspectViewManager inspectViewManager;
-    public IInspectableSource CurrentItem {get;set;}
+    public IInspectableSource CurrentItem { get; set; }
     public int SlotIndex { get; set; }
     public event Action<Scratchable> OnScratchCompleted;
+    private GameManager gameManager;
 
     void Start()
     {
-        inspectViewManager = GameObject.FindWithTag("GameController").GetComponent<InspectViewManager>();
+        GameObject controllerObj = GameObject.FindWithTag("GameController");
+        if (controllerObj != null)
+        {
+            inspectViewManager = controllerObj.GetComponent<InspectViewManager>();
+            gameManager = controllerObj.GetComponent<GameManager>();
+        }
+
         if (targetCamera == null) targetCamera = Camera.main;
         if (dirtyRenderer == null || dirtyRenderer.sprite == null) return;
 
         BuildBrushMask();
         InitRuntimeTexture();
     }
-    void OnEnable()
-    {
-        // Debug.Log($"{gameObject.name} active: {gameObject.activeSelf}");
-    }
 
     void BuildBrushMask()
     {
         brushMask = new float[brushMaskSize * brushMaskSize];
 
-        // brushTexture가 있으면 그 알파값을 사용, 없으면 부드러운 원형 브러시 생성
         Texture2D readableBrush = null;
         if (brushTexture != null && brushTexture.isReadable)
         {
@@ -126,7 +132,6 @@ public class Scratchable : MonoBehaviour
         runtimeTex.SetPixels32(pixels);
         runtimeTex.Apply();
 
-        // 원본 스프라이트와 같은 PPU/피벗으로 새 스프라이트 교체
         Sprite newSprite = Sprite.Create(
             runtimeTex,
             new Rect(0, 0, texWidth, texHeight),
@@ -151,6 +156,9 @@ public class Scratchable : MonoBehaviour
 
     void HandleEraseInput()
     {
+        if (targetCamera == null) targetCamera = Camera.main;
+        if (targetCamera == null) return;
+
         Vector3 mouseWorld3D = targetCamera.ScreenToWorldPoint(Input.mousePosition);
         Vector2 currentWorld = new Vector2(mouseWorld3D.x, mouseWorld3D.y);
 
@@ -165,7 +173,7 @@ public class Scratchable : MonoBehaviour
         else if (Input.GetMouseButton(0) && isErasing)
         {
             float dist = Vector2.Distance(prevWorldPos, currentWorld);
-            float stepSize = Mathf.Max(0.03f, brushWorldRadius * 0.25f);
+            float stepSize = Mathf.Max(0.03f, GetEffectiveBrushRadius() * 0.25f);
             int steps = Mathf.Max(1, Mathf.CeilToInt(dist / stepSize));
 
             for (int i = 1; i <= steps; i++)
@@ -192,9 +200,8 @@ public class Scratchable : MonoBehaviour
         float u = (worldPos.x - bounds.min.x) / bounds.size.x;
         float v = (worldPos.y - bounds.min.y) / bounds.size.y;
 
-        // 브러시 반지름을 텍스처 픽셀 단위로 변환
-        float radiusPxX = (brushWorldRadius / bounds.size.x) * texWidth;
-        float radiusPxY = (brushWorldRadius / bounds.size.y) * texHeight;
+        float radiusPxX = (GetEffectiveBrushRadius() / bounds.size.x) * texWidth;
+        float radiusPxY = (GetEffectiveBrushRadius() / bounds.size.y) * texHeight;
         float radiusPx = Mathf.Max(radiusPxX, radiusPxY);
 
         int centerX = Mathf.RoundToInt(u * texWidth);
@@ -216,14 +223,13 @@ public class Scratchable : MonoBehaviour
                 int bx = Mathf.Clamp(Mathf.FloorToInt(normX * brushMaskSize), 0, brushMaskSize - 1);
                 int by = Mathf.Clamp(Mathf.FloorToInt(normY * brushMaskSize), 0, brushMaskSize - 1);
 
-                float eraseStrength = brushMask[by * brushMaskSize + bx];
+                float eraseStrength = brushMask[by * brushMaskSize + bx] * GetEffectiveAlphaMultiplier();
                 if (eraseStrength <= 0.01f) continue;
 
                 int idx = y * texWidth + x;
                 byte oldAlpha = pixels[idx].a;
                 if (oldAlpha == 0) continue;
 
-                // 지우개 강도만큼 알파 감소
                 byte newAlpha = (byte)Mathf.Max(0, oldAlpha - Mathf.RoundToInt(eraseStrength * 255f));
                 pixels[idx].a = newAlpha;
 
@@ -245,6 +251,18 @@ public class Scratchable : MonoBehaviour
             IsCompleted = true;
             dirtyRenderer.enabled = false;
             Debug.Log($"{this.gameObject.name} 세척 완료! ({ratio * 100f:F1}%)");
+
+            if (OwnerIconArea != null)
+            {
+                OwnerIconArea.PlayCompleteGlow();
+            }
+            else if (BackgroundSprite != null)
+            {
+                BackgroundSprite.color = Color.white;
+            }
+
+            OnScratchCompleted?.Invoke(this);
+
             if (CurrentItem is Lottery currentLottery)
             {
                 currentLottery.HandleSlotCompleted(this);
@@ -257,9 +275,25 @@ public class Scratchable : MonoBehaviour
         }
     }
 
-
     void OnDestroy()
     {
         if (runtimeTex != null) Destroy(runtimeTex);
+    }
+    private float GetEffectiveBrushRadius()
+    {
+        if (CurrentItem is Lottery && gameManager != null)
+        {
+            return brushWorldRadius * gameManager.CoinSizeMultiplier;
+        }
+        return brushWorldRadius;
+    }
+
+    private float GetEffectiveAlphaMultiplier()
+    {
+        if (CurrentItem is Lottery && gameManager != null)
+        {
+            return gameManager.CoinAlphaMultiplier;
+        }
+        return 1f;
     }
 }

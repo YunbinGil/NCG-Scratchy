@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.Serialization;
 using TMPro;
@@ -16,17 +17,19 @@ public class UiManager : MonoBehaviour
     [SerializeField] private Sprite defaultCoinSprite;
     [SerializeField] private Sprite aluminiumCoinSprite;
     [SerializeField] private Sprite titaniumCoinSprite;
+
+    [Header("UI References")]
     [SerializeField] private TMP_Text moneyText;
     [SerializeField] private TMP_Text levelText;
     [SerializeField] private Image levelImage;
-    // [SerializeField] private Ticket[] tickets;
-    // [SerializeField] private Equipment[] equips;
+
     private const float ClickSpriteDuration = 0.12f;
 
-    private enum CursorMode { Default, Scrubber, Coin }
+    public enum CursorMode { Default, Scrubber, Coin }
 
     private CursorMode cursorMode;
     private float clickSpriteUntil;
+    private Coroutine clickResetRoutine;
     private GameManager gameManager;
     private RectMask2D levelMask;
     private float experienceRatio;
@@ -34,9 +37,16 @@ public class UiManager : MonoBehaviour
 
     private void Awake()
     {
-        gameManager = GameObject.FindWithTag("GameController").GetComponent<GameManager>();
-        if (targetCamera == null) targetCamera = Camera.main;
-        SetDefaultCursor();
+        GameObject controllerObj = GameObject.FindWithTag("GameController");
+        if (controllerObj != null)
+        {
+            gameManager = controllerObj.GetComponent<GameManager>();
+        }
+
+        if (targetCamera == null)
+        {
+            targetCamera = Camera.main;
+        }
 
         if (levelImage != null)
         {
@@ -45,12 +55,33 @@ public class UiManager : MonoBehaviour
         }
     }
 
+    private void Start()
+    {
+        if (targetCamera == null)
+        {
+            targetCamera = Camera.main;
+        }
+
+        SetDefaultCursor();
+    }
+
     private void Update()
     {
-        UpdateCursorSprite();
+        if (cursorMode == CursorMode.Default && Input.GetMouseButtonDown(0))
+        {
+            clickSpriteUntil = Time.unscaledTime + ClickSpriteDuration;
+            RefreshCursorSprite();
+            RestartClickResetRoutine();
+        }
+        else if (cursorMode == CursorMode.Scrubber && (Input.GetMouseButtonDown(0) || Input.GetMouseButtonUp(0)))
+        {
+            RefreshCursorSprite();
+        }
 
         if (levelMask != null && levelMask.rectTransform.rect.width != lastMaskWidth)
+        {
             UpdateLevelMask();
+        }
     }
 
     private void LateUpdate()
@@ -71,20 +102,32 @@ public class UiManager : MonoBehaviour
         cursorTransform.position = worldPos + (currentPosition - topLeft);
     }
 
+    private void RestartClickResetRoutine()
+    {
+        if (clickResetRoutine != null)
+        {
+            StopCoroutine(clickResetRoutine);
+        }
+        clickResetRoutine = StartCoroutine(ResetClickSpriteAfterDelay());
+    }
+
+    private IEnumerator ResetClickSpriteAfterDelay()
+    {
+        yield return new WaitForSecondsRealtime(ClickSpriteDuration);
+        clickResetRoutine = null;
+
+        if (cursorMode == CursorMode.Default)
+        {
+            RefreshCursorSprite();
+        }
+    }
+
     public void SetCursorSprite(Sprite newSprite)
     {
         if (cursorRenderer != null && newSprite != null && cursorRenderer.sprite != newSprite)
         {
             cursorRenderer.sprite = newSprite;
         }
-    }
-
-    private void UpdateCursorSprite()
-    {
-        if (cursorMode == CursorMode.Default && Input.GetMouseButtonDown(0))
-            clickSpriteUntil = Time.unscaledTime + ClickSpriteDuration;
-
-        RefreshCursorSprite();
     }
 
     private void RefreshCursorSprite()
@@ -97,6 +140,7 @@ public class UiManager : MonoBehaviour
             _ => Time.unscaledTime < clickSpriteUntil && useCursorSprite != null
                 ? useCursorSprite : defaultCursorSprite
         };
+
         SetCursorSprite(sprite != null ? sprite : defaultCursorSprite);
     }
 
@@ -119,18 +163,30 @@ public class UiManager : MonoBehaviour
     {
         cursorMode = mode;
         clickSpriteUntil = 0f;
+
+        if (clickResetRoutine != null)
+        {
+            StopCoroutine(clickResetRoutine);
+            clickResetRoutine = null;
+        }
+
         RefreshCursorSprite();
     }
 
     public void SetMoneyText(int amount)
     {
         if (moneyText != null)
+        {
             moneyText.text = amount.ToString();
+        }
     }
+
     public void SetLevelText(int exp, int goalExp)
     {
         if (levelText != null)
+        {
             Localization.Bind(levelText, "status.experience", "{0} / {1}", exp, goalExp);
+        }
 
         experienceRatio = goalExp > 0 ? Mathf.Clamp01((float)exp / goalExp) : 0f;
         UpdateLevelMask();
