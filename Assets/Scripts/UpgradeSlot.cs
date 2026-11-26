@@ -15,6 +15,11 @@ public class UpgradeSlot : MonoBehaviour
     [SerializeField] private Button upgradeButton;
 
     private PlayerUpgradeManager upgrades;
+    private PlayerUpgradeManager Upgrades => upgrades ??= FindFirstObjectByType<GameManager>()?.Upgrades;
+
+    public UpgradeType UpgradeTypeValue => upgradeType;
+    public int UpgradeLevelValue => Upgrades?.GetLevel(upgradeType) ?? 0;
+    public float UpgradeCostValue => Upgrades?.GetCost(upgradeType) ?? 0;
 
     private void Awake()
     {
@@ -24,9 +29,9 @@ public class UpgradeSlot : MonoBehaviour
 
     private void Start()
     {
-        upgrades = FindFirstObjectByType<GameManager>()?.Upgrades;
-        if (upgrades != null)
-            upgrades.Changed += UpdateUI;
+        PlayerUpgradeManager manager = Upgrades;
+        if (manager != null)
+            manager.Changed += UpdateUI;
         if (upgradeButton != null)
             upgradeButton.onClick.AddListener(Purchase);
 
@@ -50,6 +55,28 @@ public class UpgradeSlot : MonoBehaviour
             upgrades.Changed -= UpdateUI;
         if (upgradeButton != null)
             upgradeButton.onClick.RemoveListener(Purchase);
+    }
+
+    public void ApplySaveData(int savedLevel, float savedCost)
+    {
+        PlayerUpgradeManager manager = Upgrades;
+        if (manager == null)
+            return;
+
+        var entries = manager.Capture();
+        entries.RemoveAll(entry => entry.upgradeType == upgradeType);
+        entries.Add(new UpgradeSaveEntry
+        {
+            upgradeType = upgradeType,
+            level = Mathf.Max(0, savedLevel),
+            cost = Mathf.Max(0f, savedCost)
+        });
+        manager.Restore(entries);
+    }
+
+    public void ResetToDefault()
+    {
+        ApplySaveData(0, 100f);
     }
 
     private void Purchase()

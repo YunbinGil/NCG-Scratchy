@@ -20,6 +20,7 @@ public class GameManager : MonoBehaviour
     internal ItemSpawner ItemSpawner => itemSpawner;
     internal RectTransform TableEffectParent => itemSpawner != null ? itemSpawner.TableEffectParent : null;
     private UiManager uiManager;
+    private bool hasRestoredPlayerState;
 
     public int Level { get; private set; }
     public int Exp { get; private set; }
@@ -40,10 +41,15 @@ public class GameManager : MonoBehaviour
         uiManager = GetComponent<UiManager>();
         if (itemSpawner == null)
             itemSpawner = FindFirstObjectByType<ItemSpawner>();
+
+        FindFirstObjectByType<UpgradeUnlock>(FindObjectsInactive.Include)?.Initialize(this);
     }
 
     private void Start()
     {
+        if (hasRestoredPlayerState)
+            return;
+
         SetMoney(startingMoney);
         Exp = 0;
         Level = 0;
@@ -98,6 +104,7 @@ public class GameManager : MonoBehaviour
         bool canUnlockBot,
         bool isBotUnlockedByLevel)
     {
+        hasRestoredPlayerState = true;
         Level = Mathf.Max(0, savedLevel);
         Exp = Mathf.Max(0, savedExp);
         CanUnlockScratchBot = canUnlockBot || Level >= scratchBotUnlockLevel;

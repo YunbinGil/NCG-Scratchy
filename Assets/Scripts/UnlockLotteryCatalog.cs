@@ -16,6 +16,8 @@ public class UnlockLotteryCatalog : MonoBehaviour
     private Sprite glowSprite;
     private TextMeshProUGUI revealLabel;
 
+    internal bool IsAwaitingConfirmation => button != null && button.interactable;
+
     public void Initialize(
         Texture2D texture, Action complete, string message = "Catalog Unlocked!", string localizationKey = null)
     {
@@ -39,9 +41,10 @@ public class UnlockLotteryCatalog : MonoBehaviour
         StartCoroutine(Reveal(showLabel: true));
     }
 
-    internal void PlayVisualOnly(Texture2D texture)
+    internal void PlayVisualOnly(Texture2D texture, Action complete = null)
     {
         lightTexture = texture;
+        onComplete = complete;
         Button effectButton = GetComponent<Button>();
         effectButton.transition = Selectable.Transition.None;
         effectButton.enabled = false;

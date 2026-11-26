@@ -41,6 +41,7 @@ public sealed class UnlockEffect : MonoBehaviour
         internal Func<bool> Ready;
         internal Func<bool> AlreadyUnlocked;
         internal Action Complete;
+        internal bool CompleteAfterVisual;
         internal bool Cancelled;
 
         internal void Cancel()
@@ -54,8 +55,8 @@ public sealed class UnlockEffect : MonoBehaviour
         private readonly GameManager player;
         private readonly List<Registration> pending = new List<Registration>();
         private readonly List<UnlockEffect> automaticEffects = new List<UnlockEffect>();
-        private Registration activeConfirmation;
-        private UnlockLotteryCatalog confirmationVisual;
+        private readonly List<(Registration Request, UnlockLotteryCatalog Visual)> activeReveals =
+            new List<(Registration, UnlockLotteryCatalog)>();
         private UnlockLotteryCatalog automaticPrefab;
         private GameObject automaticVisual;
         private int suppressedFrame = -1;
@@ -67,7 +68,8 @@ public sealed class UnlockEffect : MonoBehaviour
 
         internal Registration Watch(
             MonoBehaviour owner, UnlockEffect effect, Action complete,
-            Func<bool> ready = null, Func<bool> alreadyUnlocked = null)
+            Func<bool> ready = null, Func<bool> alreadyUnlocked = null,
+            bool completeAfterVisual = false)
         {
             var request = new Registration
             {
@@ -75,7 +77,8 @@ public sealed class UnlockEffect : MonoBehaviour
                 Effect = effect,
                 Complete = complete,
                 Ready = ready,
-                AlreadyUnlocked = alreadyUnlocked
+                AlreadyUnlocked = alreadyUnlocked,
+                CompleteAfterVisual = completeAfterVisual
             };
             pending.Add(request);
             return request;
@@ -91,13 +94,20 @@ public sealed class UnlockEffect : MonoBehaviour
 
         internal void Tick()
         {
-            if (activeConfirmation != null &&
-                (IsFinished(activeConfirmation) || confirmationVisual == null))
+            for (int i = activeReveals.Count - 1; i >= 0; i--)
             {
-                if (confirmationVisual != null)
-                    UnityEngine.Object.Destroy(confirmationVisual.gameObject);
-                activeConfirmation = null;
-                confirmationVisual = null;
+                var (request, visual) = activeReveals[i];
+                if (IsFinished(request))
+                {
+                    if (visual != null)
+                        UnityEngine.Object.Destroy(visual.gameObject);
+                    activeReveals.RemoveAt(i);
+                }
+                else if (visual == null)
+                {
+                    activeReveals.RemoveAt(i);
+                    pending.Add(request);
+                }
             }
 
             for (int i = 0; i < pending.Count;)
@@ -117,9 +127,14 @@ public sealed class UnlockEffect : MonoBehaviour
                     continue;
                 }
 
-                if (effect != null && effect.RequiresConfirmation)
+                bool confirm = effect != null && effect.RequiresConfirmation;
+                bool playBeforeCompleting = request.CompleteAfterVisual && effect != null &&
+                    effect.playback == Playback.Automatic && effect.effectPrefab != null;
+                if (confirm || playBeforeCompleting)
                 {
-                    if (activeConfirmation != null || automaticVisual != null || !StartConfirmation(request))
+                    bool blockedByReveal = activeReveals.Count > 0 &&
+                        (confirm || activeReveals.Exists(active => !active.Visual.IsAwaitingConfirmation));
+                    if (blockedByReveal || automaticVisual != null || !StartReveal(request, confirm))
                     {
                         i++;
                         continue;
@@ -137,7 +152,7 @@ public sealed class UnlockEffect : MonoBehaviour
                     automaticEffects.Add(effect);
             }
 
-            if (activeConfirmation == null)
+            if (activeReveals.Count == 0)
                 PlayNextAutomatic();
         }
 
@@ -147,26 +162,40 @@ public sealed class UnlockEffect : MonoBehaviour
                    (request.AlreadyUnlocked != null && request.AlreadyUnlocked());
         }
 
-        private bool StartConfirmation(Registration request)
+        private bool StartReveal(Registration request, bool confirm)
         {
             UnlockEffect effect = request.Effect;
-            ItemSpawner spawner = player.ItemSpawner;
-            RectTransform table = player.TableEffectParent;
-            if (spawner == null || !spawner.isActiveAndEnabled || table == null ||
-                !table.gameObject.activeInHierarchy ||
-                !spawner.TrySpawnItemAtTableCenter(effect.effectPrefab.gameObject, out GameObject spawnedObject))
-                return false;
-
-            confirmationVisual = spawnedObject.GetComponent<UnlockLotteryCatalog>();
-
-            activeConfirmation = request;
-            confirmationVisual.Initialize(effect.lightTexture, () =>
+            UnlockLotteryCatalog visual;
+            if (confirm)
             {
+                ItemSpawner spawner = player.ItemSpawner;
+                RectTransform table = player.TableEffectParent;
+                if (spawner == null || !spawner.isActiveAndEnabled || table == null ||
+                    !table.gameObject.activeInHierarchy ||
+                    !spawner.TrySpawnItemAtTableCenter(effect.effectPrefab.gameObject, out GameObject spawnedObject))
+                    return false;
+
+                visual = spawnedObject.GetComponent<UnlockLotteryCatalog>();
+            }
+            else
+            {
+                visual = CreateVisual(effect);
+                if (visual == null)
+                    return false;
+            }
+
+            activeReveals.Add((request, visual));
+            void CompleteReveal()
+            {
+                activeReveals.Remove((request, visual));
                 if (!IsFinished(request))
                     request.Complete();
-                activeConfirmation = null;
-                confirmationVisual = null;
-            }, effect.confirmationText, effect.confirmationKey);
+            }
+
+            if (confirm)
+                visual.Initialize(effect.lightTexture, CompleteReveal, effect.confirmationText, effect.confirmationKey);
+            else
+                visual.PlayVisualOnly(effect.lightTexture, CompleteReveal);
             return true;
         }
 

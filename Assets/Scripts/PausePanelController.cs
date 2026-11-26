@@ -78,7 +78,7 @@ public class PausePanelController : MonoBehaviour
             phoneCallTrigger = FindFirstObjectByType<PhoneCallTrigger>();
 
         if (upgradeUnlock == null)
-            upgradeUnlock = FindFirstObjectByType<UpgradeUnlock>();
+            upgradeUnlock = FindFirstObjectByType<UpgradeUnlock>(FindObjectsInactive.Include);
 
         if (settingToggleButton != null)
             settingToggleButton.onClick.AddListener(TogglePanel);
@@ -100,7 +100,8 @@ public class PausePanelController : MonoBehaviour
 
         ResetHoldState(clearMessage: true);
         SetPanelActive(false);
-        LoadUpgradeSnapshot();
+        if (PlayerPrefs.GetInt("ShouldLoadSavedData", 0) == 1)
+            LoadUpgradeSnapshot();
     }
 
     private void Update()
@@ -255,7 +256,7 @@ public class PausePanelController : MonoBehaviour
     private void SaveUpgradeSnapshot()
     {
         if (upgradeUnlock == null)
-            upgradeUnlock = FindFirstObjectByType<UpgradeUnlock>();
+            upgradeUnlock = FindFirstObjectByType<UpgradeUnlock>(FindObjectsInactive.Include);
 
         bool unlocked = (upgradeUnlock != null && upgradeUnlock.IsUnlocked) ||
                         PlayerPrefs.GetInt(UpgradeUnlockedPrefKey, 0) == 1;
@@ -338,7 +339,7 @@ public class PausePanelController : MonoBehaviour
     private void LoadUpgradeSnapshot()
     {
         if (upgradeUnlock == null)
-            upgradeUnlock = FindFirstObjectByType<UpgradeUnlock>();
+            upgradeUnlock = FindFirstObjectByType<UpgradeUnlock>(FindObjectsInactive.Include);
 
         bool prefUnlocked = PlayerPrefs.GetInt(UpgradeUnlockedPrefKey, 0) == 1;
         if (!File.Exists(UpgradeSnapshotPath))
