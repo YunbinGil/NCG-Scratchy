@@ -6,6 +6,7 @@
 "locked","잠김"
 "unlock.catalog.complete","도감 해금!"
 "unlock.upgrades.complete","업그레이드 해금!"
+"unlock.equipment.complete","장비 해금!"
 "status.level","Lv. {0}"
 "status.experience","{0} / {1}"
 "status.max_level","최대 레벨"

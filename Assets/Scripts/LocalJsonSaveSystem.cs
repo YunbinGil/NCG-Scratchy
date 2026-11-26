@@ -29,6 +29,7 @@ public class GameSaveData
 
     public List<UpgradeSaveEntry> upgrades = new List<UpgradeSaveEntry>();
     public List<string> purchasedEquipmentNames = new List<string>();
+    public List<string> revealedEquipmentNames = new List<string>();
 }
 
 public class LocalJsonSaveSystem : MonoBehaviour
@@ -136,6 +137,7 @@ public class LocalJsonSaveSystem : MonoBehaviour
         if (machineShop != null)
         {
             data.purchasedEquipmentNames.AddRange(machineShop.PurchasedEquipmentNames);
+            data.revealedEquipmentNames.AddRange(machineShop.RevealedEquipmentNames);
         }
 
         string json = JsonUtility.ToJson(data, true);
@@ -201,9 +203,10 @@ public class LocalJsonSaveSystem : MonoBehaviour
             }
         }
 
-        if (machineShop != null && data.purchasedEquipmentNames != null)
+        if (machineShop != null)
         {
             machineShop.RestorePurchasedEquipments(data.purchasedEquipmentNames);
+            machineShop.RestoreRevealedEquipments(data.revealedEquipmentNames);
         }
 
         Debug.Log("로컬 JSON 저장 데이터를 불러왔습니다.");

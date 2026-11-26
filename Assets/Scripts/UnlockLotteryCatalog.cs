@@ -11,15 +11,20 @@ public class UnlockLotteryCatalog : MonoBehaviour
     private Texture2D lightTexture;
     private Action onComplete;
     private string revealMessage;
+    private string revealLocalizationKey;
     private Image glow;
     private Sprite glowSprite;
     private TextMeshProUGUI revealLabel;
 
-    public void Initialize(Texture2D texture, Action complete, string message = "Catalog Unlocked!")
+    public void Initialize(
+        Texture2D texture, Action complete, string message = "Catalog Unlocked!", string localizationKey = null)
     {
         lightTexture = texture;
         onComplete = complete;
         revealMessage = message;
+        revealLocalizationKey = localizationKey ?? (message == "Upgrades Unlocked!"
+            ? "unlock.upgrades.complete"
+            : "unlock.catalog.complete");
         button = GetComponent<Button>();
         button.onClick.AddListener(BeginReveal);
 
@@ -88,8 +93,7 @@ public class UnlockLotteryCatalog : MonoBehaviour
     {
         GameObject labelObject = new GameObject("Catalog Unlock Text", typeof(RectTransform), typeof(TextMeshProUGUI));
         revealLabel = labelObject.GetComponent<TextMeshProUGUI>();
-        string key = revealMessage == "Upgrades Unlocked!" ? "unlock.upgrades.complete" : "unlock.catalog.complete";
-        Localization.Bind(revealLabel, key, revealMessage);
+        Localization.Bind(revealLabel, revealLocalizationKey, revealMessage);
         revealLabel.alignment = TextAlignmentOptions.Center;
         revealLabel.fontSize = 30f;
         revealLabel.fontStyle = FontStyles.Bold;

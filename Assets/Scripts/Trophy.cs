@@ -13,7 +13,6 @@ public class Trophy : MonoBehaviour, IInspectableSource
     private GameObject stainOverlay;
 
     public TrophyData Data => dishData;
-    private UiManager uiManager;
     private int sellPriceAtSpawn;
     private float breakChanceAtSpawn;
     public bool IsCleaned { get; private set; }
@@ -25,11 +24,6 @@ public class Trophy : MonoBehaviour, IInspectableSource
     {
         sellPriceAtSpawn = dishData != null ? dishData.GetSellPriceAfterClean() : 0;
         breakChanceAtSpawn = dishData != null ? dishData.GetBreakChance() : 0f;
-    }
-
-    private void Start()
-    {
-        uiManager = GameObject.FindWithTag("GameController").GetComponent<UiManager>();
     }
 
     private void OnDestroy()
@@ -54,7 +48,6 @@ public class Trophy : MonoBehaviour, IInspectableSource
         InspectViewManager.Instance?.OpenInspect(this);
         if(IsCleaned)
             InspectViewManager.Instance?.OnCleaned(this);
-        uiManager.SetScrubberCursor();
     }
 
     public Sprite GetInspectSprite()
