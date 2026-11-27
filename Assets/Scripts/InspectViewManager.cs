@@ -288,17 +288,17 @@ public class InspectViewManager : MonoBehaviour
             }
         }
 
-        if (centerPreviewImage != null)
-        {
-            centerPreviewImage.sprite = sprite;
-            centerPreviewImage.enabled = sprite != null;
-        }
+        // if (centerPreviewImage != null)
+        // {
+        //     // centerPreviewImage.sprite = sprite;
+        //     centerPreviewImage.enabled = sprite != null;
+        // }
 
-        if (centerPreviewRenderer != null)
-        {
-            centerPreviewRenderer.sprite = sprite;
-            centerPreviewRenderer.enabled = sprite != null;
-        }
+        // if (centerPreviewRenderer != null)
+        // {
+        //     centerPreviewRenderer.sprite = sprite;
+        //     centerPreviewRenderer.enabled = sprite != null;
+        // }
     }
 
     public void OpenTrophyView(Trophy trophy)
