@@ -7,6 +7,8 @@ public class MachineShop : MonoBehaviour
     private class EquipmentEntry
     {
         public GameObject slotPrefab;
+        [Min(0)] public int unlockLevel;
+        public UnlockLotteryCatalog unlockPrefab;
     }
 
     [Header("장비 목록")]
@@ -19,11 +21,18 @@ public class MachineShop : MonoBehaviour
     [Header("초기 골드 (GameManager 없을 때 폴백)")]
     [SerializeField] private int fallbackGold = 1000;
 
+    [Header("해금 연출")]
+    [SerializeField] private Texture2D unlockLightTexture;
+
     [SerializeField] private GameManager gameManager;
 
     private readonly List<MachineSlot> equipmentSlots = new List<MachineSlot>();
     private readonly HashSet<string> revealedEquipmentNames = new HashSet<string>();
+    private readonly Dictionary<string, GameObject> spawnedEquipments = new Dictionary<string, GameObject>();
+    private ItemSpawner itemSpawner;
     private ScratchBotUpgradeManager botUpgradeManager;
+    private GameObject activeUnlockItem;
+    private bool unlockCheckRequested;
 
     public IReadOnlyCollection<string> RevealedEquipmentNames => revealedEquipmentNames;
 
@@ -44,11 +53,17 @@ public class MachineShop : MonoBehaviour
     private readonly List<string> purchasedEquipmentNames = new List<string>();
     public IReadOnlyList<string> PurchasedEquipmentNames => purchasedEquipmentNames;
 
+    public bool IsEquipmentPurchased(string equipmentName)
+    {
+        return !string.IsNullOrWhiteSpace(equipmentName) && purchasedEquipmentNames.Contains(equipmentName);
+    }
+
     private void Start()
     {
         if (gameManager == null)
             gameManager = FindFirstObjectByType<GameManager>();
 
+        itemSpawner = FindFirstObjectByType<ItemSpawner>();
         botUpgradeManager = ScratchBotUpgradeManager.Instance;
         CreateEquipmentUI();
 
@@ -58,6 +73,7 @@ public class MachineShop : MonoBehaviour
             botUpgradeManager.OnUpgraded += RefreshEquipmentLocks;
 
         RefreshEquipmentLocks();
+        SyncPurchasedSlotsAndEquipments();
     }
 
     private void CreateEquipmentUI()
@@ -69,13 +85,14 @@ public class MachineShop : MonoBehaviour
                 continue;
 
             GameObject slotObj = Instantiate(equipmentPrefab, equipmentContent);
-            GameAudio.RegisterButtons(slotObj);
 
             MachineSlot slot = slotObj.GetComponent<MachineSlot>();
             if (slot != null)
             {
+                slot.equipmentShop = this;
+                slot.UnlockLevel = entry.unlockLevel;
+                slot.UnlockRevealPrefab = entry.unlockPrefab;
                 equipmentSlots.Add(slot);
-                slot.Initialize(this);
             }
         }
     }
@@ -92,9 +109,31 @@ public class MachineShop : MonoBehaviour
             revealedEquipmentNames.UnionWith(equipmentNames);
 
         RefreshEquipmentLocks();
+        SyncPurchasedSlotsAndEquipments();
     }
 
-    internal void RecordUnlock(string equipmentName)
+    private void LateUpdate()
+    {
+        if (!unlockCheckRequested || activeUnlockItem != null || itemSpawner == null)
+            return;
+
+        unlockCheckRequested = false;
+        foreach (MachineSlot slot in equipmentSlots)
+        {
+            if (slot == null || !slot.IsReadyForUnlockReveal || HasRevealedEquipment(slot.EffectiveEquipmentName))
+                continue;
+
+            if (!itemSpawner.TrySpawnItemAtTableCenter(slot.UnlockRevealPrefab.gameObject, out activeUnlockItem))
+                continue;
+
+            string equipmentName = slot.EffectiveEquipmentName;
+            activeUnlockItem.GetComponent<UnlockLotteryCatalog>().Initialize(
+                unlockLightTexture, () => CompleteUnlock(equipmentName), "Equipment Unlocked!", "unlock.equipment.complete");
+            return;
+        }
+    }
+
+    private void CompleteUnlock(string equipmentName)
     {
         revealedEquipmentNames.Add(equipmentName);
         RefreshEquipmentLocks();
@@ -112,6 +151,8 @@ public class MachineShop : MonoBehaviour
             if (slot != null)
                 slot.UpdateLock(playerLevel);
         }
+
+        unlockCheckRequested = true;
     }
 
     private void OnDestroy()
@@ -120,6 +161,8 @@ public class MachineShop : MonoBehaviour
             gameManager.OnLevelChanged -= RefreshEquipmentLocks;
         if (botUpgradeManager != null)
             botUpgradeManager.OnUpgraded -= RefreshEquipmentLocks;
+        if (activeUnlockItem != null)
+            Destroy(activeUnlockItem);
     }
 
     public bool PurchaseEquipment(int price)
@@ -155,14 +198,19 @@ public class MachineShop : MonoBehaviour
         if (equipmentPrefab == null || canvasRect == null)
             return;
 
+        string key = equipmentPrefab.name;
+        if (spawnedEquipments.TryGetValue(key, out GameObject existing) && existing != null)
+            return;
+
         GameObject equipment = Instantiate(equipmentPrefab, canvasRect);
-        GameAudio.RegisterButtons(equipment);
+        spawnedEquipments[key] = equipment;
 
         RectTransform rect = equipment.GetComponent<RectTransform>();
         if (rect == null)
         {
             Debug.LogWarning("장비 프리팹에 RectTransform이 없습니다.");
             Destroy(equipment);
+            spawnedEquipments.Remove(key);
             return;
         }
 
@@ -173,40 +221,86 @@ public class MachineShop : MonoBehaviour
         rect.SetAsLastSibling();
     }
 
-    public void RecordPurchasedEquipment(string equipmentName, GameObject equipmentPrefab)
+    public void RecordPurchasedEquipment(string equipmentName, GameObject equipmentPrefab, bool isScratchBot = false)
     {
-        if (!string.IsNullOrEmpty(equipmentName) && !purchasedEquipmentNames.Contains(equipmentName))
+        if (!string.IsNullOrWhiteSpace(equipmentName) && !purchasedEquipmentNames.Contains(equipmentName))
         {
             purchasedEquipmentNames.Add(equipmentName);
         }
 
-        SpawnEquipment(equipmentPrefab);
+        if (!isScratchBot && equipmentPrefab != null)
+        {
+            SpawnEquipment(equipmentPrefab);
+        }
     }
 
     public void RestorePurchasedEquipments(List<string> savedEquipmentNames)
     {
         purchasedEquipmentNames.Clear();
-        if (savedEquipmentNames == null)
-            return;
 
-        foreach (string equipmentName in savedEquipmentNames)
+        if (savedEquipmentNames != null)
         {
-            if (!string.IsNullOrEmpty(equipmentName) && !purchasedEquipmentNames.Contains(equipmentName))
+            foreach (string equipmentName in savedEquipmentNames)
             {
-                purchasedEquipmentNames.Add(equipmentName);
+                if (!string.IsNullOrWhiteSpace(equipmentName) && !purchasedEquipmentNames.Contains(equipmentName))
+                {
+                    purchasedEquipmentNames.Add(equipmentName);
+                }
+            }
+        }
+
+        SyncPurchasedSlotsAndEquipments();
+    }
+
+    private void SyncPurchasedSlotsAndEquipments()
+    {
+        if (canvasRect == null)
+        {
+            Canvas mainCanvas = FindFirstObjectByType<Canvas>();
+            if (mainCanvas != null)
+                canvasRect = mainCanvas.GetComponent<RectTransform>();
+        }
+
+        bool botUnlocked = ScratchBotUpgradeManager.Instance != null &&
+                           ScratchBotUpgradeManager.Instance.isBotUnlocked;
+
+        foreach (MachineSlot slot in equipmentSlots)
+        {
+            if (slot == null)
+                continue;
+
+            bool purchased = IsEquipmentPurchased(slot.EffectiveEquipmentName) ||
+                             (slot.IsScratchBotSlot && botUnlocked);
+
+            if (purchased)
+            {
+                if (!string.IsNullOrWhiteSpace(slot.EffectiveEquipmentName) &&
+                    !purchasedEquipmentNames.Contains(slot.EffectiveEquipmentName))
+                {
+                    purchasedEquipmentNames.Add(slot.EffectiveEquipmentName);
+                }
+
+                slot.ApplyPurchasedState(true);
+
+                if (!slot.IsScratchBotSlot && slot.equipmentPrefab != null)
+                {
+                    SpawnEquipment(slot.equipmentPrefab);
+                }
             }
         }
 
         foreach (EquipmentEntry entry in equipmentList)
         {
-            GameObject equipmentPrefab = entry?.slotPrefab;
-            if (equipmentPrefab == null)
+            GameObject slotPrefab = entry?.slotPrefab;
+            if (slotPrefab == null)
                 continue;
 
-            MachineSlot slot = equipmentPrefab.GetComponent<MachineSlot>();
-            if (slot != null && purchasedEquipmentNames.Contains(slot.equipmentName))
+            MachineSlot prefabSlot = slotPrefab.GetComponent<MachineSlot>();
+            string key = prefabSlot != null ? prefabSlot.EffectiveEquipmentName : slotPrefab.name;
+
+            if (IsEquipmentPurchased(key) && prefabSlot != null && !prefabSlot.IsScratchBotSlot && prefabSlot.equipmentPrefab != null)
             {
-                SpawnEquipment(equipmentPrefab);
+                SpawnEquipment(prefabSlot.equipmentPrefab);
             }
         }
     }

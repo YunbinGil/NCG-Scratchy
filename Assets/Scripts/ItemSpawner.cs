@@ -45,7 +45,7 @@ public class ItemSpawner : MonoBehaviour
 
     private GameObject spawnedScratchBot;
     public GameObject SpawnedScratchBot => spawnedScratchBot;
-    internal RectTransform TableEffectParent => lotteryLayer != null ? lotteryLayer : spawnTable;
+     internal RectTransform TableEffectParent => lotteryLayer != null ? lotteryLayer : spawnTable;
 
     public bool TrySpawnItem(GameObject item)
     {
@@ -113,7 +113,6 @@ public class ItemSpawner : MonoBehaviour
             Quaternion.identity,
             parentRect
         );
-
         GameAudio.RegisterButtons(spawnedObject);
 
         RectTransform spawnItem =
@@ -173,9 +172,7 @@ public class ItemSpawner : MonoBehaviour
             Lottery lottery = go.GetComponent<Lottery>();
             if (lottery != null)
             {
-                string key = lottery.Data != null && lottery.Data.lotteryTablePrefab != null
-                    ? lottery.Data.lotteryTablePrefab.name
-                    : go.name.Replace("(Clone)", "").Trim();
+                string key = go.name.Replace("(Clone)", "").Trim();
 
                 result.Add(new SpawnedTableItemSaveData
                 {
@@ -260,12 +257,6 @@ public class ItemSpawner : MonoBehaviour
             {
                 if (prefab == null) continue;
                 if (prefab.name == itemKey)
-                    return prefab;
-
-                Lottery lottery = prefab.GetComponent<Lottery>();
-                if (lottery != null && lottery.Data != null &&
-                    lottery.Data.lotteryTablePrefab != null &&
-                    lottery.Data.lotteryTablePrefab.name == itemKey)
                     return prefab;
 
                 Trophy trophy = prefab.GetComponent<Trophy>();
