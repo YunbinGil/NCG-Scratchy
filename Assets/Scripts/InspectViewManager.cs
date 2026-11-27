@@ -567,6 +567,7 @@ public class InspectViewManager : MonoBehaviour
             label.text = $"${target.Reward}";
 
         resultButton.gameObject.SetActive(true);
+        PlayScratchComplete();
     }
     public void OnLotteryMatched(Lottery lottery)
     {

@@ -93,7 +93,7 @@ public class Trophy : MonoBehaviour, IInspectableSource
         Reward = Random.value < breakChanceAtSpawn
             ? -Mathf.Abs(trophyData.breakPenalty)
             : sellPriceAtSpawn;
-        InspectViewManager.Instance?.PlayScratchComplete();
+        // InspectViewManager.Instance?.PlayScratchComplete();
     }
 
     public void DestoryItem()

@@ -240,6 +240,12 @@ public class GameManager : MonoBehaviour
         // F2: 업그레이드 테스트용 돈 추가
         if (Input.GetKeyDown(KeyCode.F2))
         {
+            AddMoney(1000);
+        }
+        
+        // F3: 엔딩 테스트용 돈 추가
+        if (Input.GetKeyDown(KeyCode.F3))
+        {
             AddMoney(100000);
         }
 #endif
