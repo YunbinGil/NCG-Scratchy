@@ -385,109 +385,139 @@ public class Lottery : MonoBehaviour, IInspectableSource
     }
 
     public void EvaluateOpenedSlots(bool allowJackpotEffect)
+{
+    if (lotteryData == null || currentLotteryIcons == null) return;
+
+    var validOpened = new List<(int slotIdx, LotteryIconData icon)>();
+    var counts = new Dictionary<LotteryIconData, int>();
+    var slotsByIcon = new Dictionary<LotteryIconData, List<int>>();
+
+    foreach (int slotIdx in currentOpened)
     {
-        if (lotteryData == null || currentLotteryIcons == null) return;
+        Debug.Log($"slotindex {slotIdx}");
+        if (slotIdx < 0 || slotIdx >= currentLotteryIcons.Count) continue;
 
-        var openedSymbols = new List<LotteryIconData>();
-        var counts = new Dictionary<LotteryIconData, int>();
-        var slotsByIcon = new Dictionary<LotteryIconData, List<int>>();
+        LotteryIconData icon = currentLotteryIcons[slotIdx];
+        if (icon == null) continue;
 
-        foreach (int slotIdx in currentOpened)
+        validOpened.Add((slotIdx, icon));
+
+        if (!counts.ContainsKey(icon))
         {
-            Debug.Log($"slotindex {slotIdx}");
-            if (slotIdx < 0 || slotIdx >= currentLotteryIcons.Count) continue;
-            LotteryIconData icon = currentLotteryIcons[slotIdx];
-            if (icon == null) continue;
-
-            openedSymbols.Add(icon);
-
-            if (!counts.ContainsKey(icon))
-            {
-                counts[icon] = 0;
-                slotsByIcon[icon] = new List<int>();
-            }
-            counts[icon]++;
-            slotsByIcon[icon].Add(slotIdx);
+            counts[icon] = 0;
+            slotsByIcon[icon] = new List<int>();
         }
+        counts[icon]++;
+        slotsByIcon[icon].Add(slotIdx);
+    }
 
-        int totalReward = 0;
-        var newlyMatchedSlots = new List<int>();
-
-        foreach (var pair in counts)
+    // 현재 복권에서 등장 확률이 가장 낮은 심볼 기준값 계산
+    float lowestProb = float.MaxValue;
+    foreach (var pair in counts)
+    {
+        float prob = lotteryData.GetSymbolProbabilityPercent(pair.Key, rollLuckMultiplier);
+        if (prob < lowestProb)
         {
-            LotteryIconData icon = pair.Key;
-            int matchCount = pair.Value;
-
-            if (matchCount >= lotteryData.requiredMatchCount)
-            {
-                Debug.Log($"{icon.name} matched: {matchCount}개");
-                totalReward += icon.GetPayoutForMatchCount(matchCount);
-                foreach (int sIdx in slotsByIcon[icon])
-                {
-                    if (!highlightedSlots.Contains(sIdx))
-                    {
-                        highlightedSlots.Add(sIdx);
-                        newlyMatchedSlots.Add(sIdx);
-                    }
-                }
-            }
-        }
-
-        Reward = totalReward;
-        Debug.Log($"Reward: {Reward}");
-
-        lastEvaluatedChances.Clear();
-        for (int i = 0; i < currentOpened.Count && i < openedSymbols.Count; i++)
-        {
-            int slotIdx = currentOpened[i];
-            LotteryIconData icon = openedSymbols[i];
-            int openedCount = counts.TryGetValue(icon, out int c) ? c : 1;
-            int payout = openedCount >= lotteryData.requiredMatchCount
-                ? icon.GetPayoutForMatchCount(openedCount)
-                : 0;
-
-            lastEvaluatedChances.Add(new OpenedSymbolChance
-            {
-                slotIndex = slotIdx,
-                symbol = icon,
-                symbolName = string.IsNullOrWhiteSpace(icon.iconName) ? icon.name : icon.iconName,
-                spawnProbabilityPercent = lotteryData.GetSymbolProbabilityPercent(icon, rollLuckMultiplier),
-                openedCount = openedCount,
-                payout = payout
-            });
-        }
-
-        ScratchedLotteryClickHandler handler = GetComponent<ScratchedLotteryClickHandler>();
-        if (handler == null)
-            handler = GetComponentInChildren<ScratchedLotteryClickHandler>();
-        if (handler != null)
-        {
-            handler.SetSymbolProbabilities(lastEvaluatedChances);
-        }
-
-        if (newlyMatchedSlots.Count > 0)
-        {
-            HasMatched = true;
-            string keys = slotAreasByIndex.Count == 0
-                ? "EMPTY"
-                : string.Join(", ", slotAreasByIndex.Keys);
-            PlayMatchGlowForSlots(newlyMatchedSlots);
-            InspectViewManager.Instance?.OnLotteryMatched(this);
-        }
-
-        IsJackpot = Reward > 0 && Reward == JackpotReward;
-
-        if (allowJackpotEffect && IsJackpot)
-        {
-            if (jackpotEffectController == null)
-            {
-                Debug.LogWarning("jackpotEffectController가 할당되지 않았습니다.", this);
-                return;
-            }
-            jackpotEffectController.TryPlayJackpot(Reward, JackpotReward);
+            lowestProb = prob;
         }
     }
 
+    int totalReward = 0;
+    var newlyMatchedSlots = new List<int>();
+    bool matchedLowestProbSymbol = false;
+
+    foreach (var pair in counts)
+    {
+        LotteryIconData icon = pair.Key;
+        int matchCount = pair.Value;
+
+        if (matchCount >= lotteryData.requiredMatchCount)
+        {
+            Debug.Log($"{icon.name} matched: {matchCount}개");
+
+            // 1개 매치 복권은 1개당 보상 * 나온 개수(누적합), 2개 이상 복권은 matchCount 기준 페이아웃
+            int matchedPayout = (lotteryData.requiredMatchCount == 1)
+                ? icon.GetPayoutForMatchCount(1) * matchCount
+                : icon.GetPayoutForMatchCount(matchCount);
+
+            totalReward += matchedPayout;
+
+            float prob = lotteryData.GetSymbolProbabilityPercent(icon, rollLuckMultiplier);
+            if (Mathf.Approximately(prob, lowestProb))
+            {
+                matchedLowestProbSymbol = true;
+            }
+
+            foreach (int sIdx in slotsByIcon[icon])
+            {
+                if (!highlightedSlots.Contains(sIdx))
+                {
+                    highlightedSlots.Add(sIdx);
+                    newlyMatchedSlots.Add(sIdx);
+                }
+            }
+        }
+    }
+
+    Reward = totalReward;
+    Debug.Log($"Reward: {Reward}");
+
+    lastEvaluatedChances.Clear();
+    foreach (var (slotIdx, icon) in validOpened)
+    {
+        int openedCount = counts.TryGetValue(icon, out int c) ? c : 1;
+        float probPercent = lotteryData.GetSymbolProbabilityPercent(icon, rollLuckMultiplier);
+
+        int payout = 0;
+        if (openedCount >= lotteryData.requiredMatchCount)
+        {
+            payout = (lotteryData.requiredMatchCount == 1)
+                ? icon.GetPayoutForMatchCount(1) * openedCount
+                : icon.GetPayoutForMatchCount(openedCount);
+        }
+
+        lastEvaluatedChances.Add(new OpenedSymbolChance
+        {
+            slotIndex = slotIdx,
+            symbol = icon,
+            symbolName = string.IsNullOrWhiteSpace(icon.iconName) ? icon.name : icon.iconName,
+            spawnProbabilityPercent = probPercent,
+            openedCount = openedCount,
+            payout = payout
+        });
+    }
+
+    ScratchedLotteryClickHandler handler = GetComponent<ScratchedLotteryClickHandler>();
+    if (handler == null)
+        handler = GetComponentInChildren<ScratchedLotteryClickHandler>();
+    if (handler != null)
+    {
+        handler.SetSymbolProbabilities(lastEvaluatedChances);
+    }
+
+    if (newlyMatchedSlots.Count > 0)
+    {
+        HasMatched = true;
+        string keys = slotAreasByIndex.Count == 0
+            ? "EMPTY"
+            : string.Join(", ", slotAreasByIndex.Keys);
+        PlayMatchGlowForSlots(newlyMatchedSlots);
+        InspectViewManager.Instance?.OnLotteryMatched(this);
+    }
+
+    // 최저 확률 심볼 당첨 또는 기존 JackpotReward 도달 시 잭팟 처리
+    IsJackpot = Reward > 0 && (matchedLowestProbSymbol || Reward == JackpotReward);
+
+    if (allowJackpotEffect && IsJackpot)
+    {
+        if (jackpotEffectController == null)
+        {
+            Debug.LogWarning("jackpotEffectController가 할당되지 않았습니다.", this);
+            return;
+        }
+        jackpotEffectController.TryPlayJackpot(Reward, JackpotReward);
+    }
+}
     private void PlayMatchGlowForSlots(List<int> slotIndices)
     {
         foreach (int slotIdx in slotIndices)
