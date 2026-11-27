@@ -2388,7 +2388,7 @@ PrefabInstance:
       objectReference: {fileID: 969263738}
     - target: {fileID: 8026929555053945897, guid: 37527d9c95b170140a81b723c9053204, type: 3}
       propertyPath: savableItemPrefabs.Array.size
-      value: 2
+      value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 8026929555053945897, guid: 37527d9c95b170140a81b723c9053204, type: 3}
       propertyPath: 'savableItemPrefabs.Array.data[0]'
@@ -2401,11 +2401,11 @@ PrefabInstance:
     - target: {fileID: 8026929555053945897, guid: 37527d9c95b170140a81b723c9053204, type: 3}
       propertyPath: 'savableItemPrefabs.Array.data[2]'
       value: 
-      objectReference: {fileID: 4382154160015985177, guid: 847ea943e1c273941afa6aec3a2ec799, type: 3}
+      objectReference: {fileID: 5491830050816562597, guid: 870c90297ef473a46b75f381e3ac2460, type: 3}
     - target: {fileID: 8026929555053945897, guid: 37527d9c95b170140a81b723c9053204, type: 3}
       propertyPath: 'savableItemPrefabs.Array.data[3]'
       value: 
-      objectReference: {fileID: 4464211831565045949, guid: 02c5a7ec3f054ee4fa4da283122c1917, type: 3}
+      objectReference: {fileID: 5491830050816562597, guid: fffc2e1d81a0bf34dae2434a650320f7, type: 3}
     - target: {fileID: 8026929555053945897, guid: 3065bfd795393b142bc4a3cbc99bc7c4, type: 3}
       propertyPath: dragArea
       value: 
@@ -3321,7 +3321,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7952588149342728083, guid: 30e7eb5b629f65642a207e4b9a476236, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 0
+      value: 0.00079345703
       objectReference: {fileID: 0}
     - target: {fileID: 7994922925460622214, guid: 30e7eb5b629f65642a207e4b9a476236, type: 3}
       propertyPath: m_AnchoredPosition.y
