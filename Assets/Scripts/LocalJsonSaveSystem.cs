@@ -98,7 +98,7 @@ public class LocalJsonSaveSystem : MonoBehaviour
             itemSpawner = FindFirstObjectByType<ItemSpawner>();
 
         if (upgradeUnlock == null || !upgradeUnlock)
-            upgradeUnlock = FindFirstObjectByType<UpgradeUnlock>(FindObjectsInactive.Include);
+            upgradeUnlock = UpgradeUnlock.Instance ?? FindFirstObjectByType<UpgradeUnlock>();
 
         if (productProgress == null || !productProgress)
             productProgress = FindFirstObjectByType<ProductProgress>();
@@ -156,8 +156,17 @@ public class LocalJsonSaveSystem : MonoBehaviour
             data.powerLevel = botUpgradeManager.powerLevel;
         }
 
-        if (gameManager != null)
-            data.upgrades = gameManager.Upgrades.Capture();
+        UpgradeSlot[] slots = FindObjectsByType<UpgradeSlot>(FindObjectsSortMode.None);
+        foreach (UpgradeSlot slot in slots)
+        {
+            if (slot == null || !slot) continue;
+            data.upgrades.Add(new UpgradeSaveEntry
+            {
+                upgradeType = slot.UpgradeTypeValue,
+                level = slot.UpgradeLevelValue,
+                cost = slot.UpgradeCostValue
+            });
+        }
 
         if (productProgress != null && productProgress)
         {
@@ -241,12 +250,23 @@ public class LocalJsonSaveSystem : MonoBehaviour
             }
         }
 
-        if (gameManager != null)
-            gameManager.Upgrades.Restore(data.upgrades);
-
         if (itemSpawner != null && itemSpawner && data.spawnedTableItems != null)
         {
             itemSpawner.RestoreSpawnedTableItems(data.spawnedTableItems);
+        }
+
+        UpgradeSlot[] slots = FindObjectsByType<UpgradeSlot>(FindObjectsSortMode.None);
+        foreach (UpgradeSlot slot in slots)
+        {
+            if (slot == null || !slot) continue;
+            foreach (UpgradeSaveEntry entry in data.upgrades)
+            {
+                if (entry.upgradeType == slot.UpgradeTypeValue)
+                {
+                    slot.ApplySaveData(entry.level, entry.cost);
+                    break;
+                }
+            }
         }
 
         if (machineShop != null && machineShop)

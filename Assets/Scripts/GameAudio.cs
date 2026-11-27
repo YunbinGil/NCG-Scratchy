@@ -154,9 +154,7 @@ public sealed class GameAudio : MonoBehaviour
             return;
 
         var catalogSlot = button.GetComponentInParent<CatalogSlot>(true);
-        var machineSlot = button.GetComponentInParent<MachineSlot>(true);
-        if ((catalogSlot != null && catalogSlot.PurchaseButton == button) ||
-            (machineSlot != null && machineSlot.IsPurchaseButton(button)))
+        if (catalogSlot != null && catalogSlot.PurchaseButton == button)
             return;
 
         button.onClick.AddListener(PlayClick);

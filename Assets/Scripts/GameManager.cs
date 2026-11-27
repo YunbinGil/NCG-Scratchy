@@ -25,7 +25,9 @@ public class GameManager : MonoBehaviour
 
     private ItemSpawner itemSpawner;
     internal ItemSpawner ItemSpawner => itemSpawner;
-    internal RectTransform TableEffectParent => itemSpawner != null ? itemSpawner.TableEffectParent : null;
+    internal RectTransform TableEffectParent => itemSpawner != null
+        ? itemSpawner.GetComponent<RectTransform>()
+        : null;
     private UiManager uiManager;
     private bool hasRestoredPlayerState;
 
