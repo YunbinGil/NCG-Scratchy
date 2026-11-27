@@ -45,6 +45,7 @@ public class ItemSpawner : MonoBehaviour
 
     private GameObject spawnedScratchBot;
     public GameObject SpawnedScratchBot => spawnedScratchBot;
+     internal RectTransform TableEffectParent => lotteryLayer != null ? lotteryLayer : spawnTable;
 
     public bool TrySpawnItem(GameObject item)
     {
@@ -112,6 +113,7 @@ public class ItemSpawner : MonoBehaviour
             Quaternion.identity,
             parentRect
         );
+        GameAudio.RegisterButtons(spawnedObject);
 
         RectTransform spawnItem =
             spawnedObject.GetComponent<RectTransform>();
@@ -322,6 +324,7 @@ public class ItemSpawner : MonoBehaviour
             return false;
 
         GameObject botObj = Instantiate(scratchBotPrefab, baseRect);
+        GameAudio.RegisterButtons(botObj);
         RectTransform botRect = botObj.GetComponent<RectTransform>();
         if (botRect != null)
         {
